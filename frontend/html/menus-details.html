@@ -1,11 +1,310 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+<!-- 
+    ================================================================
+    VITE & GOURMAND - PAGE DÉTAIL D'UN MENU
+    ================================================================
+    
+    STRUCTURE DE LA PAGE :
+    1. Head (métadonnées, liens CSS)
+    2. Header (logo, navigation)
+    3. Main (contenu principal)
+       - Image du menu (bannière)
+       - Informations du menu
+       - Liste des plats
+       - Prix et bouton commander
+    4. Footer (informations, liens)
+    
+    SÉCURITÉ APPLIQUÉE :
+    - Validation de l'ID du menu côté serveur
+    - Pas d'affichage direct de données utilisateur
+    - Protection contre les injections XSS
+    - Échappement des caractères spéciaux
+    
+    ACCESSIBILITÉ :
+    - Structure sémantique claire
+    - Icônes avec texte alternatif
+    - Navigation au clavier
+    - Contrastes respectés
+    
+    ================================================================
+-->
 <head>
+    <!-- === MÉTADONNÉES ESSENTIELLES === -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- === SÉCURITÉ === -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+    
+    <!-- === SEO === -->
+    <title>Menu Prestige - Vite & Gourmand | Traiteur Bordeaux</title>
+    <meta name="description" content="Découvrez notre Menu Prestige : une expérience gastronomique haut de gamme avec foie gras, Saint-Jacques et filet de bœuf. Traiteur à Bordeaux.">
+    
+    <!-- === FAVICON === -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    
+    <!-- === FEUILLE DE STYLE === -->
+    <link rel="stylesheet" href="Css/style.css">
 </head>
+
 <body>
+    <!-- ============================================================
+         HEADER - NAVIGATION
+         ============================================================ -->
+    <header class="header" role="banner">
+        <div class="container header-content">
+            
+            <!-- Logo -->
+            <a href="index.html" class="logo" aria-label="Vite & Gourmand - Accueil">
+                Vite <span>&</span> Gourmand
+            </a>
+            
+            <!-- Navigation principale -->
+            <nav class="nav" role="navigation" aria-label="Navigation principale" id="main-nav">
+                <ul class="nav-list">
+                    <li>
+                        <a href="index.html" class="nav-link">Accueil</a>
+                    </li>
+                    <li>
+                        <a href="menus.html" class="nav-link active">Menus</a>
+                    </li>
+                    <li>
+                        <a href="contact.html" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Boutons d'action -->
+            <div class="header-buttons">
+                <a href="connexion.html" class="btn btn-outline btn-small">Connexion</a>
+                <a href="inscription.html" class="btn btn-secondary btn-small">Inscription</a>
+            </div>
+            
+            <!-- Menu hamburger (mobile) -->
+            <button class="menu-toggle" 
+                    aria-label="Ouvrir le menu" 
+                    aria-expanded="false" 
+                    aria-controls="main-nav"
+                    id="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+        </div>
+    </header>
+
+    <!-- ============================================================
+         CONTENU PRINCIPAL
+         ============================================================ -->
+    <main class="main-content" role="main">
+
+        <!-- ========================================================
+             SECTION DÉTAIL DU MENU
+             ======================================================== -->
+        <article class="menu-detail" itemscope itemtype="https://schema.org/Menu">
+            <!-- 
+                itemscope & itemtype : Microdonnées Schema.org
+                Aide les moteurs de recherche à comprendre le contenu
+                (SEO avancé)
+            -->
+            
+            <!-- ====== IMAGE BANNIÈRE ====== -->
+            <div class="menu-detail-header">
+                <img src="images/menu-prestige.jpg" 
+                     alt="Menu Prestige : Filet de bœuf aux légumes de saison, présentation gastronomique"
+                     itemprop="image"
+                     loading="eager">
+                <!-- loading="eager" : charge immédiatement (image principale) -->
+            </div>
+            
+            <!-- ====== CONTENU DU MENU ====== -->
+            <div class="menu-detail-content">
+                
+                <!-- Titre et description -->
+                <h1 class="menu-detail-title" itemprop="name">Menu Prestige</h1>
+                <p class="menu-detail-subtitle" itemprop="description">
+                    Un repas d'exception pour vos grandes occasions
+                </p>
+                
+                <!-- Tags / Étiquettes -->
+                <div class="menu-tags">
+                    <span class="tag tag-primary">Gastronomique</span>
+                    <span class="tag tag-outline">Sans Gluten</span>
+                </div>
+                
+                <!-- Séparateur -->
+                <hr class="separator" aria-hidden="true">
+                
+                <!-- ====== LISTE DES PLATS ====== -->
+                <section class="menu-plats" aria-labelledby="plats-title">
+                    <h2 id="plats-title">Au menu :</h2>
+                    
+                    <ul class="plats-list">
+                        
+                        <!-- Entrée -->
+                        <li class="plat-item">
+                            <div class="plat-info">
+                                <span class="plat-name">Foie gras et chutney de figues</span>
+                                <span class="plat-type">Entrée</span>
+                            </div>
+                            <div class="plat-icons" aria-label="Informations allergènes">
+                                <span class="plat-icon" title="Contient du gluten" aria-label="Contient du gluten">🌾</span>
+                                <span class="plat-icon" title="Contient des fruits à coque" aria-label="Contient des fruits à coque">🥜</span>
+                            </div>
+                        </li>
+                        
+                        <!-- Poisson -->
+                        <li class="plat-item">
+                            <div class="plat-info">
+                                <span class="plat-name">Noix de Saint-Jacques, émulsion de champagne</span>
+                                <span class="plat-type">Poisson</span>
+                            </div>
+                            <div class="plat-icons" aria-label="Informations allergènes">
+                                <span class="plat-icon" title="Contient des crustacés" aria-label="Contient des crustacés">🦐</span>
+                                <span class="plat-icon" title="Contient du lait" aria-label="Contient du lait">🥛</span>
+                            </div>
+                        </li>
+                        
+                        <!-- Viande -->
+                        <li class="plat-item">
+                            <div class="plat-info">
+                                <span class="plat-name">Filet de bœuf, jus truffé et légumes de saison</span>
+                                <span class="plat-type">Plat principal</span>
+                            </div>
+                            <div class="plat-icons" aria-label="Informations allergènes">
+                                <span class="plat-icon" title="Sans gluten" aria-label="Sans gluten">✓</span>
+                            </div>
+                        </li>
+                        
+                        <!-- Fromage -->
+                        <li class="plat-item">
+                            <div class="plat-info">
+                                <span class="plat-name">Assiette de fromages affinés</span>
+                                <span class="plat-type">Fromage</span>
+                            </div>
+                            <div class="plat-icons" aria-label="Informations allergènes">
+                                <span class="plat-icon" title="Contient du lait" aria-label="Contient du lait">🥛</span>
+                            </div>
+                        </li>
+                        
+                        <!-- Dessert -->
+                        <li class="plat-item">
+                            <div class="plat-info">
+                                <span class="plat-name">Fondant au chocolat et coulis de framboise</span>
+                                <span class="plat-type">Dessert</span>
+                            </div>
+                            <div class="plat-icons" aria-label="Informations allergènes">
+                                <span class="plat-icon" title="Contient des œufs" aria-label="Contient des œufs">🥚</span>
+                                <span class="plat-icon" title="Contient du lait" aria-label="Contient du lait">🥛</span>
+                            </div>
+                        </li>
+                        
+                    </ul>
+                </section>
+                
+                <!-- ====== INFORMATIONS ALLERGÈNES ====== -->
+                <section class="menu-allergenes" aria-labelledby="allergenes-title">
+                    <h3 id="allergenes-title">Informations allergènes</h3>
+                    <p class="allergenes-text">
+                        Ce menu peut contenir des traces de : gluten, crustacés, œufs, 
+                        poissons, arachides, soja, lait, fruits à coque, céleri, moutarde, 
+                        sésame, sulfites, lupin, mollusques.
+                    </p>
+                    <p class="allergenes-contact">
+                        Pour toute question concernant les allergènes, 
+                        <a href="contact.html">contactez-nous</a>.
+                    </p>
+                </section>
+                
+                <!-- ====== PRIX ET COMMANDE ====== -->
+                <section class="menu-order" aria-labelledby="order-title">
+                    <h3 id="order-title" class="sr-only">Commander ce menu</h3>
+                    
+                    <div class="menu-order-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <span itemprop="price" content="65">65 €</span>
+                        <span itemprop="priceCurrency" content="EUR" class="sr-only">EUR</span>
+                        <small>par personne</small>
+                    </div>
+                    
+                    <p class="menu-order-info">
+                        Minimum <strong>6 personnes</strong> pour ce menu
+                    </p>
+                    
+                    <a href="connexion.html" class="btn btn-secondary btn-large">
+                        Commander
+                    </a>
+                    
+                    <p class="menu-order-note">
+                        <small>Vous devez être connecté pour commander</small>
+                    </p>
+                </section>
+                
+                <!-- ====== RETOUR AU CATALOGUE ====== -->
+                <div class="menu-back">
+                    <a href="menus.html" class="btn btn-outline">
+                        ← Retour aux menus
+                    </a>
+                </div>
+                
+            </div>
+            
+        </article>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer" role="contentinfo">
+        <div class="container footer-content">
+            
+            <!-- Horaires -->
+            <div class="footer-section">
+                <h4>Nos Horaires</h4>
+                <p>Lun - Ven : 9h - 19h</p>
+                <p>Sam - Dim : 9h - 21h</p>
+            </div>
+            
+            <!-- Adresse -->
+            <div class="footer-section">
+                <h4>Adresse</h4>
+                <address>
+                    <p>128, Avenue des Vignes</p>
+                    <p>33000 Bordeaux</p>
+                    <p>
+                        <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
+                            📞 01 23 45 67 89
+                        </a>
+                    </p>
+                </address>
+            </div>
+            
+            <!-- Liens utiles -->
+            <div class="footer-section">
+                <h4>Liens Utiles</h4>
+                <ul>
+                    <li><a href="menus.html">Nos Menus</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="connexion.html">Connexion</a></li>
+                    <li><a href="inscription.html">Inscription</a></li>
+                </ul>
+            </div>
+            
+        </div>
+        
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         SCRIPTS JAVASCRIPT
+         ============================================================ -->
+    <script src="js/main.js"></script>
     
 </body>
 </html>

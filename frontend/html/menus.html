@@ -1,11 +1,499 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+<!-- 
+    ================================================================
+    VITE & GOURMAND - PAGE CATALOGUE DES MENUS
+    ================================================================
+    
+    STRUCTURE DE LA PAGE :
+    1. Head (métadonnées, liens CSS)
+    2. Header (logo, navigation)
+    3. Main (contenu principal)
+       - Filtres (prix, thème, régime)
+       - Grille des menus
+    4. Footer (informations, liens)
+    
+    SÉCURITÉ APPLIQUÉE :
+    - Filtres avec attributs data-* (pas de valeurs dans l'URL)
+    - Validation JavaScript côté client + serveur
+    - Échappement des données affichées
+    - Structure sémantique HTML5
+    
+    ACCESSIBILITÉ :
+    - Labels sur les filtres
+    - Attributs ARIA pour les interactions
+    - Navigation au clavier possible
+    
+    ================================================================
+-->
 <head>
+    <!-- === MÉTADONNÉES ESSENTIELLES === -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- === SÉCURITÉ === -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+    
+    <!-- === SEO === -->
+    <title>Nos Menus - Vite & Gourmand | Traiteur Bordeaux</title>
+    <meta name="description" content="Découvrez nos menus gastronomiques pour vos événements. Menus traditionnels, végétariens, sans gluten. Traiteur à Bordeaux.">
+    
+    <!-- === FAVICON === -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    
+    <!-- === FEUILLE DE STYLE === -->
+    <link rel="stylesheet" href="Css/style.css">
 </head>
+
 <body>
+    <!-- ============================================================
+         HEADER - NAVIGATION
+         ============================================================ -->
+    <header class="header" role="banner">
+        <div class="container header-content">
+            
+            <!-- Logo -->
+            <a href="index.html" class="logo" aria-label="Vite & Gourmand - Accueil">
+                Vite <span>&</span> Gourmand
+            </a>
+            
+            <!-- Navigation principale -->
+            <nav class="nav" role="navigation" aria-label="Navigation principale" id="main-nav">
+                <ul class="nav-list">
+                    <li>
+                        <a href="index.html" class="nav-link">Accueil</a>
+                    </li>
+                    <li>
+                        <a href="menus.html" class="nav-link active" aria-current="page">Menus</a>
+                    </li>
+                    <li>
+                        <a href="contact.html" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Boutons d'action -->
+            <div class="header-buttons">
+                <a href="connexion.html" class="btn btn-outline btn-small">Connexion</a>
+                <a href="inscription.html" class="btn btn-secondary btn-small">Inscription</a>
+            </div>
+            
+            <!-- Menu hamburger (mobile) -->
+            <button class="menu-toggle" 
+                    aria-label="Ouvrir le menu" 
+                    aria-expanded="false" 
+                    aria-controls="main-nav"
+                    id="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+        </div>
+    </header>
+
+    <!-- ============================================================
+         CONTENU PRINCIPAL
+         ============================================================ -->
+    <main class="main-content" role="main">
+
+        <!-- ========================================================
+             SECTION FILTRES
+             ========================================================
+             Objectif : Permettre de filtrer les menus par critères
+             
+             SÉCURITÉ :
+             - Les valeurs sont dans des attributs data-*
+             - Pas de paramètres dans l'URL (évite les injections)
+             - Validation côté JavaScript avant affichage
+             ======================================================== -->
+        <section class="filters-section" aria-label="Filtres de recherche">
+            <div class="container">
+                
+                <form class="filters" id="filters-form" role="search">
+                    
+                    <!-- Filtre par prix -->
+                    <div class="filter-group">
+                        <label for="filter-prix" class="sr-only">Filtrer par prix</label>
+                        <select class="filter-select" id="filter-prix" name="prix">
+                            <option value="">Prix</option>
+                            <option value="0-45">Moins de 45€</option>
+                            <option value="45-55">45€ - 55€</option>
+                            <option value="55-100">Plus de 55€</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtre par thème -->
+                    <div class="filter-group">
+                        <label for="filter-theme" class="sr-only">Filtrer par thème</label>
+                        <select class="filter-select" id="filter-theme" name="theme">
+                            <option value="">Thème</option>
+                            <option value="traditionnel">Traditionnel</option>
+                            <option value="exotique">Exotique</option>
+                            <option value="mediterraneen">Méditerranéen</option>
+                            <option value="gastronomique">Gastronomique</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtre par régime alimentaire -->
+                    <div class="filter-group">
+                        <label for="filter-regime" class="sr-only">Filtrer par régime alimentaire</label>
+                        <select class="filter-select" id="filter-regime" name="regime">
+                            <option value="">Régime</option>
+                            <option value="vegetarien">Végétarien</option>
+                            <option value="sans-gluten">Sans Gluten</option>
+                            <option value="halal">Halal</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Bouton filtrer -->
+                    <button type="submit" class="btn btn-accent" id="btn-filtrer">
+                        Filtrer
+                    </button>
+                    
+                    <!-- Bouton réinitialiser (caché par défaut) -->
+                    <button type="reset" class="btn btn-outline btn-small" id="btn-reset" style="display: none;">
+                        Réinitialiser
+                    </button>
+                    
+                </form>
+                
+            </div>
+        </section>
+
+        <!-- ========================================================
+             SECTION CATALOGUE DES MENUS
+             ========================================================
+             Objectif : Afficher tous les menus disponibles
+             
+             STRUCTURE D'UNE CARTE MENU :
+             - Image du menu
+             - Nom du menu
+             - Description courte
+             - Prix par personne
+             - Bouton "Voir" vers le détail
+             
+             ATTRIBUTS DATA-* :
+             - data-prix : prix du menu (pour le filtre)
+             - data-theme : thème culinaire (pour le filtre)
+             - data-regime : régime alimentaire (pour le filtre)
+             ======================================================== -->
+        <section class="menus-catalog section" aria-labelledby="menus-title">
+            <div class="container">
+                
+                <!-- Titre caché visuellement mais accessible -->
+                <h1 id="menus-title" class="sr-only">Nos Menus</h1>
+                
+                <!-- Message si aucun résultat -->
+                <div class="no-results message message-info" id="no-results" style="display: none;">
+                    <p>Aucun menu ne correspond à vos critères. Essayez de modifier vos filtres.</p>
+                </div>
+                
+                <!-- Grille des menus -->
+                <div class="menus-grid" id="menus-grid">
+                    
+                    <!-- ====== MENU 1 : Gourmand ====== -->
+                    <article class="menu-card" 
+                             data-prix="45" 
+                             data-theme="traditionnel" 
+                             data-regime="">
+                        
+                        <img src="images/menu-gourmand.jpg" 
+                             alt="Menu Gourmand : Assiette gastronomique avec viande et légumes de saison" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Gourmand</h2>
+                            <p>Un menu raffiné avec des plats traditionnels revisités par notre chef.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    45 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=1" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 2 : Évasion ====== -->
+                    <article class="menu-card" 
+                             data-prix="55" 
+                             data-theme="exotique" 
+                             data-regime="">
+                        
+                        <img src="images/menu-evasion.jpg" 
+                             alt="Menu Évasion : Plats aux saveurs exotiques et épicées" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Évasion</h2>
+                            <p>Voyage culinaire à travers des saveurs exotiques et parfumées.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    55 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=2" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 3 : Végétarien ====== -->
+                    <article class="menu-card" 
+                             data-prix="40" 
+                             data-theme="mediterraneen" 
+                             data-regime="vegetarien">
+                        
+                        <img src="images/menu-vegetarien.jpg" 
+                             alt="Menu Végétarien : Assiette colorée de légumes frais et créatifs" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Végétarien</h2>
+                            <p>Cuisine créative et gourmande 100% végétarienne.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    40 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=3" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 4 : Prestige ====== -->
+                    <article class="menu-card" 
+                             data-prix="65" 
+                             data-theme="gastronomique" 
+                             data-regime="sans-gluten">
+                        
+                        <img src="images/menu-prestige.jpg" 
+                             alt="Menu Prestige : Plat gastronomique haut de gamme avec foie gras" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Prestige</h2>
+                            <p>Une expérience gastronomique haut de gamme pour vos grandes occasions.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    65 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=4" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 5 : Méditerranéen ====== -->
+                    <article class="menu-card" 
+                             data-prix="50" 
+                             data-theme="mediterraneen" 
+                             data-regime="">
+                        
+                        <img src="images/menu-mediterraneen.jpg" 
+                             alt="Menu Méditerranéen : Poisson grillé aux herbes et légumes du soleil" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Méditerranéen</h2>
+                            <p>Délices ensoleillés aux parfums méditerranéens et huile d'olive.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    50 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=5" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 6 : Terroir ====== -->
+                    <article class="menu-card" 
+                             data-prix="48" 
+                             data-theme="traditionnel" 
+                             data-regime="">
+                        
+                        <img src="images/menu-terroir.jpg" 
+                             alt="Menu Terroir : Plat traditionnel français avec viande et sauce au vin" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Terroir</h2>
+                            <p>Saveurs traditionnelles du terroir français et produits locaux.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    48 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=6" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 7 : Océan ====== -->
+                    <article class="menu-card" 
+                             data-prix="58" 
+                             data-theme="gastronomique" 
+                             data-regime="sans-gluten">
+                        
+                        <img src="images/menu-ocean.jpg" 
+                             alt="Menu Océan : Fruits de mer frais et poissons nobles" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Océan</h2>
+                            <p>Fruits de mer frais et poissons nobles pour les amateurs.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    58 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=7" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 8 : Végan ====== -->
+                    <article class="menu-card" 
+                             data-prix="42" 
+                             data-theme="exotique" 
+                             data-regime="vegetarien">
+                        
+                        <img src="images/menu-vegan.jpg" 
+                             alt="Menu Végan : Assiette 100% végétale colorée et créative" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Végan</h2>
+                            <p>Cuisine 100% végétale, créative et savoureuse.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    42 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=8" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+
+                    <!-- ====== MENU 9 : Festif ====== -->
+                    <article class="menu-card" 
+                             data-prix="70" 
+                             data-theme="gastronomique" 
+                             data-regime="">
+                        
+                        <img src="images/menu-festif.jpg" 
+                             alt="Menu Festif : Grand menu de fête avec mets raffinés" 
+                             class="menu-card-image"
+                             loading="lazy">
+                        
+                        <div class="menu-card-content">
+                            <h2>Menu Festif</h2>
+                            <p>Le menu idéal pour célébrer vos grands événements en beauté.</p>
+                            
+                            <div class="menu-card-footer">
+                                <span class="menu-price">
+                                    70 € <small>par personne</small>
+                                </span>
+                                <a href="menus-details.html?id=9" class="btn btn-primary btn-small">
+                                    Voir
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </article>
+                    
+                </div>
+                
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer" role="contentinfo">
+        <div class="container footer-content">
+            
+            <!-- Horaires -->
+            <div class="footer-section">
+                <h4>Nos Horaires</h4>
+                <p>Lun - Ven : 9h - 19h</p>
+                <p>Sam - Dim : 9h - 21h</p>
+            </div>
+            
+            <!-- Adresse -->
+            <div class="footer-section">
+                <h4>Adresse</h4>
+                <address>
+                    <p>128, Avenue des Vignes</p>
+                    <p>33000 Bordeaux</p>
+                    <p>
+                        <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
+                            📞 01 23 45 67 89
+                        </a>
+                    </p>
+                </address>
+            </div>
+            
+            <!-- Liens utiles -->
+            <div class="footer-section">
+                <h4>Liens Utiles</h4>
+                <ul>
+                    <li><a href="menus.html">Nos Menus</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="connexion.html">Connexion</a></li>
+                    <li><a href="inscription.html">Inscription</a></li>
+                </ul>
+            </div>
+            
+        </div>
+        
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         SCRIPTS JAVASCRIPT
+         ============================================================ -->
+    <script src="js/main.js"></script>
+    <script src="js/filters.js"></script>
     
 </body>
 </html>

@@ -1,11 +1,506 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+<!-- 
+    ================================================================
+    VITE & GOURMAND - PAGE INSCRIPTION
+    ================================================================
+    
+    STRUCTURE DE LA PAGE :
+    1. Head (métadonnées, liens CSS)
+    2. Header (logo, navigation)
+    3. Main (contenu principal)
+       - Formulaire d'inscription
+    4. Footer (informations, liens)
+    
+    SÉCURITÉ DU FORMULAIRE D'INSCRIPTION :
+    ======================================
+    
+    CÔTÉ CLIENT (ce fichier) :
+    - Validation des champs (format, longueur)
+    - Indicateur de force du mot de passe
+    - Confirmation du mot de passe
+    - Honeypot anti-spam
+    
+    CÔTÉ SERVEUR (obligatoire) :
+    - Vérifier que l'email n'existe pas déjà (sans révéler l'info)
+    - Hasher le mot de passe avec bcrypt (coût >= 12)
+    - Valider TOUS les champs (ne jamais faire confiance au client)
+    - Envoyer un email de confirmation
+    - Token CSRF
+    - Rate limiting (éviter les inscriptions massives)
+    
+    RGPD :
+    - Consentement explicite obligatoire
+    - Informer sur l'utilisation des données
+    - Permettre la suppression du compte
+    
+    ================================================================
+-->
 <head>
+    <!-- === MÉTADONNÉES ESSENTIELLES === -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- === SÉCURITÉ === -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+    
+    <!-- === SEO === -->
+    <title>Inscription - Vite & Gourmand | Traiteur Bordeaux</title>
+    <meta name="description" content="Créez votre compte Vite & Gourmand pour commander nos menus gastronomiques et gérer vos réservations.">
+    
+    <!-- Empêcher l'indexation de la page d'inscription -->
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- === FAVICON === -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    
+    <!-- === FEUILLE DE STYLE === -->
+    <link rel="stylesheet" href="Css/style.css">
 </head>
+
 <body>
+    <!-- ============================================================
+         HEADER - NAVIGATION
+         ============================================================ -->
+    <header class="header" role="banner">
+        <div class="container header-content">
+            
+            <!-- Logo -->
+            <a href="index.html" class="logo" aria-label="Vite & Gourmand - Accueil">
+                Vite <span>&</span> Gourmand
+            </a>
+            
+            <!-- Navigation principale -->
+            <nav class="nav" role="navigation" aria-label="Navigation principale" id="main-nav">
+                <ul class="nav-list">
+                    <li>
+                        <a href="index.html" class="nav-link">Accueil</a>
+                    </li>
+                    <li>
+                        <a href="menus.html" class="nav-link">Menus</a>
+                    </li>
+                    <li>
+                        <a href="contact.html" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Boutons d'action -->
+            <div class="header-buttons">
+                <a href="connexion.html" class="btn btn-outline btn-small">Connexion</a>
+                <a href="inscription.html" class="btn btn-secondary btn-small" aria-current="page">Inscription</a>
+            </div>
+            
+            <!-- Menu hamburger (mobile) -->
+            <button class="menu-toggle" 
+                    aria-label="Ouvrir le menu" 
+                    aria-expanded="false" 
+                    aria-controls="main-nav"
+                    id="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+        </div>
+    </header>
+
+    <!-- ============================================================
+         CONTENU PRINCIPAL
+         ============================================================ -->
+    <main class="main-content" role="main">
+
+        <!-- ========================================================
+             SECTION INSCRIPTION
+             ======================================================== -->
+        <section class="auth-page" aria-labelledby="inscription-title">
+            
+            <div class="auth-container auth-container-large">
+                
+                <!-- Titre -->
+                <h1 class="auth-title" id="inscription-title">Créer un compte</h1>
+                
+                <p class="auth-subtitle">
+                    Rejoignez Vite & Gourmand pour commander nos menus et profiter d'avantages exclusifs.
+                </p>
+                
+                <!-- 
+                    FORMULAIRE D'INSCRIPTION
+                    ========================
+                    
+                    VALIDATION :
+                    - Côté client : feedback immédiat pour l'utilisateur
+                    - Côté serveur : validation OBLIGATOIRE (sécurité)
+                    
+                    MOTS DE PASSE :
+                    - Minimum 8 caractères
+                    - Au moins 1 majuscule
+                    - Au moins 1 minuscule
+                    - Au moins 1 chiffre
+                    - Au moins 1 caractère spécial (recommandé)
+                -->
+                <form id="inscription-form" 
+                      class="auth-form" 
+                      action="#" 
+                      method="POST"
+                      autocomplete="on"
+                      novalidate>
+                    
+                    <!-- Message d'erreur global (caché par défaut) -->
+                    <div class="message message-error" id="inscription-error" style="display: none;" role="alert">
+                        <p>❌ Une erreur est survenue. Veuillez vérifier les champs et réessayer.</p>
+                    </div>
+                    
+                    <!-- Message de succès -->
+                    <div class="message message-success" id="inscription-success" style="display: none;" role="alert">
+                        <p>✅ Inscription réussie ! Un email de confirmation vous a été envoyé.</p>
+                    </div>
+                    
+                    <!-- Groupe : Nom et Prénom (sur la même ligne) -->
+                    <div class="form-row">
+                        
+                        <!-- Champ : Prénom -->
+                        <div class="form-group">
+                            <label for="inscription-prenom" class="form-label">
+                                Prénom <span class="required" aria-hidden="true">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="inscription-prenom" 
+                                   name="prenom" 
+                                   class="form-input"
+                                   required
+                                   minlength="2"
+                                   maxlength="50"
+                                   pattern="[A-Za-zÀ-ÿ\s\-']+"
+                                   autocomplete="given-name"
+                                   placeholder="Votre prénom"
+                                   aria-describedby="prenom-error">
+                            <!-- 
+                                autocomplete="given-name" :
+                                - Standard HTML5 pour le prénom
+                                - Aide au remplissage automatique
+                            -->
+                            <span class="form-error" id="prenom-error" aria-live="polite"></span>
+                        </div>
+                        
+                        <!-- Champ : Nom -->
+                        <div class="form-group">
+                            <label for="inscription-nom" class="form-label">
+                                Nom <span class="required" aria-hidden="true">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="inscription-nom" 
+                                   name="nom" 
+                                   class="form-input"
+                                   required
+                                   minlength="2"
+                                   maxlength="50"
+                                   pattern="[A-Za-zÀ-ÿ\s\-']+"
+                                   autocomplete="family-name"
+                                   placeholder="Votre nom"
+                                   aria-describedby="nom-error">
+                            <span class="form-error" id="nom-error" aria-live="polite"></span>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Champ : Email -->
+                    <div class="form-group">
+                        <label for="inscription-email" class="form-label">
+                            Adresse email <span class="required" aria-hidden="true">*</span>
+                        </label>
+                        <input type="email" 
+                               id="inscription-email" 
+                               name="email" 
+                               class="form-input"
+                               required
+                               maxlength="255"
+                               autocomplete="email"
+                               placeholder="votre@email.com"
+                               aria-describedby="email-error email-hint">
+                        <span class="form-hint" id="email-hint">
+                            Vous recevrez un email de confirmation à cette adresse.
+                        </span>
+                        <span class="form-error" id="email-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Champ : Téléphone (optionnel) -->
+                    <div class="form-group">
+                        <label for="inscription-telephone" class="form-label">
+                            Téléphone <span class="optional">(optionnel)</span>
+                        </label>
+                        <input type="tel" 
+                               id="inscription-telephone" 
+                               name="telephone" 
+                               class="form-input"
+                               maxlength="20"
+                               pattern="[0-9\s\+\-\.]+"
+                               autocomplete="tel"
+                               placeholder="01 23 45 67 89"
+                               aria-describedby="telephone-error">
+                        <span class="form-error" id="telephone-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Champ : Mot de passe -->
+                    <div class="form-group">
+                        <label for="inscription-password" class="form-label">
+                            Mot de passe <span class="required" aria-hidden="true">*</span>
+                        </label>
+                        <div class="password-field">
+                            <input type="password" 
+                                   id="inscription-password" 
+                                   name="password" 
+                                   class="form-input"
+                                   required
+                                   minlength="8"
+                                   maxlength="128"
+                                   autocomplete="new-password"
+                                   placeholder="Créez un mot de passe sécurisé"
+                                   aria-describedby="password-error password-requirements">
+                            <!-- 
+                                autocomplete="new-password" :
+                                - Indique que c'est un NOUVEAU mot de passe
+                                - Les navigateurs proposent de générer un mot de passe fort
+                            -->
+                            
+                            <!-- Bouton afficher/masquer -->
+                            <button type="button" 
+                                    class="password-toggle" 
+                                    id="toggle-password"
+                                    aria-label="Afficher le mot de passe"
+                                    aria-pressed="false">
+                                <span class="icon-eye" aria-hidden="true">👁️</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Indicateur de force du mot de passe -->
+                        <div class="password-strength" id="password-strength" aria-hidden="true">
+                            <div class="password-strength-bar" id="password-strength-bar"></div>
+                        </div>
+                        <span class="password-strength-text" id="password-strength-text" aria-live="polite"></span>
+                        
+                        <!-- Exigences du mot de passe -->
+                        <div class="password-requirements" id="password-requirements">
+                            <p class="requirements-title">Le mot de passe doit contenir :</p>
+                            <ul class="requirements-list">
+                                <li id="req-length" class="requirement">
+                                    <span class="req-icon" aria-hidden="true">○</span>
+                                    Au moins 8 caractères
+                                </li>
+                                <li id="req-uppercase" class="requirement">
+                                    <span class="req-icon" aria-hidden="true">○</span>
+                                    Au moins 1 majuscule (A-Z)
+                                </li>
+                                <li id="req-lowercase" class="requirement">
+                                    <span class="req-icon" aria-hidden="true">○</span>
+                                    Au moins 1 minuscule (a-z)
+                                </li>
+                                <li id="req-number" class="requirement">
+                                    <span class="req-icon" aria-hidden="true">○</span>
+                                    Au moins 1 chiffre (0-9)
+                                </li>
+                                <li id="req-special" class="requirement">
+                                    <span class="req-icon" aria-hidden="true">○</span>
+                                    Au moins 1 caractère spécial (!@#$%...)
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <span class="form-error" id="password-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Champ : Confirmation du mot de passe -->
+                    <div class="form-group">
+                        <label for="inscription-password-confirm" class="form-label">
+                            Confirmer le mot de passe <span class="required" aria-hidden="true">*</span>
+                        </label>
+                        <div class="password-field">
+                            <input type="password" 
+                                   id="inscription-password-confirm" 
+                                   name="password_confirm" 
+                                   class="form-input"
+                                   required
+                                   minlength="8"
+                                   maxlength="128"
+                                   autocomplete="new-password"
+                                   placeholder="Retapez votre mot de passe"
+                                   aria-describedby="password-confirm-error">
+                            
+                            <!-- Bouton afficher/masquer -->
+                            <button type="button" 
+                                    class="password-toggle" 
+                                    id="toggle-password-confirm"
+                                    aria-label="Afficher la confirmation du mot de passe"
+                                    aria-pressed="false">
+                                <span class="icon-eye" aria-hidden="true">👁️</span>
+                            </button>
+                        </div>
+                        <span class="form-error" id="password-confirm-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Champ : Type de compte -->
+                    <div class="form-group">
+                        <label for="inscription-type" class="form-label">
+                            Type de compte <span class="required" aria-hidden="true">*</span>
+                        </label>
+                        <select id="inscription-type" 
+                                name="type_compte" 
+                                class="form-input"
+                                required
+                                aria-describedby="type-error">
+                            <option value="">-- Choisissez --</option>
+                            <option value="particulier">Particulier</option>
+                            <option value="professionnel">Professionnel / Entreprise</option>
+                        </select>
+                        <span class="form-error" id="type-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Champ conditionnel : Nom de l'entreprise -->
+                    <div class="form-group" id="entreprise-group" style="display: none;">
+                        <label for="inscription-entreprise" class="form-label">
+                            Nom de l'entreprise
+                        </label>
+                        <input type="text" 
+                               id="inscription-entreprise" 
+                               name="entreprise" 
+                               class="form-input"
+                               maxlength="100"
+                               autocomplete="organization"
+                               placeholder="Nom de votre entreprise"
+                               aria-describedby="entreprise-error">
+                        <span class="form-error" id="entreprise-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Consentements RGPD -->
+                    <div class="form-consents">
+                        
+                        <!-- CGU obligatoire -->
+                        <div class="form-group form-group-checkbox">
+                            <input type="checkbox" 
+                                   id="inscription-cgu" 
+                                   name="cgu" 
+                                   required
+                                   aria-describedby="cgu-error">
+                            <label for="inscription-cgu" class="form-label-checkbox">
+                                J'accepte les <a href="#" target="_blank">conditions générales d'utilisation</a>
+                                <span class="required" aria-hidden="true">*</span>
+                            </label>
+                            <span class="form-error" id="cgu-error" aria-live="polite"></span>
+                        </div>
+                        
+                        <!-- RGPD obligatoire -->
+                        <div class="form-group form-group-checkbox">
+                            <input type="checkbox" 
+                                   id="inscription-rgpd" 
+                                   name="rgpd" 
+                                   required
+                                   aria-describedby="rgpd-error">
+                            <label for="inscription-rgpd" class="form-label-checkbox">
+                                J'accepte que mes données soient traitées conformément à la 
+                                <a href="#" target="_blank">politique de confidentialité</a>
+                                <span class="required" aria-hidden="true">*</span>
+                            </label>
+                            <span class="form-error" id="rgpd-error" aria-live="polite"></span>
+                        </div>
+                        
+                        <!-- Newsletter optionnelle -->
+                        <div class="form-group form-group-checkbox">
+                            <input type="checkbox" 
+                                   id="inscription-newsletter" 
+                                   name="newsletter">
+                            <label for="inscription-newsletter" class="form-label-checkbox">
+                                Je souhaite recevoir les offres et actualités de Vite & Gourmand
+                                <span class="optional">(optionnel)</span>
+                            </label>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Bouton d'inscription -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btn-inscription">
+                            Créer mon compte
+                        </button>
+                    </div>
+                    
+                    <!-- Honeypot anti-spam (invisible) -->
+                    <div style="display: none;" aria-hidden="true">
+                        <input type="text" 
+                               name="website" 
+                               tabindex="-1"
+                               autocomplete="off">
+                        <input type="text" 
+                               name="username" 
+                               tabindex="-1"
+                               autocomplete="off">
+                    </div>
+                    
+                </form>
+                
+                <!-- Lien vers connexion -->
+                <div class="auth-footer">
+                    <p>Déjà un compte ?</p>
+                    <a href="connexion.html" class="btn btn-outline">Se connecter</a>
+                </div>
+                
+            </div>
+            
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer" role="contentinfo">
+        <div class="container footer-content">
+            
+            <!-- Horaires -->
+            <div class="footer-section">
+                <h4>Nos Horaires</h4>
+                <p>Lun - Ven : 9h - 19h</p>
+                <p>Sam - Dim : 9h - 21h</p>
+            </div>
+            
+            <!-- Adresse -->
+            <div class="footer-section">
+                <h4>Adresse</h4>
+                <address>
+                    <p>128, Avenue des Vignes</p>
+                    <p>33000 Bordeaux</p>
+                    <p>
+                        <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
+                            📞 01 23 45 67 89
+                        </a>
+                    </p>
+                </address>
+            </div>
+            
+            <!-- Liens utiles -->
+            <div class="footer-section">
+                <h4>Liens Utiles</h4>
+                <ul>
+                    <li><a href="menus.html">Nos Menus</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="connexion.html">Connexion</a></li>
+                    <li><a href="inscription.html">Inscription</a></li>
+                </ul>
+            </div>
+            
+        </div>
+        
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         SCRIPTS JAVASCRIPT
+         ============================================================ -->
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
     
 </body>
 </html>

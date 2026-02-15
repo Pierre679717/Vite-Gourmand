@@ -1,11 +1,317 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+<!-- 
+    ================================================================
+    VITE & GOURMAND - PAGE CONNEXION
+    ================================================================
+    
+    STRUCTURE DE LA PAGE :
+    1. Head (métadonnées, liens CSS)
+    2. Header (logo, navigation)
+    3. Main (contenu principal)
+       - Formulaire de connexion
+    4. Footer (informations, liens)
+    
+    SÉCURITÉ DU FORMULAIRE DE CONNEXION :
+    =====================================
+    
+    CÔTÉ CLIENT (ce fichier) :
+    - Validation basique des champs (required, type)
+    - Pas de message d'erreur trop précis (évite l'énumération d'utilisateurs)
+    - Attribut autocomplete pour aider les gestionnaires de mots de passe
+    
+    CÔTÉ SERVEUR (obligatoire) :
+    - Hashage des mots de passe (bcrypt avec salt)
+    - Protection contre les attaques par force brute (rate limiting)
+    - Tokens de session sécurisés (HttpOnly, Secure, SameSite)
+    - Protection CSRF
+    - Ne JAMAIS stocker les mots de passe en clair
+    - Messages d'erreur génériques ("Identifiants incorrects")
+    
+    ================================================================
+-->
 <head>
+    <!-- === MÉTADONNÉES ESSENTIELLES === -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- === SÉCURITÉ === -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+    
+    <!-- === SEO === -->
+    <title>Connexion - Vite & Gourmand | Traiteur Bordeaux</title>
+    <meta name="description" content="Connectez-vous à votre espace client Vite & Gourmand pour gérer vos commandes et réservations.">
+    
+    <!-- Empêcher l'indexation de la page de connexion -->
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- === FAVICON === -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    
+    <!-- === FEUILLE DE STYLE === -->
+    <link rel="stylesheet" href="Css/style.css">
 </head>
+
 <body>
+    <!-- ============================================================
+         HEADER - NAVIGATION
+         ============================================================ -->
+    <header class="header" role="banner">
+        <div class="container header-content">
+            
+            <!-- Logo -->
+            <a href="index.html" class="logo" aria-label="Vite & Gourmand - Accueil">
+                Vite <span>&</span> Gourmand
+            </a>
+            
+            <!-- Navigation principale -->
+            <nav class="nav" role="navigation" aria-label="Navigation principale" id="main-nav">
+                <ul class="nav-list">
+                    <li>
+                        <a href="index.html" class="nav-link">Accueil</a>
+                    </li>
+                    <li>
+                        <a href="menus.html" class="nav-link">Menus</a>
+                    </li>
+                    <li>
+                        <a href="contact.html" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Boutons d'action -->
+            <div class="header-buttons">
+                <a href="connexion.html" class="btn btn-outline btn-small" aria-current="page">Connexion</a>
+                <a href="inscription.html" class="btn btn-secondary btn-small">Inscription</a>
+            </div>
+            
+            <!-- Menu hamburger (mobile) -->
+            <button class="menu-toggle" 
+                    aria-label="Ouvrir le menu" 
+                    aria-expanded="false" 
+                    aria-controls="main-nav"
+                    id="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+        </div>
+    </header>
+
+    <!-- ============================================================
+         CONTENU PRINCIPAL
+         ============================================================ -->
+    <main class="main-content" role="main">
+
+        <!-- ========================================================
+             SECTION CONNEXION
+             ======================================================== -->
+        <section class="auth-page" aria-labelledby="connexion-title">
+            
+            <div class="auth-container">
+                
+                <!-- Titre -->
+                <h1 class="auth-title" id="connexion-title">Connexion</h1>
+                
+                <!-- 
+                    FORMULAIRE DE CONNEXION
+                    =======================
+                    
+                    ATTRIBUTS IMPORTANTS :
+                    - action : URL du script de traitement (backend)
+                    - method="POST" : données envoyées de façon sécurisée
+                    - autocomplete="on" : permet aux gestionnaires de mots de passe
+                    
+                    SÉCURITÉ :
+                    - Pas de validation complexe côté client (le serveur fait le travail)
+                    - Messages d'erreur génériques pour éviter l'énumération
+                -->
+                <form id="connexion-form" 
+                      class="auth-form" 
+                      action="#" 
+                      method="POST"
+                      autocomplete="on"
+                      novalidate>
+                    
+                    <!-- Message d'erreur global (caché par défaut) -->
+                    <div class="message message-error" id="connexion-error" style="display: none;" role="alert">
+                        <p>❌ Identifiants incorrects. Veuillez vérifier votre email et mot de passe.</p>
+                    </div>
+                    <!-- 
+                        SÉCURITÉ : Message générique
+                        Ne jamais dire "cet email n'existe pas" ou "mot de passe incorrect"
+                        Car cela permettrait à un attaquant de savoir quels emails sont enregistrés
+                    -->
+                    
+                    <!-- Message de succès (redirection) -->
+                    <div class="message message-success" id="connexion-success" style="display: none;" role="alert">
+                        <p>✅ Connexion réussie ! Redirection en cours...</p>
+                    </div>
+                    
+                    <!-- Champ : Email -->
+                    <div class="form-group">
+                        <label for="connexion-email" class="form-label">
+                            Adresse email
+                        </label>
+                        <input type="email" 
+                               id="connexion-email" 
+                               name="email" 
+                               class="form-input"
+                               required
+                               maxlength="255"
+                               autocomplete="email"
+                               placeholder="votre@email.com"
+                               aria-describedby="email-error">
+                        <!-- 
+                            autocomplete="email" :
+                            - Aide les gestionnaires de mots de passe
+                            - Améliore l'expérience utilisateur
+                            - Recommandé par les bonnes pratiques de sécurité
+                        -->
+                        <span class="form-error" id="email-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Champ : Mot de passe -->
+                    <div class="form-group">
+                        <label for="connexion-password" class="form-label">
+                            Mot de passe
+                        </label>
+                        <div class="password-field">
+                            <input type="password" 
+                                   id="connexion-password" 
+                                   name="password" 
+                                   class="form-input"
+                                   required
+                                   minlength="8"
+                                   maxlength="128"
+                                   autocomplete="current-password"
+                                   placeholder="Votre mot de passe"
+                                   aria-describedby="password-error">
+                            <!-- 
+                                autocomplete="current-password" :
+                                - Indique que c'est le mot de passe actuel (pas un nouveau)
+                                - Aide les gestionnaires de mots de passe
+                                
+                                maxlength="128" :
+                                - Limite raisonnable pour éviter les attaques DoS
+                                - Les mots de passe sont hashés, donc la taille en BDD est fixe
+                            -->
+                            
+                            <!-- Bouton afficher/masquer le mot de passe -->
+                            <button type="button" 
+                                    class="password-toggle" 
+                                    id="toggle-password"
+                                    aria-label="Afficher le mot de passe"
+                                    aria-pressed="false">
+                                <span class="icon-eye" aria-hidden="true">👁️</span>
+                            </button>
+                        </div>
+                        <span class="form-error" id="password-error" aria-live="polite"></span>
+                    </div>
+                    
+                    <!-- Options : Se souvenir / Mot de passe oublié -->
+                    <div class="form-options">
+                        <div class="form-remember">
+                            <input type="checkbox" 
+                                   id="connexion-remember" 
+                                   name="remember">
+                            <label for="connexion-remember">Se souvenir de moi</label>
+                            <!-- 
+                                "Se souvenir de moi" :
+                                - Prolonge la durée de la session
+                                - Côté serveur : utiliser un token sécurisé (pas le mot de passe !)
+                            -->
+                        </div>
+                        <a href="#" class="form-forgot-link">Mot de passe oublié ?</a>
+                    </div>
+                    
+                    <!-- Bouton de connexion -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btn-connexion">
+                            Se connecter
+                        </button>
+                    </div>
+                    
+                    <!-- Honeypot anti-spam (invisible) -->
+                    <div style="display: none;" aria-hidden="true">
+                        <input type="text" 
+                               name="username" 
+                               tabindex="-1"
+                               autocomplete="off">
+                        <!-- 
+                            HONEYPOT :
+                            - Champ invisible nommé de façon attractive pour les bots
+                            - Si rempli = tentative de spam/bot
+                        -->
+                    </div>
+                    
+                </form>
+                
+                <!-- Lien vers inscription -->
+                <div class="auth-footer">
+                    <p>Pas encore de compte ?</p>
+                    <a href="inscription.html" class="btn btn-outline">Créer un compte</a>
+                </div>
+                
+            </div>
+            
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer" role="contentinfo">
+        <div class="container footer-content">
+            
+            <!-- Horaires -->
+            <div class="footer-section">
+                <h4>Nos Horaires</h4>
+                <p>Lun - Ven : 9h - 19h</p>
+                <p>Sam - Dim : 9h - 21h</p>
+            </div>
+            
+            <!-- Adresse -->
+            <div class="footer-section">
+                <h4>Adresse</h4>
+                <address>
+                    <p>128, Avenue des Vignes</p>
+                    <p>33000 Bordeaux</p>
+                    <p>
+                        <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
+                            📞 01 23 45 67 89
+                        </a>
+                    </p>
+                </address>
+            </div>
+            
+            <!-- Liens utiles -->
+            <div class="footer-section">
+                <h4>Liens Utiles</h4>
+                <ul>
+                    <li><a href="menus.html">Nos Menus</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="connexion.html">Connexion</a></li>
+                    <li><a href="inscription.html">Inscription</a></li>
+                </ul>
+            </div>
+            
+        </div>
+        
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         SCRIPTS JAVASCRIPT
+         ============================================================ -->
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
     
 </body>
 </html>

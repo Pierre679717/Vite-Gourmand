@@ -1,11 +1,462 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+<!-- 
+    ================================================================
+    VITE & GOURMAND - PAGE CONTACT
+    ================================================================
+    
+    STRUCTURE DE LA PAGE :
+    1. Head (métadonnées, liens CSS)
+    2. Header (logo, navigation)
+    3. Main (contenu principal)
+       - Informations de contact
+       - Formulaire de contact
+    4. Footer (informations, liens)
+    
+    SÉCURITÉ DU FORMULAIRE :
+    - Validation HTML5 (required, type, pattern)
+    - Validation JavaScript côté client
+    - Protection CSRF (token généré côté serveur)
+    - Validation côté serveur OBLIGATOIRE
+    - Échappement des données avant affichage
+    - Limitation de la taille des champs (maxlength)
+    
+    ACCESSIBILITÉ :
+    - Labels associés aux champs (for/id)
+    - Messages d'erreur liés aux champs (aria-describedby)
+    - Focus visible sur les champs
+    - Navigation au clavier
+    
+    ================================================================
+-->
 <head>
+    <!-- === MÉTADONNÉES ESSENTIELLES === -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- === SÉCURITÉ === -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+    
+    <!-- === SEO === -->
+    <title>Contact - Vite & Gourmand | Traiteur Bordeaux</title>
+    <meta name="description" content="Contactez Vite & Gourmand, votre traiteur à Bordeaux. Demandez un devis personnalisé pour vos événements : mariages, séminaires, anniversaires.">
+    
+    <!-- === FAVICON === -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    
+    <!-- === FEUILLE DE STYLE === -->
+    <link rel="stylesheet" href="Css/style.css">
 </head>
+
 <body>
+    <!-- ============================================================
+         HEADER - NAVIGATION
+         ============================================================ -->
+    <header class="header" role="banner">
+        <div class="container header-content">
+            
+            <!-- Logo -->
+            <a href="index.html" class="logo" aria-label="Vite & Gourmand - Accueil">
+                Vite <span>&</span> Gourmand
+            </a>
+            
+            <!-- Navigation principale -->
+            <nav class="nav" role="navigation" aria-label="Navigation principale" id="main-nav">
+                <ul class="nav-list">
+                    <li>
+                        <a href="index.html" class="nav-link">Accueil</a>
+                    </li>
+                    <li>
+                        <a href="menus.html" class="nav-link">Menus</a>
+                    </li>
+                    <li>
+                        <a href="contact.html" class="nav-link active" aria-current="page">Contact</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Boutons d'action -->
+            <div class="header-buttons">
+                <a href="connexion.html" class="btn btn-outline btn-small">Connexion</a>
+                <a href="inscription.html" class="btn btn-secondary btn-small">Inscription</a>
+            </div>
+            
+            <!-- Menu hamburger (mobile) -->
+            <button class="menu-toggle" 
+                    aria-label="Ouvrir le menu" 
+                    aria-expanded="false" 
+                    aria-controls="main-nav"
+                    id="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+        </div>
+    </header>
+
+    <!-- ============================================================
+         CONTENU PRINCIPAL
+         ============================================================ -->
+    <main class="main-content" role="main">
+
+        <!-- ========================================================
+             SECTION CONTACT
+             ======================================================== -->
+        <section class="contact-page section" aria-labelledby="contact-title">
+            <div class="container">
+                
+                <h1 class="section-title" id="contact-title">Contactez-nous</h1>
+                
+                <div class="contact-grid">
+                    
+                    <!-- ====== INFORMATIONS DE CONTACT ====== -->
+                    <div class="contact-info">
+                        
+                        <h2>Nos Coordonnées</h2>
+                        
+                        <p class="contact-intro">
+                            Vous avez un projet d'événement ? Une question sur nos menus ? 
+                            N'hésitez pas à nous contacter, nous vous répondrons dans les plus brefs délais.
+                        </p>
+                        
+                        <!-- Adresse -->
+                        <div class="contact-item">
+                            <span class="contact-item-icon" aria-hidden="true">📍</span>
+                            <div class="contact-item-content">
+                                <h3>Adresse</h3>
+                                <address>
+                                    128, Avenue des Vignes<br>
+                                    33000 Bordeaux
+                                </address>
+                            </div>
+                        </div>
+                        
+                        <!-- Téléphone -->
+                        <div class="contact-item">
+                            <span class="contact-item-icon" aria-hidden="true">📞</span>
+                            <div class="contact-item-content">
+                                <h3>Téléphone</h3>
+                                <p>
+                                    <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
+                                        01 23 45 67 89
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="contact-item">
+                            <span class="contact-item-icon" aria-hidden="true">✉️</span>
+                            <div class="contact-item-content">
+                                <h3>Email</h3>
+                                <p>
+                                    <a href="mailto:contact@vite-gourmand.fr">
+                                        contact@vite-gourmand.fr
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Horaires -->
+                        <div class="contact-item">
+                            <span class="contact-item-icon" aria-hidden="true">🕐</span>
+                            <div class="contact-item-content">
+                                <h3>Horaires d'ouverture</h3>
+                                <p>Lun - Ven : 9h - 19h</p>
+                                <p>Sam - Dim : 9h - 21h</p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- ====== FORMULAIRE DE CONTACT ====== -->
+                    <div class="contact-form-container">
+                        
+                        <h2>Envoyez-nous un message</h2>
+                        
+                        <!-- 
+                            FORMULAIRE DE CONTACT
+                            =====================
+                            
+                            SÉCURITÉ :
+                            - action : URL du script côté serveur qui traite le formulaire
+                            - method="POST" : données envoyées dans le corps de la requête (pas dans l'URL)
+                            - novalidate : désactive la validation HTML5 pour utiliser notre propre validation JS
+                              (mais on garde les attributs required/pattern comme fallback)
+                            
+                            IMPORTANT BACKEND :
+                            - Toujours valider les données côté serveur
+                            - Échapper les données avant de les stocker ou afficher
+                            - Utiliser des requêtes préparées pour la BDD
+                            - Implémenter un token CSRF
+                        -->
+                        <form id="contact-form" 
+                              class="contact-form" 
+                              action="#" 
+                              method="POST"
+                              novalidate>
+                            
+                            <!-- Message de succès (caché par défaut) -->
+                            <div class="message message-success" id="form-success" style="display: none;" role="alert">
+                                <p>✅ Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.</p>
+                            </div>
+                            
+                            <!-- Message d'erreur global (caché par défaut) -->
+                            <div class="message message-error" id="form-error" style="display: none;" role="alert">
+                                <p>❌ Une erreur est survenue. Veuillez vérifier les champs et réessayer.</p>
+                            </div>
+                            
+                            <!-- Champ : Nom -->
+                            <div class="form-group">
+                                <label for="contact-nom" class="form-label">
+                                    Nom complet <span class="required" aria-hidden="true">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="contact-nom" 
+                                       name="nom" 
+                                       class="form-input"
+                                       required
+                                       minlength="2"
+                                       maxlength="100"
+                                       pattern="[A-Za-zÀ-ÿ\s\-']+"
+                                       autocomplete="name"
+                                       placeholder="Votre nom et prénom"
+                                       aria-describedby="nom-error">
+                                <!-- 
+                                    SÉCURITÉ DU CHAMP :
+                                    - required : champ obligatoire
+                                    - minlength/maxlength : limite la taille des données
+                                    - pattern : n'accepte que des lettres, espaces, tirets, apostrophes
+                                    - autocomplete : aide l'utilisateur et améliore l'UX
+                                -->
+                                <span class="form-error" id="nom-error" aria-live="polite"></span>
+                            </div>
+                            
+                            <!-- Champ : Email -->
+                            <div class="form-group">
+                                <label for="contact-email" class="form-label">
+                                    Email <span class="required" aria-hidden="true">*</span>
+                                </label>
+                                <input type="email" 
+                                       id="contact-email" 
+                                       name="email" 
+                                       class="form-input"
+                                       required
+                                       maxlength="255"
+                                       autocomplete="email"
+                                       placeholder="votre@email.com"
+                                       aria-describedby="email-error">
+                                <!-- 
+                                    SÉCURITÉ DU CHAMP :
+                                    - type="email" : validation basique du format email
+                                    - Validation plus stricte côté JS et serveur
+                                -->
+                                <span class="form-error" id="email-error" aria-live="polite"></span>
+                            </div>
+                            
+                            <!-- Champ : Téléphone (optionnel) -->
+                            <div class="form-group">
+                                <label for="contact-telephone" class="form-label">
+                                    Téléphone <span class="optional">(optionnel)</span>
+                                </label>
+                                <input type="tel" 
+                                       id="contact-telephone" 
+                                       name="telephone" 
+                                       class="form-input"
+                                       maxlength="20"
+                                       pattern="[0-9\s\+\-\.]+"
+                                       autocomplete="tel"
+                                       placeholder="01 23 45 67 89"
+                                       aria-describedby="telephone-error">
+                                <!-- 
+                                    SÉCURITÉ DU CHAMP :
+                                    - pattern : n'accepte que des chiffres, espaces, +, -, .
+                                    - maxlength : limite la taille
+                                -->
+                                <span class="form-error" id="telephone-error" aria-live="polite"></span>
+                            </div>
+                            
+                            <!-- Champ : Sujet -->
+                            <div class="form-group">
+                                <label for="contact-sujet" class="form-label">
+                                    Sujet <span class="required" aria-hidden="true">*</span>
+                                </label>
+                                <select id="contact-sujet" 
+                                        name="sujet" 
+                                        class="form-input"
+                                        required
+                                        aria-describedby="sujet-error">
+                                    <option value="">-- Choisissez un sujet --</option>
+                                    <option value="devis">Demande de devis</option>
+                                    <option value="information">Demande d'information</option>
+                                    <option value="reservation">Réservation</option>
+                                    <option value="reclamation">Réclamation</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                                <!-- 
+                                    SÉCURITÉ DU CHAMP :
+                                    - Liste de valeurs prédéfinies (pas de saisie libre)
+                                    - Valider côté serveur que la valeur est dans la liste
+                                -->
+                                <span class="form-error" id="sujet-error" aria-live="polite"></span>
+                            </div>
+                            
+                            <!-- Champ : Type d'événement -->
+                            <div class="form-group">
+                                <label for="contact-evenement" class="form-label">
+                                    Type d'événement <span class="optional">(optionnel)</span>
+                                </label>
+                                <select id="contact-evenement" 
+                                        name="evenement" 
+                                        class="form-input">
+                                    <option value="">-- Sélectionnez --</option>
+                                    <option value="mariage">Mariage</option>
+                                    <option value="anniversaire">Anniversaire</option>
+                                    <option value="seminaire">Séminaire d'entreprise</option>
+                                    <option value="bapteme">Baptême</option>
+                                    <option value="cocktail">Cocktail</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Champ : Message -->
+                            <div class="form-group">
+                                <label for="contact-message" class="form-label">
+                                    Message <span class="required" aria-hidden="true">*</span>
+                                </label>
+                                <textarea id="contact-message" 
+                                          name="message" 
+                                          class="form-input form-textarea"
+                                          required
+                                          minlength="10"
+                                          maxlength="2000"
+                                          rows="6"
+                                          placeholder="Décrivez votre projet ou posez-nous vos questions..."
+                                          aria-describedby="message-error message-count"></textarea>
+                                <!-- 
+                                    SÉCURITÉ DU CHAMP :
+                                    - minlength/maxlength : limite la taille
+                                    - Échapper le contenu côté serveur (protection XSS)
+                                -->
+                                <div class="form-helper">
+                                    <span class="form-error" id="message-error" aria-live="polite"></span>
+                                    <span class="char-count" id="message-count">0 / 2000 caractères</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Champ : Consentement RGPD -->
+                            <div class="form-group form-group-checkbox">
+                                <input type="checkbox" 
+                                       id="contact-rgpd" 
+                                       name="rgpd" 
+                                       required
+                                       aria-describedby="rgpd-error">
+                                <label for="contact-rgpd" class="form-label-checkbox">
+                                    J'accepte que mes données soient utilisées pour traiter ma demande. 
+                                    <span class="required" aria-hidden="true">*</span>
+                                </label>
+                                <!-- 
+                                    RGPD :
+                                    - Consentement explicite obligatoire
+                                    - Informer sur l'utilisation des données
+                                -->
+                                <span class="form-error" id="rgpd-error" aria-live="polite"></span>
+                            </div>
+                            
+                            <p class="form-rgpd-info">
+                                <small>
+                                    Vos données personnelles sont uniquement utilisées pour répondre à votre demande. 
+                                    Consultez notre <a href="#">politique de confidentialité</a>.
+                                </small>
+                            </p>
+                            
+                            <!-- Bouton d'envoi -->
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-large" id="btn-submit">
+                                    Envoyer le message
+                                </button>
+                            </div>
+                            
+                            <!-- Champ honeypot anti-spam (invisible) -->
+                            <div class="form-group" style="display: none;" aria-hidden="true">
+                                <label for="contact-website">Ne pas remplir</label>
+                                <input type="text" 
+                                       id="contact-website" 
+                                       name="website" 
+                                       tabindex="-1"
+                                       autocomplete="off">
+                                <!-- 
+                                    HONEYPOT :
+                                    - Champ invisible pour les humains
+                                    - Les bots le remplissent automatiquement
+                                    - Côté serveur : si ce champ est rempli = spam
+                                -->
+                            </div>
+                            
+                        </form>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer" role="contentinfo">
+        <div class="container footer-content">
+            
+            <!-- Horaires -->
+            <div class="footer-section">
+                <h4>Nos Horaires</h4>
+                <p>Lun - Ven : 9h - 19h</p>
+                <p>Sam - Dim : 9h - 21h</p>
+            </div>
+            
+            <!-- Adresse -->
+            <div class="footer-section">
+                <h4>Adresse</h4>
+                <address>
+                    <p>128, Avenue des Vignes</p>
+                    <p>33000 Bordeaux</p>
+                    <p>
+                        <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
+                            📞 01 23 45 67 89
+                        </a>
+                    </p>
+                </address>
+            </div>
+            
+            <!-- Liens utiles -->
+            <div class="footer-section">
+                <h4>Liens Utiles</h4>
+                <ul>
+                    <li><a href="menus.html">Nos Menus</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="connexion.html">Connexion</a></li>
+                    <li><a href="inscription.html">Inscription</a></li>
+                </ul>
+            </div>
+            
+        </div>
+        
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         SCRIPTS JAVASCRIPT
+         ============================================================ -->
+    <script src="js/main.js"></script>
+    <script src="js/contact-form.js"></script>
     
 </body>
 </html>
