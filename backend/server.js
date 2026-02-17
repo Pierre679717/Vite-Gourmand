@@ -52,6 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Servir les fichiers statiques du frontend
+const path = require('path');
 app.use(express.static(path.join(__dirname, '..', 'frontend', 'html')));
 
 // Sessions
