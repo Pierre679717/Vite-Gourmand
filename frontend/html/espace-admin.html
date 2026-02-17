@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Admin - Vite & Gourmand</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="Css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🍽️</span>
+                <span class="logo-text">Vite & Gourmand</span>
+            </a>
+            <nav class="nav-desktop">
+                <a href="index.html">Accueil</a>
+                <a href="espace-employe.html">Espace Employé</a>
+                <a href="espace-admin.html" class="nav-link-active">Espace Admin</a>
+            </nav>
+            <button class="hamburger" id="hamburger">☰</button>
+        </div>
+        <nav class="nav-mobile" id="nav-mobile">
+            <a href="index.html">Accueil</a>
+            <a href="espace-employe.html">Espace Employé</a>
+            <a href="espace-admin.html">Espace Admin</a>
+        </nav>
+    </header>
+
+    <!-- ACCÈS REFUSÉ -->
+    <section class="espace-login-required" id="access-denied">
+        <div class="espace-login-card">
+            <h1>Espace Administration</h1>
+            <p>Accès réservé aux administrateurs.</p>
+            <a href="connexion.html" class="btn-primary">Se connecter</a>
+        </div>
+    </section>
+
+    <!-- ESPACE ADMIN -->
+    <section class="espace-user" id="espace-admin" style="display: none;">
+
+        <div class="espace-header" style="background: linear-gradient(135deg, #722F37, #4A1C23);">
+            <div class="espace-header-content">
+                <div class="espace-avatar" id="admin-avatar">A</div>
+                <div class="espace-info">
+                    <h1 id="admin-name">Admin</h1>
+                    <p id="admin-email">email</p>
+                    <span class="espace-role">Administrateur</span>
+                </div>
+                <button class="btn-logout" id="btn-logout">Déconnexion</button>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <div class="espace-tabs">
+            <button class="espace-tab active" data-tab="admin-stats">Statistiques</button>
+            <button class="espace-tab" data-tab="admin-employes">Employés</button>
+            <button class="espace-tab" data-tab="admin-commandes">Commandes</button>
+        </div>
+
+        <!-- Tab : Statistiques -->
+        <div class="espace-content" id="tab-admin-stats">
+            <h2>Tableau de bord</h2>
+
+            <!-- Cartes statistiques -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">👥</span>
+                    <span class="stat-value" id="stat-users">-</span>
+                    <span class="stat-label">Utilisateurs</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📦</span>
+                    <span class="stat-value" id="stat-commandes">-</span>
+                    <span class="stat-label">Commandes</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-value" id="stat-ca">-</span>
+                    <span class="stat-label">Chiffre d'affaires</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🍽️</span>
+                    <span class="stat-value" id="stat-menus">-</span>
+                    <span class="stat-label">Menus actifs</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-value" id="stat-note">-</span>
+                    <span class="stat-label">Note moyenne</span>
+                </div>
+            </div>
+
+            <!-- Graphiques -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Répartition des commandes</h3>
+                    <canvas id="chart-commandes" width="400" height="300"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Chiffre d'affaires par statut</h3>
+                    <canvas id="chart-ca" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Stats MongoDB -->
+            <div class="mongo-stats" id="mongo-stats" style="display: none;">
+                <h3>Statistiques MongoDB</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-icon">👁️</span>
+                        <span class="stat-value" id="stat-visites">-</span>
+                        <span class="stat-label">Visites trackées</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🛒</span>
+                        <span class="stat-value" id="stat-commandes-mongo">-</span>
+                        <span class="stat-label">Commandes trackées</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab : Gestion employés -->
+        <div class="espace-content" id="tab-admin-employes" style="display: none;">
+            <h2>Ajouter un employé</h2>
+            <form id="form-employe" class="form-commande">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="emp-nom">Nom</label>
+                        <input type="text" id="emp-nom-input" required placeholder="Dupont">
+                    </div>
+                    <div class="form-group">
+                        <label for="emp-prenom">Prénom</label>
+                        <input type="text" id="emp-prenom-input" required placeholder="Julie">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="emp-email-input">E-mail</label>
+                    <input type="email" id="emp-email-input" required placeholder="julie@vite-gourmand.fr">
+                </div>
+                <div class="form-group">
+                    <label for="emp-mdp">Mot de passe</label>
+                    <input type="password" id="emp-mdp" required placeholder="Minimum 8 caractères">
+                </div>
+                <button type="submit" class="btn-primary">Créer le compte employé</button>
+                <div class="form-message" id="employe-message"></div>
+            </form>
+
+            <h2 style="margin-top: 2rem;">Employés actuels</h2>
+            <div id="admin-employes-list"></div>
+        </div>
+
+        <!-- Tab : Toutes les commandes -->
+        <div class="espace-content" id="tab-admin-commandes" style="display: none;">
+            <h2>Toutes les commandes</h2>
+            <div id="admin-commandes-list">
+                <p class="espace-loading">Chargement...</p>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3>Vite & Gourmand</h3>
+                <p>Traiteur gastronomique à Bordeaux pour tous vos événements.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Navigation</h3>
+                <a href="index.html">Accueil</a>
+                <a href="menus.html">Nos Menus</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="footer-col">
+                <h3>Contact</h3>
+                <p>📍 24 Rue du Palais Gallien, Bordeaux</p>
+                <p>📞 05 56 00 00 00</p>
+                <p>✉️ contact@vite-gourmand.fr</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/espace-admin.js"></script>
+</body>
+</html>

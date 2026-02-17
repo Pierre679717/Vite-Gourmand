@@ -1,140 +1,67 @@
-/**
- * ================================================================
- * VITE & GOURMAND - FILTERS.JS (CORRIGÉ)
- * ================================================================
- */
+/* ================================================================
+   FILTERS.JS - Filtres dynamiques page menus
+   ================================================================ */
 
-'use strict';
+document.addEventListener('DOMContentLoaded', function () {
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔄 Initialisation des filtres...');
-    
-    // Récupérer les éléments
-    const form = document.getElementById('filters-form');
-    const filterPrix = document.getElementById('filter-prix');
-    const filterTheme = document.getElementById('filter-theme');
-    const filterRegime = document.getElementById('filter-regime');
-    const btnReset = document.getElementById('btn-reset');
-    const menusGrid = document.getElementById('menus-grid');
-    const noResults = document.getElementById('no-results');
-    
-    // Vérifier qu'on est sur la bonne page
-    if (!form || !menusGrid) {
-        console.log('❌ Pas sur la page menus, filtres non initialisés');
-        return;
-    }
-    
-    // Récupérer toutes les cartes
-    const menuCards = menusGrid.querySelectorAll('.menu-card');
-    console.log('✅ Trouvé', menuCards.length, 'cartes de menu');
-    
-    /**
-     * Vérifier le filtre de prix
-     */
-    function checkPrixFilter(cardPrix, filterValue) {
-        if (!filterValue) return true;
-        
-        const range = filterValue.split('-');
-        const minPrix = parseInt(range[0], 10);
-        const maxPrix = parseInt(range[1], 10);
-        
-        return cardPrix >= minPrix && cardPrix <= maxPrix;
-    }
-    
-    /**
-     * Vérifier le filtre de thème
-     */
-    function checkThemeFilter(cardTheme, filterValue) {
-        if (!filterValue) return true;
-        return cardTheme.toLowerCase() === filterValue.toLowerCase();
-    }
-    
-    /**
-     * Vérifier le filtre de régime
-     */
-    function checkRegimeFilter(cardRegime, filterValue) {
-        if (!filterValue) return true;
-        return cardRegime.toLowerCase() === filterValue.toLowerCase();
-    }
-    
-    /**
-     * Appliquer les filtres
-     */
-    function applyFilters() {
-        console.log('🔍 Application des filtres...');
-        
-        const prixValue = filterPrix ? filterPrix.value : '';
-        const themeValue = filterTheme ? filterTheme.value : '';
-        const regimeValue = filterRegime ? filterRegime.value : '';
-        
-        console.log('Filtres sélectionnés:', { prix: prixValue, theme: themeValue, regime: regimeValue });
-        
-        let visibleCount = 0;
-        
-        menuCards.forEach(function(card) {
-            const cardPrix = parseInt(card.getAttribute('data-prix'), 10);
-            const cardTheme = card.getAttribute('data-theme') || '';
-            const cardRegime = card.getAttribute('data-regime') || '';
-            
-            const matchPrix = checkPrixFilter(cardPrix, prixValue);
-            const matchTheme = checkThemeFilter(cardTheme, themeValue);
-            const matchRegime = checkRegimeFilter(cardRegime, regimeValue);
-            
-            const isVisible = matchPrix && matchTheme && matchRegime;
-            
-            if (isVisible) {
-                card.style.display = '';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
+    var btnFiltrer = document.getElementById('btn-filtrer');
+    var filterPrix = document.getElementById('filter-prix');
+    var filterTheme = document.getElementById('filter-theme');
+    var filterRegime = document.getElementById('filter-regime');
+    var cards = document.querySelectorAll('.menu-card');
+
+    if (!btnFiltrer) return;
+
+    function filtrer() {
+        var prix = filterPrix ? filterPrix.value : '';
+        var theme = filterTheme ? filterTheme.value : '';
+        var regime = filterRegime ? filterRegime.value : '';
+        var nbVisible = 0;
+
+        for (var i = 0; i < cards.length; i++) {
+            var card = cards[i];
+            var cardPrix = parseFloat(card.getAttribute('data-prix'));
+            var cardTheme = card.getAttribute('data-theme');
+            var cardRegime = card.getAttribute('data-regime');
+            var show = true;
+
+            /* Filtre prix */
+            if (prix === '0-40' && cardPrix > 40) show = false;
+            if (prix === '40-50' && (cardPrix <= 40 || cardPrix > 50)) show = false;
+            if (prix === '50-65' && (cardPrix <= 50 || cardPrix > 65)) show = false;
+            if (prix === '65+' && cardPrix < 65) show = false;
+
+            /* Filtre thème */
+            if (theme && cardTheme !== theme) show = false;
+
+            /* Filtre régime */
+            if (regime && cardRegime !== regime) show = false;
+
+            card.style.display = show ? '' : 'none';
+            if (show) nbVisible++;
+        }
+
+        /* Message aucun résultat */
+        var msg = document.getElementById('no-results-message');
+        if (nbVisible === 0) {
+            if (!msg) {
+                msg = document.createElement('p');
+                msg.id = 'no-results-message';
+                msg.textContent = 'Aucun menu ne correspond à vos critères.';
+                msg.style.textAlign = 'center';
+                msg.style.padding = '3rem';
+                msg.style.color = '#666';
+                msg.style.gridColumn = '1 / -1';
+                document.querySelector('.menus-grid').appendChild(msg);
             }
-        });
-        
-        // Message aucun résultat
-        if (noResults) {
-            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        } else if (msg) {
+            msg.remove();
         }
-        
-        // Bouton réinitialiser
-        if (btnReset) {
-            const hasFilter = prixValue || themeValue || regimeValue;
-            btnReset.style.display = hasFilter ? 'inline-block' : 'none';
-        }
-        
-        console.log('📋 Résultat:', visibleCount, 'menu(s) visible(s)');
     }
-    
-    /**
-     * Réinitialiser les filtres
-     */
-    function resetFilters() {
-        if (filterPrix) filterPrix.value = '';
-        if (filterTheme) filterTheme.value = '';
-        if (filterRegime) filterRegime.value = '';
-        
-        menuCards.forEach(function(card) {
-            card.style.display = '';
-        });
-        
-        if (noResults) noResults.style.display = 'none';
-        if (btnReset) btnReset.style.display = 'none';
-        
-        console.log('🔄 Filtres réinitialisés');
-    }
-    
-    // ÉVÉNEMENT : Soumission du formulaire
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        applyFilters();
-    });
-    
-    // ÉVÉNEMENT : Bouton réinitialiser
-    if (btnReset) {
-        btnReset.addEventListener('click', function(event) {
-            event.preventDefault();
-            resetFilters();
-        });
-    }
-    
-    console.log('✅ Filtres initialisés avec succès');
+
+    btnFiltrer.addEventListener('click', filtrer);
+    if (filterPrix) filterPrix.addEventListener('change', filtrer);
+    if (filterTheme) filterTheme.addEventListener('change', filtrer);
+    if (filterRegime) filterRegime.addEventListener('change', filtrer);
+
 });

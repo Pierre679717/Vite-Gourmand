@@ -79,16 +79,27 @@
                 <a href="inscription.html" class="btn btn-secondary btn-small">Inscription</a>
             </div>
             
-            <!-- Menu hamburger (mobile) -->
-            <button class="menu-toggle" 
-                    aria-label="Ouvrir le menu" 
+           <!-- Bouton hamburger mobile (caché en desktop par le CSS) -->
+            <button class="hamburger" id="hamburger-btn" 
+                    aria-label="Ouvrir le menu de navigation" 
                     aria-expanded="false" 
-                    aria-controls="main-nav"
-                    id="menu-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
+                    aria-controls="mobile-menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
             </button>
+        </div>
+
+        <!-- Menu mobile (caché par défaut, s'ouvre au clic hamburger) -->
+        <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+            <ul class="mobile-nav-list">
+                <li><a href="index.html" class="mobile-nav-link">Accueil</a></li>
+                <li><a href="menus.html" class="mobile-nav-link">Menus</a></li>
+                <li><a href="contact.html" class="mobile-nav-link">Contact</a></li>
+                <li><a href="connexion.html" class="mobile-nav-link">Connexion</a></li>
+                <li><a href="inscription.html" class="mobile-nav-link">Inscription</a></li>
+            </ul>
+        </div>
             
         </div>
     </header>
@@ -196,17 +207,17 @@
                     <!-- ====== MENU 1 : Gourmand ====== -->
                     <article class="menu-card" 
                              data-prix="45" 
-                             data-theme="traditionnel" 
-                             data-regime="">
+                             data-theme="exotique" 
+                             data-regime="Halal">
                         
-                        <img src="images/menu-gourmand.jpg" 
-                             alt="Menu Gourmand : Assiette gastronomique avec viande et légumes de saison" 
+                        <img src="sansporc.jpg" 
+                             alt="Menu sans porc : Cuisine créative et gourmande sans viande de porc" 
                              class="menu-card-image"
                              loading="lazy">
                         
                         <div class="menu-card-content">
-                            <h2>Menu Gourmand</h2>
-                            <p>Un menu raffiné avec des plats traditionnels revisités par notre chef.</p>
+                            <h2>Menu sans porc</h2>
+                            <p>Cuisine créative et gourmande sans viande de porc.</p>
                             
                             <div class="menu-card-footer">
                                 <span class="menu-price">
@@ -222,22 +233,22 @@
 
                     <!-- ====== MENU 2 : Évasion ====== -->
                     <article class="menu-card" 
-                             data-prix="55" 
-                             data-theme="exotique" 
-                             data-regime="">
+                             data-prix="65" 
+                             data-theme="gastronomique" 
+                             data-regime="gastronomique">
                         
-                        <img src="images/menu-evasion.jpg" 
-                             alt="Menu Évasion : Plats aux saveurs exotiques et épicées" 
+                        <img src="gastro.jpg" 
+                             alt="Menu gastronomique : Une expérience gastronomique de haute gamme" 
                              class="menu-card-image"
                              loading="lazy">
                         
                         <div class="menu-card-content">
-                            <h2>Menu Évasion</h2>
-                            <p>Voyage culinaire à travers des saveurs exotiques et parfumées.</p>
+                            <h2>Menu Gastronomique</h2>
+                            <p>Une expérience gastronomique de haute gamme.</p>
                             
                             <div class="menu-card-footer">
                                 <span class="menu-price">
-                                    55 € <small>par personne</small>
+                                    65 € <small>par personne</small>
                                 </span>
                                 <a href="menus-details.html?id=2" class="btn btn-primary btn-small">
                                     Voir
@@ -249,11 +260,11 @@
 
                     <!-- ====== MENU 3 : Végétarien ====== -->
                     <article class="menu-card" 
-                             data-prix="40" 
-                             data-theme="mediterraneen" 
-                             data-regime="vegetarien">
+                             data-prix="50" 
+                             data-theme="Végétarien" 
+                             data-regime="Végétarien">
                         
-                        <img src="images/menu-vegetarien.jpg" 
+                        <img src="vege.jpg" 
                              alt="Menu Végétarien : Assiette colorée de légumes frais et créatifs" 
                              class="menu-card-image"
                              loading="lazy">
@@ -264,7 +275,7 @@
                             
                             <div class="menu-card-footer">
                                 <span class="menu-price">
-                                    40 € <small>par personne</small>
+                                    50 € <small>par personne</small>
                                 </span>
                                 <a href="menus-details.html?id=3" class="btn btn-primary btn-small">
                                     Voir
@@ -276,22 +287,22 @@
 
                     <!-- ====== MENU 4 : Prestige ====== -->
                     <article class="menu-card" 
-                             data-prix="65" 
-                             data-theme="gastronomique" 
+                             data-prix="55" 
+                             data-theme="Exotique" 
                              data-regime="sans-gluten">
                         
-                        <img src="images/menu-prestige.jpg" 
-                             alt="Menu Prestige : Plat gastronomique haut de gamme avec foie gras" 
+                        <img src="exotique.jpg" 
+                             alt="Menu Exotique : Plat raffiné aux saveurs exotiques et épices douces" 
                              class="menu-card-image"
                              loading="lazy">
                         
                         <div class="menu-card-content">
-                            <h2>Menu Prestige</h2>
-                            <p>Une expérience gastronomique haut de gamme pour vos grandes occasions.</p>
+                            <h2>Menu Exotique</h2>
+                            <p>Plat raffiné aux saveurs exotiques et épices douces.</p>
                             
                             <div class="menu-card-footer">
                                 <span class="menu-price">
-                                    65 € <small>par personne</small>
+                                    55 € <small>par personne</small>
                                 </span>
                                 <a href="menus-details.html?id=4" class="btn btn-primary btn-small">
                                     Voir
@@ -307,8 +318,8 @@
                              data-theme="mediterraneen" 
                              data-regime="">
                         
-                        <img src="images/menu-mediterraneen.jpg" 
-                             alt="Menu Méditerranéen : Poisson grillé aux herbes et légumes du soleil" 
+                        <img src="medi.jpg" 
+                             alt="Menu Méditerranéen : Délices ensoleillés aux parfums méditerranéens et huile d'olive." 
                              class="menu-card-image"
                              loading="lazy">
                         
@@ -332,16 +343,16 @@
                     <article class="menu-card" 
                              data-prix="48" 
                              data-theme="traditionnel" 
-                             data-regime="">
+                             data-regime="traditionnel">
                         
-                        <img src="images/menu-terroir.jpg" 
-                             alt="Menu Terroir : Plat traditionnel français avec viande et sauce au vin" 
+                        <img src="Cassoulet Traditionnel.jpg" 
+                             alt="Menu Traditionnel : Plongée dans les saveurs du terroir français avec des produits locaux de qualité" 
                              class="menu-card-image"
                              loading="lazy">
                         
                         <div class="menu-card-content">
-                            <h2>Menu Terroir</h2>
-                            <p>Saveurs traditionnelles du terroir français et produits locaux.</p>
+                            <h2>Menu Traditionnel</h2>
+                            <p>Plongée dans les saveurs du terroir français avec des produits locaux de qualité</p>
                             
                             <div class="menu-card-footer">
                                 <span class="menu-price">
@@ -361,7 +372,7 @@
                              data-theme="gastronomique" 
                              data-regime="sans-gluten">
                         
-                        <img src="images/menu-ocean.jpg" 
+                        <img src="menuocean.jpg" 
                              alt="Menu Océan : Fruits de mer frais et poissons nobles" 
                              class="menu-card-image"
                              loading="lazy">
@@ -388,7 +399,7 @@
                              data-theme="exotique" 
                              data-regime="vegetarien">
                         
-                        <img src="images/menu-vegan.jpg" 
+                        <img src="menuvegan.jpg" 
                              alt="Menu Végan : Assiette 100% végétale colorée et créative" 
                              class="menu-card-image"
                              loading="lazy">
@@ -415,7 +426,7 @@
                              data-theme="gastronomique" 
                              data-regime="">
                         
-                        <img src="images/menu-festif.jpg" 
+                        <img src="menufestif.jpg" 
                              alt="Menu Festif : Grand menu de fête avec mets raffinés" 
                              class="menu-card-image"
                              loading="lazy">

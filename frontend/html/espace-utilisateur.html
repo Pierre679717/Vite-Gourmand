@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Espace - Vite & Gourmand</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="Css/style.css">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🍽️</span>
+                <span class="logo-text">Vite & Gourmand</span>
+            </a>
+            <nav class="nav-desktop">
+                <a href="index.html">Accueil</a>
+                <a href="menus.html">Nos Menus</a>
+                <a href="contact.html">Contact</a>
+                <a href="espace-utilisateur.html" class="nav-link-active">Mon Espace</a>
+            </nav>
+            <button class="hamburger" id="hamburger">☰</button>
+        </div>
+        <nav class="nav-mobile" id="nav-mobile">
+            <a href="index.html">Accueil</a>
+            <a href="menus.html">Nos Menus</a>
+            <a href="contact.html">Contact</a>
+            <a href="espace-utilisateur.html">Mon Espace</a>
+        </nav>
+    </header>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main>
+        <!-- Message si non connecté -->
+        <section class="espace-login-required" id="login-required">
+            <div class="espace-login-card">
+                <h1>Mon Espace</h1>
+                <p>Vous devez être connecté pour accéder à votre espace.</p>
+                <div class="espace-login-buttons">
+                    <a href="connexion.html" class="btn-primary">Se connecter</a>
+                    <a href="inscription.html" class="btn-secondary">Créer un compte</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Espace utilisateur (visible si connecté) -->
+        <section class="espace-user" id="espace-user" style="display: none;">
+
+            <!-- En-tête profil -->
+            <div class="espace-header">
+                <div class="espace-header-content">
+                    <div class="espace-avatar" id="user-avatar">P</div>
+                    <div class="espace-info">
+                        <h1 id="user-name">Prénom Nom</h1>
+                        <p id="user-email">email@example.com</p>
+                        <span class="espace-role" id="user-role">Client</span>
+                    </div>
+                    <button class="btn-logout" id="btn-logout">Déconnexion</button>
+                </div>
+            </div>
+
+            <!-- Onglets -->
+            <div class="espace-tabs">
+                <button class="espace-tab active" data-tab="commandes">Mes Commandes</button>
+                <button class="espace-tab" data-tab="commander">Commander</button>
+                <button class="espace-tab" data-tab="avis">Mes Avis</button>
+            </div>
+
+            <!-- Tab : Mes Commandes -->
+            <div class="espace-content" id="tab-commandes">
+                <h2>Mes Commandes</h2>
+                <div id="commandes-list">
+                    <p class="espace-loading">Chargement...</p>
+                </div>
+            </div>
+
+            <!-- Tab : Commander -->
+            <div class="espace-content" id="tab-commander" style="display: none;">
+                <h2>Passer une commande</h2>
+                <form id="form-commande" class="form-commande">
+                    <div class="form-group">
+                        <label for="menu-select">Choisir un menu</label>
+                        <select id="menu-select" required>
+                            <option value="">-- Sélectionnez un menu --</option>
+                        </select>
+                    </div>
+                    <div id="menu-detail-preview"></div>
+                    <div class="form-group">
+                        <label for="nb-personnes">Nombre de personnes (min. 6)</label>
+                        <input type="number" id="nb-personnes" min="6" value="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="date-evenement">Date de l'événement</label>
+                        <input type="date" id="date-evenement" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adresse-livraison">Adresse de livraison</label>
+                        <input type="text" id="adresse-livraison" placeholder="128 Avenue des Vignes, 33000 Bordeaux">
+                    </div>
+                    <div class="form-group">
+                        <label for="commentaire">Commentaire (optionnel)</label>
+                        <textarea id="commentaire" rows="3" placeholder="Précisions, allergies..."></textarea>
+                    </div>
+
+                    <!-- Récapitulatif prix -->
+                    <div class="commande-recap" id="commande-recap" style="display: none;">
+                        <h3>Récapitulatif</h3>
+                        <div class="recap-line">
+                            <span>Menu :</span>
+                            <span id="recap-menu">-</span>
+                        </div>
+                        <div class="recap-line">
+                            <span>Prix unitaire :</span>
+                            <span id="recap-prix-unit">-</span>
+                        </div>
+                        <div class="recap-line">
+                            <span>Nombre de personnes :</span>
+                            <span id="recap-personnes">-</span>
+                        </div>
+                        <div class="recap-line recap-reduction" id="recap-reduction-line" style="display: none;">
+                            <span>Réduction (>5 pers.) :</span>
+                            <span id="recap-reduction">-10%</span>
+                        </div>
+                        <div class="recap-line recap-total">
+                            <span>Total :</span>
+                            <span id="recap-total">-</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-commander">Commander</button>
+                    <div class="form-message" id="commande-message"></div>
+                </form>
+            </div>
+
+            <!-- Tab : Mes Avis -->
+            <div class="espace-content" id="tab-avis" style="display: none;">
+                <h2>Laisser un avis</h2>
+                <form id="form-avis" class="form-avis">
+                    <div class="form-group">
+                        <label>Votre note</label>
+                        <div class="stars-input" id="stars-input">
+                            <span class="star" data-note="1">★</span>
+                            <span class="star" data-note="2">★</span>
+                            <span class="star" data-note="3">★</span>
+                            <span class="star" data-note="4">★</span>
+                            <span class="star" data-note="5">★</span>
+                        </div>
+                        <input type="hidden" id="note-value" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="avis-commentaire">Votre commentaire</label>
+                        <textarea id="avis-commentaire" rows="4" placeholder="Partagez votre expérience..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Envoyer mon avis</button>
+                    <div class="form-message" id="avis-message"></div>
+                </form>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3>Vite & Gourmand</h3>
+                <p>Traiteur gastronomique à Bordeaux pour tous vos événements.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Navigation</h3>
+                <a href="index.html">Accueil</a>
+                <a href="menus.html">Nos Menus</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="footer-col">
+                <h3>Contact</h3>
+                <p>📍 24 Rue du Palais Gallien, Bordeaux</p>
+                <p>📞 05 56 00 00 00</p>
+                <p>✉️ contact@vite-gourmand.fr</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Vite & Gourmand - Tous droits réservés</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/espace-utilisateur.js"></script>
+</body>
+</html>

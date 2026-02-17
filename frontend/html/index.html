@@ -1,97 +1,94 @@
 <!DOCTYPE html>
 <html lang="fr">
-<!-- 
+<!--
     ================================================================
     VITE & GOURMAND - PAGE D'ACCUEIL
     ================================================================
     
-    STRUCTURE DE LA PAGE :
-    1. Head (métadonnées, liens CSS)
-    2. Header (logo, navigation)
-    3. Main (contenu principal)
-       - Hero (bannière d'accueil)
-       - À propos
-       - Avis clients
-    4. Footer (informations, liens)
-    
-    SÉCURITÉ APPLIQUÉE :
-    - Attribut lang="fr" pour l'accessibilité
-    - Meta charset UTF-8 pour éviter les problèmes d'encodage
-    - Meta viewport pour le responsive
-    - Attributs alt sur toutes les images (accessibilité + SEO)
-    - Liens avec rel="noopener" pour les liens externes (sécurité)
-    - Structure sémantique HTML5 (header, main, section, footer)
+    SÉCURITÉ : CSP activé, pas de scripts inline
+    ACCESSIBILITÉ : Structure sémantique, ARIA, navigation clavier
+    RESPONSIVE : Desktop, tablette, mobile
     
     ================================================================
 -->
 <head>
-    <!-- === MÉTADONNÉES ESSENTIELLES === -->
+    <!-- Métadonnées -->
     <meta charset="UTF-8">
-    <!-- Sécurité : UTF-8 évite les attaques par encodage de caractères -->
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Responsive : adapte l'affichage sur mobile -->
     
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!-- Compatibilité : utilise le dernier moteur de rendu sur IE -->
+    <!-- Sécurité CSP -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src https://fonts.gstatic.com;
+        img-src 'self' data: https:;
+        script-src 'self';
+    ">
     
-    <!-- === SÉCURITÉ SUPPLÉMENTAIRE === -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
-    <!-- CSP : Protège contre les injections de scripts malveillants (XSS) -->
+    <!-- SEO -->
+    <title>Vite & Gourmand | Traiteur Gastronomique à Bordeaux</title>
+    <meta name="description" content="Vite & Gourmand, traiteur gastronomique à Bordeaux depuis 25 ans. Des prestations culinaires sur mesure pour tous vos événements.">
     
-    <!-- === SEO & RÉSEAUX SOCIAUX === -->
-    <title>Vite & Gourmand - Traiteur Gastronomique à Bordeaux</title>
-    <meta name="description" content="Vite & Gourmand, votre traiteur gastronomique à Bordeaux. Des prestations sur mesure pour tous vos événements : mariages, séminaires, anniversaires.">
-    <meta name="keywords" content="traiteur, Bordeaux, gastronomie, mariage, événement, menu, réception">
-    <meta name="author" content="Vite & Gourmand">
-    
-    <!-- === FAVICON === -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="images/favicon.png">
     
-    <!-- === FEUILLE DE STYLE === -->
-    <link rel="stylesheet" href="Css/style.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
     <!-- ============================================================
-         HEADER - NAVIGATION
-         ============================================================
-         Structure :
-         - Logo (lien vers accueil)
-         - Navigation principale
-         - Boutons d'action (connexion)
-         - Menu hamburger (mobile)
+         HEADER
          ============================================================ -->
     <header class="header" role="banner">
-        <div class="container header-content">
+        <div class="header-content">
             
             <!-- Logo -->
             <a href="index.html" class="logo" aria-label="Vite & Gourmand - Accueil">
-                Vite <span>&</span> Gourmand
+                Vite&Gourmand
             </a>
             
-            <!-- Navigation principale -->
+            <!-- Navigation -->
             <nav class="nav" role="navigation" aria-label="Navigation principale" id="main-nav">
                 <ul class="nav-list">
-                    <li>
-                        <a href="index.html" class="nav-link active" aria-current="page">Accueil</a>
-                    </li>
-                    <li>
-                        <a href="menus.html" class="nav-link">Menus</a>
-                    </li>
-                    <li>
-                        <a href="contact.html" class="nav-link">Contact</a>
-                    </li>
+                    <li><a href="index.html" class="nav-link active" aria-current="page">Accueil</a></li>
+                    <li><a href="menus.html" class="nav-link">Menus</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
                 </ul>
+                
+                <!-- Boutons dans menu mobile -->
             </nav>
             
-            <!-- Boutons d'action -->
+            <!-- Boutons desktop -->
             <div class="header-buttons">
                 <a href="connexion.html" class="btn btn-outline btn-small">Connexion</a>
-                <a href="inscription.html" class="btn btn-secondary btn-small">Inscription</a>
+                <a href="inscription.html" class="btn btn-primary btn-small">Inscription</a>
             </div>
+
+            <!-- Bouton hamburger mobile (caché en desktop par le CSS) -->
+            <button class="hamburger" id="hamburger-btn" 
+                    aria-label="Ouvrir le menu de navigation" 
+                    aria-expanded="false" 
+                    aria-controls="mobile-menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+
+        <!-- Menu mobile (caché par défaut, s'ouvre au clic hamburger) -->
+        <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+            <ul class="mobile-nav-list">
+                <li><a href="index.html" class="mobile-nav-link">Accueil</a></li>
+                <li><a href="menus.html" class="mobile-nav-link">Menus</a></li>
+                <li><a href="contact.html" class="mobile-nav-link">Contact</a></li>
+                <li><a href="connexion.html" class="mobile-nav-link">Connexion</a></li>
+                <li><a href="inscription.html" class="mobile-nav-link">Inscription</a></li>
+            </ul>
+        </div>
+    </header>
             
-            <!-- Menu hamburger (mobile) -->
+            <!-- Menu hamburger -->
             <button class="menu-toggle" 
                     aria-label="Ouvrir le menu" 
                     aria-expanded="false" 
@@ -105,125 +102,97 @@
         </div>
     </header>
 
+   <!-- ============================================================
+     HERO
+     ============================================================ -->
+<section class="hero" aria-labelledby="hero-title">
+    <div class="hero-content">
+        <h1 class="hero-title" id="hero-title">Vite & Gourmand, l'élégance culinaire</h1>
+        <p class="hero-subtitle">Des prestations gastronomiques sur mesure pour tous vos événements</p>
+        <a href="menus.html" class="btn btn-secondary btn-medium">Découvrez nos menus</a>
+    </div>
+</section>
+
     <!-- ============================================================
-         CONTENU PRINCIPAL
+         MAIN
          ============================================================ -->
-    <main class="main-content" role="main">
-        
-        <!-- ========================================================
-             SECTION HERO (Bannière d'accueil)
-             ========================================================
-             Objectif : Attirer l'attention, présenter l'activité
-             ======================================================== -->
-        <section class="hero" aria-label="Bienvenue chez Vite & Gourmand">
-            <!-- Overlay sombre pour lisibilité du texte -->
-            <div class="hero-overlay" aria-hidden="true"></div>
-            
-            <div class="container hero-content">
-                <h1 class="hero-title">Vite & Gourmand, l'élégance culinaire</h1>
-                <p class="hero-subtitle">Des prestations gastronomiques sur mesure pour tous vos événements.</p>
-                <a href="menus.html" class="btn btn-secondary">Découvrir nos menus</a>
+    <main role="main">
+
+        <!-- Section À Propos -->
+        <section class="about section" aria-labelledby="about-title">
+            <div class="container">
+                <div class="about-content">
+                    
+                    <div class="about-image">
+                        <img src="juliejosé.jpg"
+                             alt="Julie et José, fondateurs de Vite & Gourmand"
+                             loading="lazy"
+                             width="350"
+                             height="350">
+                    </div>
+                    
+                    <div class="about-text">
+                        <h2 id="about-title">A Propos de nous</h2>
+                        <p>
+                            Julie & José, passionnés de gastronomie depuis plus de 25 ans, 
+                            créent des expériences culinaires uniques pour vos événements.
+                        </p>
+                        <p>
+                            Nous mettons notre savoir-faire au service de vos réceptions 
+                            pour des moments inoubliables. Chaque menu est élaboré avec 
+                            des produits frais et locaux, sélectionnés avec soin.
+                            Nous mettons notre savoir-faire au service de vos réceptions pour des moments inoubliables. Chaque menu est élaboré avec des produits frais et locaux, sélectionnés avec soin.
+                            De l’élégance d’un cocktail dînatoire à la générosité d’un repas assis, nous adaptons chaque prestation à vos envies et à votre budget.
+                            Notre cuisine allie créativité, authenticité et raffinement afin de surprendre et séduire vos convives.
+                            Nous accordons une attention particulière à la présentation pour sublimer chaque plat et éveiller tous les sens.
+                            À l’écoute de vos besoins, nous vous accompagnons de la conception du menu jusqu’au service le jour J.
+                            Notre objectif : transformer chaque événement en une véritable signature gustative, à votre image.
+                        </p>
+                    </div>
+                    
+                </div>
             </div>
         </section>
 
-        <!-- ========================================================
-             SECTION À PROPOS
-             ========================================================
-             Objectif : Présenter l'entreprise et les fondateurs
-             ======================================================== -->
-        <section class="about section" id="a-propos" aria-labelledby="about-title">
-            <div class="container about-content">
-                
-                <!-- Image des fondateurs -->
-                <div class="about-image">
-                    <img src="images/julie-jose.jpg" 
-                         alt="Julie et José, fondateurs de Vite & Gourmand, souriant dans leur cuisine"
-                         loading="lazy">
-                    <!-- loading="lazy" : charge l'image seulement quand visible (performance) -->
-                </div>
-                
-                <!-- Texte de présentation -->
-                <div class="about-text">
-                    <h2 id="about-title">À Propos de Nous</h2>
-                    <p>
-                        Julie & José, passionnés de gastronomie depuis plus de 25 ans, 
-                        créent des expériences culinaires uniques pour vos événements.
-                    </p>
-                    <p>
-                        Nous mettons notre savoir-faire au service de vos réceptions 
-                        pour des moments inoubliables. Chaque menu est élaboré avec 
-                        des produits frais et locaux, sélectionnés avec soin.
-                    </p>
-                    <a href="contact.html" class="btn btn-primary">Nous contacter</a>
-                </div>
-                
-            </div>
-        </section>
-
-        <!-- ========================================================
-             SECTION AVIS CLIENTS
-             ========================================================
-             Objectif : Rassurer les visiteurs avec des témoignages
-             ======================================================== -->
-        <section class="reviews section" id="avis" aria-labelledby="reviews-title">
+        <!-- Section Avis Clients -->
+        <section class="reviews section" aria-labelledby="reviews-title">
             <div class="container">
                 
-                <h2 class="section-title" id="reviews-title">Avis Clients</h2>
+                <div class="reviews-header">
+                    <h2 class="reviews-title" id="reviews-title">Avis Clients</h2>
+                    <p class="reviews-rating" aria-label="Note moyenne : 4.5 sur 5">4.5/5</p>
+                </div>
                 
                 <div class="reviews-grid">
                     
                     <!-- Avis 1 -->
                     <article class="review-card">
-                        <div class="review-header">
-                            <img src="images/client1.jpg" 
-                                 alt="Photo de Marie D." 
-                                 class="review-avatar"
-                                 loading="lazy">
-                            <div class="review-stars" aria-label="Note : 5 étoiles sur 5">
-                                ★★★★★
-                            </div>
-                        </div>
+                        <div class="review-avatar green" aria-hidden="true">L</div>
                         <p class="review-text">
-                            "Prestations exceptionnelles, cuisine raffinée et service impeccable. 
-                            Nos invités étaient ravis !"
+                            "Une expérience gustative parfaite, nos convives étaient 
+                            enchantés du début à la fin."
                         </p>
-                        <p class="review-author">— Marie D.</p>
+                        <p class="review-author">— Lucie M.</p>
                     </article>
-
+                    
                     <!-- Avis 2 -->
                     <article class="review-card">
-                        <div class="review-header">
-                            <img src="images/client2.jpg" 
-                                 alt="Photo de Thomas L." 
-                                 class="review-avatar"
-                                 loading="lazy">
-                            <div class="review-stars" aria-label="Note : 5 étoiles sur 5">
-                                ★★★★★
-                            </div>
-                        </div>
+                        <div class="review-avatar gold" aria-hidden="true">A</div>
                         <p class="review-text">
                             "Le menu était divin, chaque plat était un régal. 
                             Nous referons appel à Vite & Gourmand pour nos prochains événements."
                         </p>
-                        <p class="review-author">— Thomas L.</p>
+                        <p class="review-author">— Abdel L.</p>
                     </article>
-
+                    
                     <!-- Avis 3 -->
                     <article class="review-card">
-                        <div class="review-header">
-                            <img src="images/client3.jpg" 
-                                 alt="Photo de Sophie M." 
-                                 class="review-avatar"
-                                 loading="lazy">
-                            <div class="review-stars" aria-label="Note : 5 étoiles sur 5">
-                                ★★★★★
-                            </div>
-                        </div>
+                        <div class="review-avatar gold" aria-hidden="true">M</div>
                         <p class="review-text">
-                            "Une expérience gustative parfaite, nos convives étaient enchantés 
-                            du début à la fin."
+                            "Prestations exceptionnelles, cuisine raffinée et 
+                            service impeccable. Nos invités étaient ravis !"
                         </p>
-                        <p class="review-author">— Sophie M.</p>
+                        <p class="review-author">— Marie D.</p>
                     </article>
                     
                 </div>
@@ -235,39 +204,31 @@
 
     <!-- ============================================================
          FOOTER
-         ============================================================
-         Structure :
-         - Horaires
-         - Adresse et contact
-         - Liens utiles
-         - Copyright
          ============================================================ -->
     <footer class="footer" role="contentinfo">
-        <div class="container footer-content">
+        <div class="footer-content">
             
             <!-- Horaires -->
             <div class="footer-section">
-                <h4>Nos Horaires</h4>
-                <p>Lun - Ven : 9h - 19h</p>
-                <p>Sam - Dim : 9h - 21h</p>
+                <h4>Nos horaires</h4>
+                <p>Lun - ven : 9h00 - 19h00</p>
+                <p>Sam - Dim : 9h00 - 21h00</p>
             </div>
             
             <!-- Adresse -->
             <div class="footer-section">
                 <h4>Adresse</h4>
                 <address>
-                    <!-- <address> : balise sémantique pour les coordonnées -->
                     <p>128, Avenue des Vignes</p>
                     <p>33000 Bordeaux</p>
-                    <p>
-                        <a href="tel:+33123456789" aria-label="Appeler le 01 23 45 67 89">
-                            📞 01 23 45 67 89
-                        </a>
+                    <p class="phone">
+                        <span aria-hidden="true">📞</span>
+                        <a href="tel:+33123456789">01 23 45 67 89</a>
                     </p>
                 </address>
             </div>
             
-            <!-- Liens utiles -->
+            <!-- Liens -->
             <div class="footer-section">
                 <h4>Liens Utiles</h4>
                 <ul>
@@ -280,20 +241,12 @@
             
         </div>
         
-        <!-- Copyright -->
         <div class="footer-bottom">
             <p>&copy; 2026 Vite & Gourmand - Tous droits réservés</p>
         </div>
     </footer>
 
-    <!-- ============================================================
-         SCRIPTS JAVASCRIPT
-         ============================================================
-         Placés en fin de body pour :
-         - Ne pas bloquer le chargement de la page
-         - Avoir accès à tous les éléments du DOM
-         ============================================================ -->
+    <!-- JavaScript -->
     <script src="js/main.js"></script>
-    
 </body>
 </html>
