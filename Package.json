@@ -1,9 +1,0 @@
-{
-  "name": "vite-gourmand",
-  "version": "1.0.0",
-  "description": "Site Vite & Gourmand - Traiteur gastronomique",
-  "scripts": {
-    "start": "cd backend && node server.js",
-    "build": "cd backend && npm install"
-  }
-}
