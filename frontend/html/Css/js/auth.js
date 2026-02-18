@@ -7,7 +7,7 @@ var API = '/api';
 // ================================================================
 // PAGE CONNEXION
 // ================================================================
-var formConnexion = document.getElementById('form-connexion');
+var formConnexion = document.getElementById('form-connexion') || document.getElementById('connexion-form');
 
 if (formConnexion) {
     formConnexion.addEventListener('submit', function(e) {
@@ -70,9 +70,12 @@ if (formConnexion) {
                 return;
             }
 
-            // Connexion réussie - rediriger selon le rôle
+            // Connexion réussie
             btnSubmit.textContent = 'Connecté !';
             btnSubmit.style.backgroundColor = '#2E7D32';
+
+            var successDiv = document.getElementById('connexion-success');
+            if (successDiv) successDiv.style.display = 'block';
 
             var user = data.user;
             setTimeout(function() {
@@ -103,7 +106,6 @@ if (formConnexion) {
 var formInscription = document.getElementById('form-inscription') || document.getElementById('inscription-form');
 
 if (formInscription) {
-    // Indicateur de force du mot de passe
     var mdpInput = document.getElementById('mot-de-passe') || document.getElementById('inscription-password');
     var strengthBar = document.getElementById('strength-bar') || document.getElementById('password-strength-bar');
     var strengthText = document.getElementById('strength-text') || document.getElementById('password-strength-text');
@@ -120,7 +122,6 @@ if (formInscription) {
             if (/[0-9]/.test(val)) score++;
             if (/[^A-Za-z0-9]/.test(val)) score++;
 
-            // Mettre à jour les indicateurs individuels
             updateRequirement('req-length', val.length >= 8);
             updateRequirement('req-uppercase', /[A-Z]/.test(val));
             updateRequirement('req-lowercase', /[a-z]/.test(val));
@@ -143,7 +144,6 @@ if (formInscription) {
         });
     }
 
-    // Afficher/masquer champ entreprise selon le type de compte
     var typeSelect = document.getElementById('inscription-type');
     var entrepriseGroup = document.getElementById('entreprise-group');
     if (typeSelect && entrepriseGroup) {
@@ -167,37 +167,32 @@ if (formInscription) {
         var btnSubmit = formInscription.querySelector('button[type="submit"]');
         var ok = true;
 
-        // Reset
         var inputs = formInscription.querySelectorAll('input');
         for (var i = 0; i < inputs.length; i++) {
             inputs[i].style.borderColor = '#CCC';
         }
-        var oldErrors = formInscription.querySelectorAll('.form-error');
+        var oldErrors = formInscription.querySelectorAll('.form-error, .error-msg');
         for (var i = 0; i < oldErrors.length; i++) {
             oldErrors[i].textContent = '';
         }
 
-        // Honeypot
         if (honeypot && honeypot.value) {
             console.warn('Bot détecté');
             return;
         }
 
-        // Nom
         if (!nom || !nom.value || nom.value.length < 2) {
             if (nom) nom.style.borderColor = '#D32F2F';
             showError(nom, 'Minimum 2 caractères');
             ok = false;
         }
 
-        // Prénom
         if (!prenom || !prenom.value || prenom.value.length < 2) {
             if (prenom) prenom.style.borderColor = '#D32F2F';
             showError(prenom, 'Minimum 2 caractères');
             ok = false;
         }
 
-        // Email
         var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !email.value || !emailRegex.test(email.value)) {
             if (email) email.style.borderColor = '#D32F2F';
@@ -205,7 +200,6 @@ if (formInscription) {
             ok = false;
         }
 
-        // Téléphone (optionnel)
         if (telephone && telephone.value) {
             var telRegex = /^[0-9\s\+\-\.()]+$/;
             if (!telRegex.test(telephone.value)) {
@@ -215,7 +209,6 @@ if (formInscription) {
             }
         }
 
-        // Mot de passe
         var mdpRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/;
         if (!motDePasse || !motDePasse.value || !mdpRegex.test(motDePasse.value)) {
             if (motDePasse) motDePasse.style.borderColor = '#D32F2F';
@@ -223,20 +216,17 @@ if (formInscription) {
             ok = false;
         }
 
-        // Confirmation
         if (confirmMdp && motDePasse && confirmMdp.value !== motDePasse.value) {
             confirmMdp.style.borderColor = '#D32F2F';
             showError(confirmMdp, 'Les mots de passe ne correspondent pas');
             ok = false;
         }
 
-        // CGU
         if (cgu && !cgu.checked) {
             showError(cgu, 'Vous devez accepter les CGU');
             ok = false;
         }
 
-        // RGPD
         if (rgpd && !rgpd.checked) {
             showError(rgpd, 'Vous devez accepter la politique de confidentialité');
             ok = false;
@@ -244,7 +234,6 @@ if (formInscription) {
 
         if (!ok) return;
 
-        // Appel API
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Création...';
 
@@ -270,11 +259,9 @@ if (formInscription) {
                 return;
             }
 
-            // Succès
             btnSubmit.textContent = 'Compte créé !';
             btnSubmit.style.backgroundColor = '#2E7D32';
 
-            // Afficher message de succès
             var successDiv = document.getElementById('inscription-success');
             if (successDiv) {
                 successDiv.style.display = 'block';
@@ -302,9 +289,7 @@ if (formInscription) {
 // ================================================================
 function showError(input, message) {
     if (!input) return;
-    // Chercher .error-msg ou .form-error dans le parent
     var errorSpan = input.parentNode.querySelector('.error-msg') || input.parentNode.querySelector('.form-error');
-    // Si pas trouvé, chercher via l'attribut aria-describedby
     if (!errorSpan && input.getAttribute('aria-describedby')) {
         var ids = input.getAttribute('aria-describedby').split(' ');
         for (var i = 0; i < ids.length; i++) {
