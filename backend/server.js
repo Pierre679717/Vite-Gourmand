@@ -42,7 +42,16 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+const fs = require('fs');
+console.log('__dirname:', __dirname);
+const frontendPath = path.join(__dirname, '..', 'frontend', 'html');
+console.log('Frontend path:', frontendPath);
+console.log('Frontend existe:', fs.existsSync(frontendPath));
+try {
+    console.log('Contenu parent:', fs.readdirSync(path.join(__dirname, '..')));
+} catch(e) {
+    console.log('Erreur lecture parent:', e.message);
+}
 
 /* ================================================================
    MIDDLEWARE
