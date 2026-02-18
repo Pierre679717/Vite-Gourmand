@@ -1,14 +1,16 @@
 /* ================================================================
-   CONTACT-FORM.JS - Validation formulaire contact
+   CONTACT-FORM.JS - Validation formulaire contact + envoi API
    ================================================================ */
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    var API = '/api';
     var form = document.getElementById('contact-form');
     if (!form) return;
 
     var nom = document.getElementById('contact-nom');
     var email = document.getElementById('contact-email');
+    var telephone = document.getElementById('contact-telephone');
     var sujet = document.getElementById('contact-sujet');
     var message = document.getElementById('contact-message');
     var charCount = document.getElementById('char-count');
@@ -80,16 +82,44 @@ document.addEventListener('DOMContentLoaded', function () {
         var ok4 = validerMessage();
 
         if (ok1 && ok2 && ok3 && ok4) {
-            if (success) success.hidden = false;
             var btn = form.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = true; btn.textContent = 'Message envoyé !'; }
+            if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours...'; }
 
-            setTimeout(function () {
-                form.reset();
-                if (charCount) charCount.textContent = '0';
-                if (success) success.hidden = true;
+            // Envoi au serveur
+            fetch(API + '/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nom: nom.value.trim(),
+                    email: email.value.trim(),
+                    telephone: telephone ? telephone.value.trim() : null,
+                    sujet: sujet.value,
+                    message: message.value.trim()
+                })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer le message'; }
+                    erreur(null, 'error-message', data.error);
+                    return;
+                }
+
+                // Succès
+                if (success) success.hidden = false;
+                if (btn) { btn.textContent = 'Message envoyé !'; }
+
+                setTimeout(function () {
+                    form.reset();
+                    if (charCount) charCount.textContent = '0';
+                    if (success) success.hidden = true;
+                    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer le message'; }
+                }, 4000);
+            })
+            .catch(function() {
                 if (btn) { btn.disabled = false; btn.textContent = 'Envoyer le message'; }
-            }, 4000);
+                erreur(null, 'error-message', 'Erreur de connexion au serveur.');
+            });
         }
     });
 
