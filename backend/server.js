@@ -39,19 +39,24 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const fs = require('fs');
-console.log('__dirname:', __dirname);
-const frontendPath = path.join(__dirname, '..', 'frontend', 'html');
-console.log('Frontend path:', frontendPath);
-console.log('Frontend existe:', fs.existsSync(frontendPath));
-try {
-    console.log('Contenu parent:', fs.readdirSync(path.join(__dirname, '..')));
-} catch(e) {
-    console.log('Erreur lecture parent:', e.message);
+
+// Détecter automatiquement le chemin du frontend
+let frontendPath = path.join(__dirname, '..', 'frontend', 'html');
+if (!fs.existsSync(frontendPath)) {
+    frontendPath = path.join(process.cwd(), 'frontend', 'html');
 }
+if (!fs.existsSync(frontendPath)) {
+    frontendPath = path.join(process.cwd(), '..', 'frontend', 'html');
+}
+console.log('__dirname:', __dirname);
+console.log('cwd:', process.cwd());
+console.log('Frontend path utilisé:', frontendPath);
+console.log('Frontend existe:', fs.existsSync(frontendPath));
+
 
 /* ================================================================
    MIDDLEWARE
@@ -61,7 +66,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Servir les fichiers statiques du frontend
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'html')));
+app.use(express.static(frontendPath));
+
+// Route par défaut → index.html
+app.get('/', (req, res) => {
+    const indexFile = path.join(frontendPath, 'index.html');
+    if (fs.existsSync(indexFile)) {
+        res.sendFile(indexFile);
+    } else {
+        res.send('Frontend non trouvé. Chemin testé: ' + frontendPath + ' | __dirname: ' + __dirname + ' | cwd: ' + process.cwd());
+    }
+});
 
 // Sessions
 app.use(session({
