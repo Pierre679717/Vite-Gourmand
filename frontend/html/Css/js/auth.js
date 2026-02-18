@@ -2,7 +2,7 @@
    AUTH.JS - Validation + connexion API backend
    ================================================================ */
 
-var API = 'http://localhost:3000/api';
+var API = '/api';
 
 // ================================================================
 // PAGE CONNEXION
