@@ -1,24 +1,32 @@
 /* ================================================================
-   CONTACT-FORM.JS - Validation formulaire contact
+   CONTACT-FORM.JS - Validation formulaire contact + envoi API
    ================================================================ */
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    var API = '/api';
     var form = document.getElementById('contact-form');
     if (!form) return;
 
     var nom = document.getElementById('contact-nom');
     var email = document.getElementById('contact-email');
+    var telephone = document.getElementById('contact-telephone');
     var sujet = document.getElementById('contact-sujet');
     var message = document.getElementById('contact-message');
-    var charCount = document.getElementById('char-count');
-    var honeypot = document.getElementById('website');
+    var charCount = document.getElementById('char-count') || document.getElementById('message-count');
+    var honeypot = document.getElementById('website') || document.getElementById('contact-website');
     var success = document.getElementById('form-success');
 
     /* === Compteur de caractères === */
     if (message && charCount) {
         message.addEventListener('input', function () {
-            charCount.textContent = message.value.length;
+            var count = message.value.length;
+            // Support les deux formats d'affichage
+            if (charCount.id === 'message-count') {
+                charCount.textContent = count + ' / 2000 caractères';
+            } else {
+                charCount.textContent = count;
+            }
         });
     }
 
@@ -38,27 +46,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* === Validation === */
     function validerNom() {
-        if (!nom.value.trim()) { erreur(nom, 'error-nom', 'Le nom est obligatoire.'); return false; }
-        if (nom.value.trim().length < 2) { erreur(nom, 'error-nom', 'Minimum 2 caractères.'); return false; }
-        ok(nom, 'error-nom'); return true;
+        if (!nom.value.trim()) { erreur(nom, 'error-nom', 'Le nom est obligatoire.'); erreur(nom, 'nom-error', 'Le nom est obligatoire.'); return false; }
+        if (nom.value.trim().length < 2) { erreur(nom, 'error-nom', 'Minimum 2 caractères.'); erreur(nom, 'nom-error', 'Minimum 2 caractères.'); return false; }
+        ok(nom, 'error-nom'); ok(nom, 'nom-error'); return true;
     }
 
     function validerEmail() {
         var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email.value.trim()) { erreur(email, 'error-email', 'L\'e-mail est obligatoire.'); return false; }
-        if (!re.test(email.value.trim())) { erreur(email, 'error-email', 'E-mail invalide.'); return false; }
-        ok(email, 'error-email'); return true;
+        if (!email.value.trim()) { erreur(email, 'error-email', 'L\'e-mail est obligatoire.'); erreur(email, 'email-error', 'L\'e-mail est obligatoire.'); return false; }
+        if (!re.test(email.value.trim())) { erreur(email, 'error-email', 'E-mail invalide.'); erreur(email, 'email-error', 'E-mail invalide.'); return false; }
+        ok(email, 'error-email'); ok(email, 'email-error'); return true;
     }
 
     function validerSujet() {
-        if (!sujet.value) { erreur(sujet, 'error-sujet', 'Choisissez un sujet.'); return false; }
-        ok(sujet, 'error-sujet'); return true;
+        if (!sujet.value) { erreur(sujet, 'error-sujet', 'Choisissez un sujet.'); erreur(sujet, 'sujet-error', 'Choisissez un sujet.'); return false; }
+        ok(sujet, 'error-sujet'); ok(sujet, 'sujet-error'); return true;
     }
 
     function validerMessage() {
-        if (!message.value.trim()) { erreur(message, 'error-message', 'Le message est obligatoire.'); return false; }
-        if (message.value.trim().length < 10) { erreur(message, 'error-message', 'Minimum 10 caractères.'); return false; }
-        ok(message, 'error-message'); return true;
+        if (!message.value.trim()) { erreur(message, 'error-message', 'Le message est obligatoire.'); erreur(message, 'message-error', 'Le message est obligatoire.'); return false; }
+        if (message.value.trim().length < 10) { erreur(message, 'error-message', 'Minimum 10 caractères.'); erreur(message, 'message-error', 'Minimum 10 caractères.'); return false; }
+        ok(message, 'error-message'); ok(message, 'message-error'); return true;
     }
 
     /* === Validation en temps réel === */
@@ -80,16 +88,54 @@ document.addEventListener('DOMContentLoaded', function () {
         var ok4 = validerMessage();
 
         if (ok1 && ok2 && ok3 && ok4) {
-            if (success) success.hidden = false;
             var btn = form.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = true; btn.textContent = 'Message envoyé !'; }
+            if (btn) { btn.disabled = true; btn.textContent = 'Envoi en cours...'; }
 
-            setTimeout(function () {
-                form.reset();
-                if (charCount) charCount.textContent = '0';
-                if (success) success.hidden = true;
+            // Envoi au serveur
+            fetch(API + '/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nom: nom.value.trim(),
+                    email: email.value.trim(),
+                    telephone: telephone ? telephone.value.trim() : null,
+                    sujet: sujet.value,
+                    message: message.value.trim()
+                })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer le message'; }
+                    erreur(null, 'error-message', data.error);
+                    erreur(null, 'message-error', data.error);
+                    return;
+                }
+
+                // Succès
+                if (success) {
+                    success.style.display = 'block';
+                    success.hidden = false;
+                }
+                if (btn) { btn.textContent = 'Message envoyé !'; }
+
+                setTimeout(function () {
+                    form.reset();
+                    if (charCount) {
+                        charCount.textContent = (charCount.id === 'message-count') ? '0 / 2000 caractères' : '0';
+                    }
+                    if (success) {
+                        success.style.display = 'none';
+                        success.hidden = true;
+                    }
+                    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer le message'; }
+                }, 4000);
+            })
+            .catch(function() {
                 if (btn) { btn.disabled = false; btn.textContent = 'Envoyer le message'; }
-            }, 4000);
+                erreur(null, 'error-message', 'Erreur de connexion au serveur.');
+                erreur(null, 'message-error', 'Erreur de connexion au serveur.');
+            });
         }
     });
 
