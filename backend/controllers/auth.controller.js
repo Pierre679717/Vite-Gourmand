@@ -1,14 +1,29 @@
 /* ================================================================
    CONTROLLERS/AUTH.CONTROLLER.JS
-   Logique métier pour l'authentification
-   (Couche Controller du pattern MVC)
+   Authentification avec JWT (JSON Web Token)
+   ================================================================
+   
+   AVANT (sessions Express) :
+   - Le serveur stockait req.session.user en mémoire
+   - Le client recevait un cookie de session
+   
+   APRÈS (JWT) :
+   - Le serveur génère un token signé (JWT)
+   - Le client stocke le token (localStorage ou cookie httpOnly)
+   - Le client envoie le token dans le header : Authorization: Bearer <token>
+   - Le serveur vérifie la signature du token à chaque requête
+   - Le serveur ne stocke RIEN → sans état (stateless)
    ================================================================ */
 
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
+const bcrypt  = require('bcrypt');
+const jwt     = require('jsonwebtoken');
 const UtilisateurModel = require('../models/utilisateur.model');
 const { sauvegarderStat } = require('../config/db.mongo');
-const { envoyerEmail } = require('../config/email');
+const { envoyerEmail }    = require('../config/email');
+
+// Clé secrète pour signer les tokens (définie dans .env)
+const JWT_SECRET  = process.env.JWT_SECRET  || 'vite-gourmand-jwt-secret-2026';
+const JWT_EXPIRES = process.env.JWT_EXPIRES || '24h';
 
 class AuthController {
 
@@ -58,7 +73,11 @@ class AuthController {
 
     /**
      * POST /api/connexion
-     * Authentifier un utilisateur et créer sa session
+     * Authentifier un utilisateur et retourner un JWT
+     * 
+     * CHANGEMENT JWT :
+     * - AVANT : req.session.user = { ... }  → stockage serveur
+     * - APRÈS : jwt.sign({ ... })            → token retourné au client
      */
     static async connexion(req, res) {
         try {
@@ -74,14 +93,15 @@ class AuthController {
                 return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
             }
 
-            // Comparer le mot de passe avec le hash stocké
+            // Comparer le mot de passe avec le hash stocké (bcrypt)
             const motDePasseCorrect = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
             if (!motDePasseCorrect) {
                 return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
             }
 
-            // Créer la session (côté serveur)
-            req.session.user = {
+            // ── JWT : Générer le token ────────────────────────────────
+            // Le payload contient les infos de l'utilisateur (pas le mot de passe !)
+            const payload = {
                 id:     user.id,
                 nom:    user.nom,
                 prenom: user.prenom,
@@ -89,7 +109,17 @@ class AuthController {
                 role:   user.role
             };
 
-            res.json({ message: 'Connexion réussie', user: req.session.user });
+            // Signer le token avec la clé secrète + durée d'expiration
+            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+
+            // Retourner le token au client
+            // Le client devra l'envoyer dans chaque requête :
+            // Header : Authorization: Bearer <token>
+            res.json({
+                message: 'Connexion réussie',
+                token,
+                user: payload
+            });
 
         } catch (err) {
             console.error('Erreur connexion :', err);
@@ -98,20 +128,29 @@ class AuthController {
     }
 
     /**
-     * GET /api/deconnexion
-     * Détruire la session de l'utilisateur
+     * POST /api/deconnexion
+     * Avec JWT, la déconnexion se fait côté client
+     * (le client supprime simplement le token de son stockage)
+     * 
+     * CHANGEMENT JWT :
+     * - AVANT : req.session.destroy()  → on détruisait la session serveur
+     * - APRÈS : le client supprime son token → le serveur ne fait rien
      */
     static deconnexion(req, res) {
-        req.session.destroy();
-        res.json({ message: 'Déconnexion réussie.' });
+        // Avec JWT, le serveur n'a rien à détruire
+        // C'est le client qui supprime le token de son localStorage
+        res.json({ message: 'Déconnexion réussie. Supprimez le token côté client.' });
     }
 
     /**
      * GET /api/profil
      * Retourner les informations de l'utilisateur connecté
+     * Les infos viennent maintenant du token décodé (req.user)
+     * injecté par le middleware JWT
      */
     static profil(req, res) {
-        res.json({ user: req.session.user });
+        // req.user est injecté par le middleware auth.middleware.js
+        res.json({ user: req.user });
     }
 }
 
