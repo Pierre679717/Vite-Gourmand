@@ -1,0 +1,86 @@
+# ================================================================
+# DOCKER-COMPOSE.YML — Vite & Gourmand
+# ================================================================
+# Orchestre 3 services :
+#   - app      : le serveur Node.js/Express
+#   - mysql    : la base de données relationnelle
+#   - phpmyadmin : interface web pour gérer MySQL (dev uniquement)
+# ================================================================
+
+version: '3.8'
+
+services:
+
+  # ── SERVICE 1 : APPLICATION NODE.JS ──────────────────────────
+  app:
+    build: .                          # Construire depuis le Dockerfile
+    container_name: vite-gourmand-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"                   # Port local:port conteneur
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=mysql                 # Nom du service MySQL ci-dessous
+      - DB_USER=vite_user
+      - DB_PASSWORD=vite_password
+      - DB_NAME=vite_gourmand
+      - SESSION_SECRET=vite-gourmand-secret-docker-2026
+      - MONGO_URI=${MONGO_URI}        # Récupéré depuis le .env
+    depends_on:
+      mysql:
+        condition: service_healthy    # Attendre que MySQL soit prêt
+    volumes:
+      - .:/app                        # Monter le code source (hot reload)
+      - /app/node_modules             # Exclure node_modules du volume
+    networks:
+      - vite-network
+
+  # ── SERVICE 2 : BASE DE DONNÉES MYSQL ────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: vite-gourmand-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=vite_gourmand
+      - MYSQL_USER=vite_user
+      - MYSQL_PASSWORD=vite_password
+    ports:
+      - "3307:3306"                   # Port 3307 pour éviter conflit avec MySQL local
+    volumes:
+      - mysql_data:/var/lib/mysql     # Persistance des données
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql  # Import auto au démarrage
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+    networks:
+      - vite-network
+
+  # ── SERVICE 3 : PHPMYADMIN (DEV UNIQUEMENT) ──────────────────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: vite-gourmand-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"                     # Accès via http://localhost:8080
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=vite_user
+      - PMA_PASSWORD=vite_password
+    depends_on:
+      - mysql
+    networks:
+      - vite-network
+
+# ── VOLUMES PERSISTANTS ────────────────────────────────────────
+volumes:
+  mysql_data:
+    driver: local
+
+# ── RÉSEAU INTERNE ─────────────────────────────────────────────
+networks:
+  vite-network:
+    driver: bridge

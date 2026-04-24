@@ -1,0 +1,14 @@
+# ================================================================
+# .DOCKERIGNORE — Vite & Gourmand
+# Fichiers exclus de l'image Docker (comme .gitignore pour Git)
+# ================================================================
+
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+README.md
+*.md
+.DS_Store
+Thumbs.db
