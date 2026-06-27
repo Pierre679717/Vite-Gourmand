@@ -162,6 +162,14 @@ Le site est entièrement responsive avec 3 breakpoints :
 - **Tablette** (768px - 1199px) : grille adaptée
 - **Desktop** (≥ 1200px) : affichage complet
 
+## Wireframes
+
+| Page | Desktop | Mobile |
+|------|---------|--------|
+| Accueil | ![Accueil Desktop](docs/wireframes/WF1_Accueil_Desktop.png) | ![Accueil Mobile](docs/wireframes/WF2_Accueil_Mobile.png) |
+| Menus | ![Menus Desktop](docs/wireframes/WF3_Menus_Desktop.png) | ![Menus Mobile](docs/wireframes/WF4_Menus_Mobile.png) |
+| Détail | ![Détail Desktop](docs/wireframes/WF5_Detail_Desktop.png) | ![Détail Mobile](docs/wireframes/WF6_Detail_Mobile.png) |
+
 ---
 
 ## 🎨 Charte Graphique
