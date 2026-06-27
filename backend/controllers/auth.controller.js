@@ -19,7 +19,8 @@ const bcrypt  = require('bcrypt');
 const jwt     = require('jsonwebtoken');
 const UtilisateurModel = require('../models/utilisateur.model');
 const { sauvegarderStat } = require('../config/db.mongo');
-const { envoyerEmail }    = require('../config/email');
+const { genererMailBienvenue } = require('../email/templates');
+const { transporter, EXPEDITEUR } = require('../email/mailer');
 
 // Clé secrète pour signer les tokens (définie dans .env)
 const JWT_SECRET  = process.env.JWT_SECRET  || 'vite-gourmand-jwt-secret-2026';
