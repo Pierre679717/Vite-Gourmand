@@ -8,6 +8,7 @@ const CommandeModel    = require('../models/commande.model');
 const MenuModel        = require('../models/menu.model');
 const { pool }         = require('../config/db.mysql');
 const { getStatModel } = require('../config/db.mongo');
+const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
 
 class AdminController {
 
@@ -53,6 +54,15 @@ class AdminController {
     static async creerEmploye(req, res) {
         try {
             const { nom, prenom, email, mot_de_passe } = req.body;
+            if (!nom || !prenom || !email || !mot_de_passe) {
+                return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
+            }
+            if (!motDePasseValide(mot_de_passe)) {
+                return res.status(400).json({ error: MESSAGE_MOT_DE_PASSE });
+            }
+            if (await UtilisateurModel.emailExiste(email)) {
+                return res.status(409).json({ error: 'Cet e-mail est déjà utilisé.' });
+            }
             const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
             const id = await UtilisateurModel.creer({ nom, prenom, email, motDePasseHash, role: 'employe' });
             res.status(201).json({ message: 'Employé créé !', id });

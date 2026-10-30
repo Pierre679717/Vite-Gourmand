@@ -30,6 +30,7 @@ async function envoyerMailBienvenue(prenom, email) {
     }
 }
 const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
+const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
 
 class AuthController {
 
@@ -45,8 +46,8 @@ class AuthController {
             if (!nom || !prenom || !email || !mot_de_passe) {
                 return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
             }
-            if (mot_de_passe.length < 8) {
-                return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+            if (!motDePasseValide(mot_de_passe)) {
+                return res.status(400).json({ error: MESSAGE_MOT_DE_PASSE });
             }
 
             // Vérifier si l'email existe déjà
