@@ -16,6 +16,8 @@ const UtilisateurModel = require('../models/utilisateur.model');
 const { sauvegarderStat } = require('../config/db.mongo');
 const { genererMailBienvenue } = require('../email/templates');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
+const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
+const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
 
 /**
  * Envoie le mail de bienvenue sans bloquer l'inscription :
@@ -29,8 +31,6 @@ async function envoyerMailBienvenue(prenom, email) {
         console.error('Mail de bienvenue non envoyé :', err.message);
     }
 }
-const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
-const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
 
 class AuthController {
 
@@ -59,8 +59,12 @@ class AuthController {
             // Hasher le mot de passe avec bcrypt (10 tours de salage)
             const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
 
-            // Créer l'utilisateur en base
-            const id = await UtilisateurModel.creer({ nom, prenom, email, telephone, motDePasseHash });
+            // Créer l'utilisateur en base.
+            // Le rôle est forcé à 'client' : il n'est jamais lu dans req.body,
+            // donc impossible de s'inscrire comme employé ou admin.
+            const id = await UtilisateurModel.creer({
+                nom, prenom, email, telephone, motDePasseHash, role: 'client'
+            });
 
             // Mail de bienvenue + stat MongoDB (non bloquants)
             await envoyerMailBienvenue(prenom, email);
