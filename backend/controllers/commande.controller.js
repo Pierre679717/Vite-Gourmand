@@ -49,7 +49,7 @@ class CommandeController {
             }
 
             const id = await CommandeModel.creer({
-                utilisateurId: req.session.user.id,
+                utilisateurId: req.user.id,
                 menuId: menu_id,
                 nombrePersonnes: nombre_personnes,
                 prixUnitaire,
@@ -86,7 +86,7 @@ class CommandeController {
      */
     static async mesCommandes(req, res) {
         try {
-            const commandes = await CommandeModel.listerParClient(req.session.user.id);
+            const commandes = await CommandeModel.listerParClient(req.user.id);
             res.json(commandes);
         } catch (err) {
             console.error('Erreur mes commandes :', err);
