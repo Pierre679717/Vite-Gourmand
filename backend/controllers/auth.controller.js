@@ -34,10 +34,7 @@ async function envoyerMailBienvenue(prenom, email) {
         console.error('Mail de bienvenue non envoyé :', err.message);
     }
 }
-
-// Clé secrète pour signer les tokens (définie dans .env)
-const JWT_SECRET  = process.env.JWT_SECRET  || 'vite-gourmand-jwt-secret-2026';
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '24h';
+const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
 
 class AuthController {
 

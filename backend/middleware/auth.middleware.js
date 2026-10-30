@@ -15,8 +15,7 @@
    ================================================================ */
 
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'vite-gourmand-jwt-secret-2026';
+const { JWT_SECRET } = require('../config/jwt');
 
 /**
  * Extraire et vérifier le token JWT depuis le header

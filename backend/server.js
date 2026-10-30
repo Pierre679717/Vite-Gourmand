@@ -10,6 +10,10 @@
 
 require('dotenv').config();
 
+// Refuse de démarrer si JWT_SECRET est absent ou trop court
+const { verifierConfigJwt } = require('./config/jwt');
+verifierConfigJwt();
+
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');

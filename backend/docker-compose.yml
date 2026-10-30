@@ -25,7 +25,7 @@ services:
       - DB_USER=vite_user
       - DB_PASSWORD=vite_password
       - DB_NAME=vite_gourmand
-      - SESSION_SECRET=vite-gourmand-secret-docker-2026
+      - JWT_SECRET=${JWT_SECRET}      # Récupéré depuis le .env (obligatoire)
       - MONGO_URI=${MONGO_URI}        # Récupéré depuis le .env
     depends_on:
       mysql:
