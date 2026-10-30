@@ -22,6 +22,19 @@ const { sauvegarderStat } = require('../config/db.mongo');
 const { genererMailBienvenue } = require('../email/templates');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
 
+/**
+ * Envoie le mail de bienvenue sans bloquer l'inscription :
+ * si l'envoi échoue, le compte reste créé et on journalise l'erreur.
+ */
+async function envoyerMailBienvenue(prenom, email) {
+    try {
+        const mail = genererMailBienvenue('client', { prenom, identifiant: email });
+        await transporter.sendMail({ from: EXPEDITEUR, to: email, ...mail });
+    } catch (err) {
+        console.error('Mail de bienvenue non envoyé :', err.message);
+    }
+}
+
 // Clé secrète pour signer les tokens (définie dans .env)
 const JWT_SECRET  = process.env.JWT_SECRET  || 'vite-gourmand-jwt-secret-2026';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '24h';
@@ -56,12 +69,8 @@ class AuthController {
             // Créer l'utilisateur en base
             const id = await UtilisateurModel.creer({ nom, prenom, email, telephone, motDePasseHash });
 
-            // Email de bienvenue + stat MongoDB (non bloquants)
-            await envoyerEmail(email, 'Bienvenue chez Vite & Gourmand !',
-                `<h1>Bienvenue ${prenom} !</h1>
-                 <p>Votre compte a été créé avec succès.</p>
-                 <p>L'équipe Vite & Gourmand</p>`
-            );
+            // Mail de bienvenue + stat MongoDB (non bloquants)
+            await envoyerMailBienvenue(prenom, email);
             await sauvegarderStat('inscription', { email });
 
             res.status(201).json({ message: 'Compte créé avec succès !', id });
