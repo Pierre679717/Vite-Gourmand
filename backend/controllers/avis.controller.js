@@ -14,7 +14,7 @@ class AvisController {
             }
             await pool.query(
                 'INSERT INTO avis (utilisateur_id, commande_id, note, commentaire) VALUES (?, ?, ?, ?)',
-                [req.session.user.id, commande_id || null, note, commentaire || null]
+                [req.user.id, commande_id || null, note, commentaire || null]
             );
             res.status(201).json({ message: 'Avis enregistré !' });
         } catch (err) {

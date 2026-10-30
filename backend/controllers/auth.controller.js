@@ -2,17 +2,12 @@
    CONTROLLERS/AUTH.CONTROLLER.JS
    Authentification avec JWT (JSON Web Token)
    ================================================================
-   
-   AVANT (sessions Express) :
-   - Le serveur stockait req.session.user en mémoire
-   - Le client recevait un cookie de session
-   
-   APRÈS (JWT) :
-   - Le serveur génère un token signé (JWT)
-   - Le client stocke le token (localStorage ou cookie httpOnly)
-   - Le client envoie le token dans le header : Authorization: Bearer <token>
-   - Le serveur vérifie la signature du token à chaque requête
-   - Le serveur ne stocke RIEN → sans état (stateless)
+   - À la connexion, le serveur signe un token contenant
+     id, nom, prenom, email et role.
+   - Le client l'envoie ensuite dans le header
+     Authorization: Bearer <token>.
+   - Le middleware auth.middleware.js vérifie la signature et
+     remplit req.user. Le serveur ne stocke aucune session.
    ================================================================ */
 
 const bcrypt  = require('bcrypt');
@@ -21,10 +16,21 @@ const UtilisateurModel = require('../models/utilisateur.model');
 const { sauvegarderStat } = require('../config/db.mongo');
 const { genererMailBienvenue } = require('../email/templates');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
+const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
+const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
 
-// Clé secrète pour signer les tokens (définie dans .env)
-const JWT_SECRET  = process.env.JWT_SECRET  || 'vite-gourmand-jwt-secret-2026';
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '24h';
+/**
+ * Envoie le mail de bienvenue sans bloquer l'inscription :
+ * si l'envoi échoue, le compte reste créé et on journalise l'erreur.
+ */
+async function envoyerMailBienvenue(prenom, email) {
+    try {
+        const mail = genererMailBienvenue('client', { prenom, identifiant: email });
+        await transporter.sendMail({ from: EXPEDITEUR, to: email, ...mail });
+    } catch (err) {
+        console.error('Mail de bienvenue non envoyé :', err.message);
+    }
+}
 
 class AuthController {
 
@@ -40,8 +46,8 @@ class AuthController {
             if (!nom || !prenom || !email || !mot_de_passe) {
                 return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
             }
-            if (mot_de_passe.length < 8) {
-                return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+            if (!motDePasseValide(mot_de_passe)) {
+                return res.status(400).json({ error: MESSAGE_MOT_DE_PASSE });
             }
 
             // Vérifier si l'email existe déjà
@@ -53,15 +59,15 @@ class AuthController {
             // Hasher le mot de passe avec bcrypt (10 tours de salage)
             const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
 
-            // Créer l'utilisateur en base
-            const id = await UtilisateurModel.creer({ nom, prenom, email, telephone, motDePasseHash });
+            // Créer l'utilisateur en base.
+            // Le rôle est forcé à 'client' : il n'est jamais lu dans req.body,
+            // donc impossible de s'inscrire comme employé ou admin.
+            const id = await UtilisateurModel.creer({
+                nom, prenom, email, telephone, motDePasseHash, role: 'client'
+            });
 
-            // Email de bienvenue + stat MongoDB (non bloquants)
-            await envoyerEmail(email, 'Bienvenue chez Vite & Gourmand !',
-                `<h1>Bienvenue ${prenom} !</h1>
-                 <p>Votre compte a été créé avec succès.</p>
-                 <p>L'équipe Vite & Gourmand</p>`
-            );
+            // Mail de bienvenue + stat MongoDB (non bloquants)
+            await envoyerMailBienvenue(prenom, email);
             await sauvegarderStat('inscription', { email });
 
             res.status(201).json({ message: 'Compte créé avec succès !', id });
@@ -75,10 +81,6 @@ class AuthController {
     /**
      * POST /api/connexion
      * Authentifier un utilisateur et retourner un JWT
-     * 
-     * CHANGEMENT JWT :
-     * - AVANT : req.session.user = { ... }  → stockage serveur
-     * - APRÈS : jwt.sign({ ... })            → token retourné au client
      */
     static async connexion(req, res) {
         try {
@@ -132,10 +134,6 @@ class AuthController {
      * POST /api/deconnexion
      * Avec JWT, la déconnexion se fait côté client
      * (le client supprime simplement le token de son stockage)
-     * 
-     * CHANGEMENT JWT :
-     * - AVANT : req.session.destroy()  → on détruisait la session serveur
-     * - APRÈS : le client supprime son token → le serveur ne fait rien
      */
     static deconnexion(req, res) {
         // Avec JWT, le serveur n'a rien à détruire
