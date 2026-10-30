@@ -2,16 +2,10 @@
    MIDDLEWARE/AUTH.MIDDLEWARE.JS
    Vérification des tokens JWT
    ================================================================
-   
-   AVANT (sessions) :
-   - On vérifiait req.session.user
-   - La session était stockée en mémoire serveur
-   
-   APRÈS (JWT) :
-   - On lit le token depuis le header Authorization: Bearer <token>
-   - On vérifie la signature avec jwt.verify()
-   - On injecte req.user avec les données du token décodé
-   - Aucun accès base de données nécessaire !
+   - Lit le token dans le header Authorization: Bearer <token>
+   - Vérifie la signature avec jwt.verify()
+   - Remplit req.user avec le contenu du token
+     (id, nom, prenom, email, role)
    ================================================================ */
 
 const jwt = require('jsonwebtoken');

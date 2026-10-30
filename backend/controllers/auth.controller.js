@@ -2,17 +2,12 @@
    CONTROLLERS/AUTH.CONTROLLER.JS
    Authentification avec JWT (JSON Web Token)
    ================================================================
-   
-   AVANT (sessions Express) :
-   - Le serveur stockait req.session.user en mémoire
-   - Le client recevait un cookie de session
-   
-   APRÈS (JWT) :
-   - Le serveur génère un token signé (JWT)
-   - Le client stocke le token (localStorage ou cookie httpOnly)
-   - Le client envoie le token dans le header : Authorization: Bearer <token>
-   - Le serveur vérifie la signature du token à chaque requête
-   - Le serveur ne stocke RIEN → sans état (stateless)
+   - À la connexion, le serveur signe un token contenant
+     id, nom, prenom, email et role.
+   - Le client l'envoie ensuite dans le header
+     Authorization: Bearer <token>.
+   - Le middleware auth.middleware.js vérifie la signature et
+     remplit req.user. Le serveur ne stocke aucune session.
    ================================================================ */
 
 const bcrypt  = require('bcrypt');
@@ -81,10 +76,6 @@ class AuthController {
     /**
      * POST /api/connexion
      * Authentifier un utilisateur et retourner un JWT
-     * 
-     * CHANGEMENT JWT :
-     * - AVANT : req.session.user = { ... }  → stockage serveur
-     * - APRÈS : jwt.sign({ ... })            → token retourné au client
      */
     static async connexion(req, res) {
         try {
@@ -138,10 +129,6 @@ class AuthController {
      * POST /api/deconnexion
      * Avec JWT, la déconnexion se fait côté client
      * (le client supprime simplement le token de son stockage)
-     * 
-     * CHANGEMENT JWT :
-     * - AVANT : req.session.destroy()  → on détruisait la session serveur
-     * - APRÈS : le client supprime son token → le serveur ne fait rien
      */
     static deconnexion(req, res) {
         // Avec JWT, le serveur n'a rien à détruire

@@ -1,11 +1,5 @@
 /* ================================================================
    SERVER.JS - Point d'entrée principal — Vite & Gourmand
-   ================================================================
-   
-   CHANGEMENT JWT :
-   - Suppression de express-session
-   - Ajout de JWT_SECRET dans les variables d'environnement
-   - L'authentification est maintenant stateless (sans état serveur)
    ================================================================ */
 
 require('dotenv').config();
@@ -57,9 +51,6 @@ app.use(cors({
 }));
 
 app.use(express.static(frontendPath));
-
-// ── SUPPRIMÉ : express-session n'est plus nécessaire avec JWT ──
-// app.use(session({ ... }))
 
 /* ================================================================
    ROUTES API
