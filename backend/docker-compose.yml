@@ -50,7 +50,7 @@ services:
       - "3307:3306"                   # Port 3307 pour éviter conflit avec MySQL local
     volumes:
       - mysql_data:/var/lib/mysql     # Persistance des données
-      - ./database.sql:/docker-entrypoint-initdb.d/init.sql  # Import auto au démarrage
+      - ../database/vite_gourmand.sql:/docker-entrypoint-initdb.d/init.sql  # Import auto au premier démarrage (script unique du dépôt)
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 10s

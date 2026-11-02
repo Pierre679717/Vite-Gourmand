@@ -57,8 +57,9 @@ Vite-Gourmand/
 ├── backend/
 │   ├── server.js            # Serveur Express (API REST)
 │   ├── package.json         # Dépendances Node.js
-│   ├── .env                 # Variables d'environnement (non commité)
-│   └── database.sql         # Script création BDD
+│   └── .env                 # Variables d'environnement (non commité)
+├── database/
+│   └── vite_gourmand.sql    # Script unique : création des tables + données de test
 ├── frontend/
 │   └── html/
 │       ├── index.html       # Page d'accueil
@@ -99,9 +100,9 @@ cd backend
 npm install
 ```
 
-3. **Créer la base de données**
+3. **Créer la base de données** (depuis le dossier `backend/`)
 ```bash
-mysql -u root -p < database.sql
+mysql -u root -p < ../database/vite_gourmand.sql
 ```
 
 4. **Configurer les variables d'environnement**
