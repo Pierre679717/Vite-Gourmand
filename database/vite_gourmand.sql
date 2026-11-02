@@ -20,6 +20,11 @@
 -- ================================================================
 -- 1. BASE DE DONNÉES
 -- ================================================================
+-- Le fichier est encodé en UTF-8 : on le dit explicitement à MySQL.
+-- Sans cette ligne, selon la configuration du client mysql, les
+-- accents peuvent être mal interprétés ("Noël" devient "NoÃ«l").
+SET NAMES utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS vite_gourmand
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
@@ -54,16 +59,19 @@ CREATE TABLE role (
 -- ----------------------------------------------------------------
 -- utilisateur : comptes clients, employés et administrateur
 -- Pas de suppression physique : on désactive le compte (actif = 0).
+-- Téléphone et adresse peuvent être NULL : un compte employé est créé
+-- par l'administrateur avec seulement nom, prénom, e-mail et mot de
+-- passe. Pour un client, l'API les rend obligatoires à l'inscription.
 -- ----------------------------------------------------------------
 CREATE TABLE utilisateur (
     utilisateur_id   INT AUTO_INCREMENT PRIMARY KEY,
     nom              VARCHAR(50)  NOT NULL,
     prenom           VARCHAR(50)  NOT NULL,
     email            VARCHAR(254) NOT NULL,
-    telephone        VARCHAR(20)  NOT NULL,
-    adresse_postale  VARCHAR(255) NOT NULL,
-    code_postal      VARCHAR(5)   NOT NULL,
-    ville            VARCHAR(100) NOT NULL,
+    telephone        VARCHAR(20)  DEFAULT NULL,
+    adresse_postale  VARCHAR(255) DEFAULT NULL,
+    code_postal      VARCHAR(5)   DEFAULT NULL,
+    ville            VARCHAR(100) DEFAULT NULL,
     mot_de_passe     VARCHAR(255) NOT NULL,          -- empreinte bcrypt, jamais le mot de passe en clair
     actif            TINYINT(1)   NOT NULL DEFAULT 1,
     role_id          INT          NOT NULL,
