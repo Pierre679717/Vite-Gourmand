@@ -4,7 +4,7 @@
 
 const bcrypt = require('bcrypt');
 const UtilisateurModel = require('../models/utilisateur.model');
-const CommandeModel    = require('../models/commande.model');
+const { CommandeModel } = require('../models/commande.model');
 const MenuModel        = require('../models/menu.model');
 const { pool }         = require('../config/db.mysql');
 const { getStatModel } = require('../config/db.mongo');
@@ -14,10 +14,13 @@ class AdminController {
 
     static async statistiques(req, res) {
         try {
-            const totalUsers    = await UtilisateurModel.compter();
+            const totalClients   = await UtilisateurModel.compterClients();
             const statsCommandes = await CommandeModel.statistiques();
-            const totalMenus    = await MenuModel.compterActifs();
-            const [moyenneAvis] = await pool.query('SELECT AVG(note) AS moyenne FROM avis');
+            const totalMenus     = await MenuModel.compterActifs();
+            // Moyenne calculée sur les avis validés seulement (ceux affichés au public)
+            const [moyenneAvis]  = await pool.query(
+                "SELECT AVG(note) AS moyenne FROM avis WHERE statut = 'valide'"
+            );
 
             let mongoStats = null;
             const StatModel = getStatModel();
@@ -29,7 +32,7 @@ class AdminController {
             }
 
             res.json({
-                utilisateurs:    totalUsers,
+                utilisateurs:    totalClients,
                 commandes:       statsCommandes.total,
                 chiffre_affaires: statsCommandes.chiffreAffaires,
                 menus_actifs:    totalMenus,
@@ -64,6 +67,8 @@ class AdminController {
                 return res.status(409).json({ error: 'Cet e-mail est déjà utilisé.' });
             }
             const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
+            // Téléphone et adresse restent NULL : seuls l'identité, l'e-mail
+            // et le mot de passe sont demandés pour un compte employé.
             const id = await UtilisateurModel.creer({ nom, prenom, email, motDePasseHash, role: 'employe' });
             res.status(201).json({ message: 'Employé créé !', id });
         } catch (err) {
