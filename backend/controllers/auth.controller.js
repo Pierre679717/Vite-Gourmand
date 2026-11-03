@@ -40,11 +40,14 @@ class AuthController {
      */
     static async inscription(req, res) {
         try {
-            const { nom, prenom, email, telephone, mot_de_passe } = req.body;
+            const { nom, prenom, email, telephone, adresse_postale, code_postal, ville, mot_de_passe } = req.body;
 
-            // Validation des champs obligatoires
-            if (!nom || !prenom || !email || !mot_de_passe) {
+            // Validation des champs obligatoires (le sujet exige le GSM et l'adresse postale)
+            if (!nom || !prenom || !email || !telephone || !adresse_postale || !code_postal || !ville || !mot_de_passe) {
                 return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
+            }
+            if (!/^[0-9]{5}$/.test(code_postal)) {
+                return res.status(400).json({ error: 'Le code postal doit contenir 5 chiffres.' });
             }
             if (!motDePasseValide(mot_de_passe)) {
                 return res.status(400).json({ error: MESSAGE_MOT_DE_PASSE });
@@ -60,10 +63,12 @@ class AuthController {
             const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
 
             // Créer l'utilisateur en base.
-            // Le rôle est forcé à 'client' : il n'est jamais lu dans req.body,
-            // donc impossible de s'inscrire comme employé ou admin.
+            // Le rôle est forcé à 'utilisateur' : il n'est jamais lu dans req.body,
+            // donc impossible de s'inscrire comme employé ou administrateur.
             const id = await UtilisateurModel.creer({
-                nom, prenom, email, telephone, motDePasseHash, role: 'client'
+                nom, prenom, email, telephone,
+                adressePostale: adresse_postale, codePostal: code_postal, ville,
+                motDePasseHash, role: 'utilisateur'
             });
 
             // Mail de bienvenue + stat MongoDB (non bloquants)
@@ -102,10 +107,15 @@ class AuthController {
                 return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
             }
 
+            // Compte désactivé par l'administrateur (ex. ancien employé)
+            if (!user.actif) {
+                return res.status(403).json({ error: 'Ce compte est désactivé. Contactez Vite & Gourmand.' });
+            }
+
             // ── JWT : Générer le token ────────────────────────────────
             // Le payload contient les infos de l'utilisateur (pas le mot de passe !)
             const payload = {
-                id:     user.id,
+                id:     user.utilisateur_id,
                 nom:    user.nom,
                 prenom: user.prenom,
                 email:  user.email,

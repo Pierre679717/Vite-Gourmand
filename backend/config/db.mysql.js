@@ -11,7 +11,16 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME     || 'vite_gourmand',
     waitForConnections: true,
-    connectionLimit: 10
+    connectionLimit: 10,
+    // Renvoyer DATE, DATETIME et TIME sous forme de texte ('2026-10-03').
+    // Sans cette option, mysql2 crée des objets Date JavaScript en UTC :
+    // une date_prestation au 03/10 pouvait s'afficher au 02/10 après
+    // conversion de fuseau horaire.
+    dateStrings: true,
+    // Renvoyer les DECIMAL (prix) comme des nombres et non du texte :
+    // "75.00" devient 75. Sans risque ici, nos prix restent bien en
+    // dessous de la limite de précision des nombres JavaScript.
+    decimalNumbers: true
 });
 
 // Tester la connexion au démarrage

@@ -59,7 +59,7 @@ function authRequired(req, res, next) {
  */
 function adminRequired(req, res, next) {
     verifierToken(req, res, () => {
-        if (req.user.role !== 'admin') {
+        if (req.user.role !== 'administrateur') {
             return res.status(403).json({ error: 'Accès réservé aux administrateurs.' });
         }
         next();
@@ -71,7 +71,7 @@ function adminRequired(req, res, next) {
  */
 function employeRequired(req, res, next) {
     verifierToken(req, res, () => {
-        if (req.user.role !== 'employe' && req.user.role !== 'admin') {
+        if (req.user.role !== 'employe' && req.user.role !== 'administrateur') {
             return res.status(403).json({ error: 'Accès réservé aux employés.' });
         }
         next();
