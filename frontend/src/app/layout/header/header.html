@@ -1,0 +1,60 @@
+<header class="entete">
+  <div class="conteneur entete__barre">
+    <a class="entete__logo" routerLink="/" aria-label="Vite et Gourmand, retour à l'accueil">
+      Vite <span class="entete__esperluette" aria-hidden="true">&amp;</span> Gourmand
+    </a>
+
+    <!-- Bouton burger : visible uniquement sur mobile -->
+    <button
+      class="entete__burger"
+      type="button"
+      aria-controls="navigation-principale"
+      [attr.aria-expanded]="menuOuvert()"
+      (click)="basculerMenu()"
+    >
+      <span class="visuellement-masque">{{ menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu' }}</span>
+      <span class="entete__burger-barre" aria-hidden="true"></span>
+      <span class="entete__burger-barre" aria-hidden="true"></span>
+      <span class="entete__burger-barre" aria-hidden="true"></span>
+    </button>
+
+    <nav
+      id="navigation-principale"
+      class="entete__nav"
+      [class.entete__nav--ouverte]="menuOuvert()"
+      aria-label="Navigation principale"
+    >
+      <ul class="entete__liens">
+        <li>
+          <a
+            routerLink="/"
+            routerLinkActive="entete__lien--actif"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            class="entete__lien"
+            >Accueil</a
+          >
+        </li>
+        <li>
+          <a
+            routerLink="/menus"
+            routerLinkActive="entete__lien--actif"
+            ariaCurrentWhenActive="page"
+            class="entete__lien"
+            >Nos menus</a
+          >
+        </li>
+        <li>
+          <a
+            routerLink="/contact"
+            routerLinkActive="entete__lien--actif"
+            ariaCurrentWhenActive="page"
+            class="entete__lien"
+            >Contact</a
+          >
+        </li>
+      </ul>
+      <a class="btn btn--primaire entete__connexion" routerLink="/connexion">Connexion</a>
+    </nav>
+  </div>
+</header>

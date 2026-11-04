@@ -1,1 +1,10 @@
-<router-outlet />
+<!-- Lien d'évitement : premier élément atteint avec Tab, pour sauter la navigation -->
+<a class="lien-evitement" href="#contenu" (click)="allerAuContenu($event)">Aller au contenu</a>
+
+<app-header />
+
+<main id="contenu" tabindex="-1">
+  <router-outlet />
+</main>
+
+<app-footer />
