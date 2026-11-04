@@ -178,3 +178,8 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+// Espacement vertical commun à toutes les pages
+.page {
+  padding-block: $espace-8 $espace-12;
+}
