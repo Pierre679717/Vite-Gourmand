@@ -30,8 +30,15 @@
               }
             ],
             "styles": [
+              "@fontsource-variable/open-sans/index.css",
+              "@fontsource-variable/playfair-display/index.css",
               "src/styles.scss"
-            ]
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "src/styles"
+              ]
+            }
           },
           "configurations": {
             "production": {

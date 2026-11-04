@@ -1,1 +1,8 @@
-/* You can add global styles to this file, and also import other style files */
+// =====================================================================
+// Styles globaux — point d'entrée du thème Vite & Gourmand
+// Chaque partiel (_*.scss) est dans src/styles/
+// =====================================================================
+@use 'styles/base';
+@use 'styles/boutons';
+@use 'styles/cartes';
+@use 'styles/formulaires';

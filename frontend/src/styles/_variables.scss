@@ -1,0 +1,51 @@
+// =====================================================================
+// Variables du thème — reprises de la charte graphique Vite & Gourmand
+// =====================================================================
+// Les contrastes indiqués ont été vérifiés selon les critères WCAG 2.1
+// (4,5:1 minimum pour un texte normal, 3:1 pour un grand texte ou un
+// élément d'interface).
+
+// ---- Couleurs de la charte ------------------------------------------
+$vert: #2e7d32;       // principale : fraîcheur, nature
+$or: #d4af37;         // secondaire : luxe, qualité
+$bordeaux: #722f37;   // accent : vin, gastronomie
+$fond: #fafafa;       // fond clair (blanc cassé)
+$texte: #333333;      // texte (gris foncé)
+
+// ---- Nuances dérivées -----------------------------------------------
+$vert-fonce: #1b5e20;     // survol des boutons verts, pied de page
+$vert-clair: #e8f5e9;     // fonds de messages de succès
+$bordeaux-fonce: #5a252b; // survol des boutons bordeaux
+$or-fonce: #c19d2a;       // survol des boutons dorés
+$or-texte: #7a5f12;       // l'or de la charte n'a que 2:1 sur fond clair :
+                          // cette nuance foncée (5,8:1) sert pour du texte
+$blanc: #ffffff;
+$texte-doux: #5f5f5f;     // textes secondaires (6,1:1 sur le fond)
+$bordure: #d6d6d6;
+$erreur: #b3261e;         // messages d'erreur (6,3:1 sur le fond)
+$erreur-clair: #fdecea;
+
+// ---- Typographies (polices auto-hébergées, voir angular.json) -------
+$police-titres: 'Playfair Display Variable', Georgia, 'Times New Roman', serif;
+$police-texte: 'Open Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+// ---- Espacements (échelle de 4 px) ------------------------------------
+$espace-1: 0.25rem;
+$espace-2: 0.5rem;
+$espace-3: 0.75rem;
+$espace-4: 1rem;
+$espace-6: 1.5rem;
+$espace-8: 2rem;
+$espace-12: 3rem;
+
+// ---- Formes ----------------------------------------------------------
+$rayon: 8px;
+$rayon-petit: 4px;
+$ombre: 0 2px 8px rgba(0, 0, 0, 0.08);
+$ombre-survol: 0 8px 24px rgba(0, 0, 0, 0.12);
+$transition: 0.2s ease;
+
+// ---- Mise en page (mobile d'abord) ------------------------------------
+$largeur-max: 1200px;
+$point-tablette: 768px;
+$point-bureau: 1024px;

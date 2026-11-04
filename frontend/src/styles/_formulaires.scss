@@ -1,0 +1,86 @@
+// =====================================================================
+// Formulaires — un .champ = libellé + saisie + aide ou erreur
+// =====================================================================
+@use 'variables' as *;
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: $espace-4;
+}
+
+// Deux champs côte à côte à partir de la tablette (nom / prénom...)
+.formulaire__ligne {
+  display: grid;
+  gap: $espace-4;
+
+  @media (min-width: $point-tablette) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: $espace-1;
+
+  &__label {
+    font-weight: 600;
+  }
+
+  // Astérisque des champs obligatoires (expliqué en haut du formulaire)
+  &__obligatoire {
+    color: $erreur;
+  }
+
+  &__saisie {
+    width: 100%;
+    min-height: 44px;
+    padding: $espace-2 $espace-3;
+    background: $blanc;
+    color: $texte;
+    border: 1px solid #8a8a8a; // 3,4:1 : bordure visible (critère 3:1)
+    border-radius: $rayon-petit;
+    transition: border-color $transition, box-shadow $transition;
+
+    &:focus {
+      outline: none;
+      border-color: $vert;
+      box-shadow: 0 0 0 3px rgba($vert, 0.25);
+    }
+
+    // Erreur affichée seulement après que l'utilisateur a quitté le champ
+    &.ng-invalid.ng-touched {
+      border-color: $erreur;
+    }
+  }
+
+  &__aide {
+    font-size: 0.875rem;
+    color: $texte-doux;
+  }
+
+  &__erreur {
+    font-size: 0.875rem;
+    color: $erreur;
+  }
+}
+
+textarea.champ__saisie {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+// Case à cocher avec son libellé
+.champ-case {
+  display: flex;
+  align-items: flex-start;
+  gap: $espace-2;
+
+  input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.2rem;
+    accent-color: $vert;
+  }
+}
