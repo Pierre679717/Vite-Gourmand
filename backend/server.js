@@ -25,6 +25,7 @@ const contactRoutes  = require('./routes/contact.routes');
 const avisRoutes     = require('./routes/avis.routes');
 const employeRoutes  = require('./routes/employe.routes');
 const adminRoutes    = require('./routes/admin.routes');
+const horaireRoutes  = require('./routes/horaire.routes');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -62,6 +63,7 @@ app.use('/api/contact',   contactRoutes);
 app.use('/api/avis',      avisRoutes);
 app.use('/api/employe',   employeRoutes);
 app.use('/api/admin',     adminRoutes);
+app.use('/api/horaires',  horaireRoutes);
 
 /* ================================================================
    ROUTE PAR DÉFAUT → index.html
