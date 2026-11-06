@@ -31,12 +31,16 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 /* ================================================================
-   CHEMIN DU FRONTEND
+   CHEMIN DU FRONTEND (build Angular)
+   ================================================================
+   « ng build » produit le site dans frontend/dist/vite-gourmand/browser.
+   En production, Express sert à la fois ce dossier et l'API : une seule
+   origine, donc pas besoin de CORS ni de proxy.
+   En développement, on utilise plutôt « ng serve » (port 4200) et son
+   proxy vers l'API (port 3000).
    ================================================================ */
-let frontendPath = path.join(__dirname, '..', 'frontend', 'html');
-if (!fs.existsSync(frontendPath)) {
-    frontendPath = path.join(process.cwd(), 'frontend', 'html');
-}
+const frontendPath = path.join(__dirname, '..', 'frontend', 'dist', 'vite-gourmand', 'browser');
+const indexFile    = path.join(frontendPath, 'index.html');
 
 /* ================================================================
    MIDDLEWARES GLOBAUX
@@ -51,7 +55,16 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.static(frontendPath));
+// Fichiers du build (JS, CSS, images, polices).
+// Leurs noms contiennent une empreinte (main-M5JGVSHK.js) qui change à chaque
+// modification : le navigateur peut donc les garder en cache longtemps.
+// index.html, lui, ne doit jamais être mis en cache (sinon le navigateur
+// garderait les anciens noms de fichiers après une mise à jour).
+app.use(express.static(frontendPath, {
+    index: false,
+    maxAge: '1y',
+    immutable: true
+}));
 
 /* ================================================================
    ROUTES API
@@ -66,15 +79,24 @@ app.use('/api/admin',     adminRoutes);
 app.use('/api/horaires',  horaireRoutes);
 
 /* ================================================================
-   ROUTE PAR DÉFAUT → index.html
+   ROUTES INCONNUES
    ================================================================ */
+// Une route d'API inconnue renvoie une erreur JSON, pas la page du site
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Route API inconnue.' });
+});
+
+// Toutes les autres adresses (/menus, /espace-admin...) renvoient index.html :
+// c'est le routeur d'Angular, dans le navigateur, qui affiche la bonne page.
+// Sans cela, actualiser la page sur /menus donnerait une erreur 404.
 app.get('*', (req, res) => {
-    const indexFile = path.join(frontendPath, 'index.html');
-    if (fs.existsSync(indexFile)) {
-        res.sendFile(indexFile);
-    } else {
-        res.status(404).json({ error: 'Frontend non trouvé.' });
+    if (!fs.existsSync(indexFile)) {
+        return res.status(503).json({
+            error: 'Frontend non construit. Lancez « npm run build » à la racine du projet.'
+        });
     }
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(indexFile);
 });
 
 /* ================================================================
