@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from './core/auth/auth.guards';
 import { Accueil } from './pages/accueil/accueil';
 
 /**
@@ -33,21 +34,25 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/cgv/cgv').then((m) => m.Cgv),
   },
 
-  // Espaces réservés (les guards par rôle seront ajoutés avec l'authentification)
+  // Espaces réservés : le guard vérifie le rôle avant même de télécharger le code
   {
     path: 'espace-utilisateur',
     title: 'Mon espace — Vite & Gourmand',
+    canMatch: [roleGuard('utilisateur')],
     loadChildren: () =>
       import('./espaces/utilisateur/utilisateur.routes').then((m) => m.UTILISATEUR_ROUTES),
   },
   {
     path: 'espace-employe',
     title: 'Espace employé — Vite & Gourmand',
+    // L'administrateur a aussi accès aux fonctions employé (comme côté API)
+    canMatch: [roleGuard('employe', 'administrateur')],
     loadChildren: () => import('./espaces/employe/employe.routes').then((m) => m.EMPLOYE_ROUTES),
   },
   {
     path: 'espace-admin',
     title: 'Espace administrateur — Vite & Gourmand',
+    canMatch: [roleGuard('administrateur')],
     loadChildren: () => import('./espaces/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
 

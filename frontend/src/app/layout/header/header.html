@@ -54,7 +54,18 @@
           >
         </li>
       </ul>
-      <a class="btn btn--primaire entete__connexion" routerLink="/connexion">Connexion</a>
+      <!-- Zone de compte : dépend du signal utilisateur de l'AuthService -->
+      <div class="entete__compte">
+        @if (auth.utilisateur(); as utilisateur) {
+          <span class="entete__bonjour">Bonjour {{ utilisateur.prenom }}</span>
+          <a class="btn btn--secondaire" [routerLink]="auth.lienEspace()">Mon espace</a>
+          <button class="btn btn--accent" type="button" (click)="seDeconnecter()">
+            Déconnexion
+          </button>
+        } @else {
+          <a class="btn btn--primaire" routerLink="/connexion">Connexion</a>
+        }
+      </div>
     </nav>
   </div>
 </header>

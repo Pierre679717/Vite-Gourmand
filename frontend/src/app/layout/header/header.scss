@@ -49,7 +49,7 @@
 
     @include focus-clavier;
 
-    @include a-partir-de($point-tablette) {
+    @include a-partir-de($point-bureau) {
       display: none;
     }
   }
@@ -95,7 +95,7 @@
     }
 
     // Tablette et ordinateur : navigation toujours visible, en ligne
-    @include a-partir-de($point-tablette) {
+    @include a-partir-de($point-bureau) {
       display: flex;
       position: static;
       flex-direction: row;
@@ -115,10 +115,28 @@
     padding: 0;
     list-style: none;
 
-    @include a-partir-de($point-tablette) {
+    @include a-partir-de($point-bureau) {
       flex-direction: row;
       gap: $espace-6;
     }
+  }
+
+  // Zone de compte : empilée sur mobile, en ligne à partir de la tablette
+  &__compte {
+    display: flex;
+    flex-direction: column;
+    gap: $espace-2;
+
+    @include a-partir-de($point-bureau) {
+      flex-direction: row;
+      align-items: center;
+      gap: $espace-3;
+    }
+  }
+
+  &__bonjour {
+    color: $texte-doux;
+    font-weight: 600;
   }
 
   &__lien {
