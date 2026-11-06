@@ -1,0 +1,160 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.entete {
+  position: sticky; // reste visible en haut quand on fait défiler la page
+  top: 0;
+  z-index: 100;
+  background: $blanc;
+  border-bottom: 1px solid $bordure;
+  box-shadow: $ombre;
+
+  &__barre {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 4.5rem;
+  }
+
+  &__logo {
+    font-family: $police-titres;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $bordeaux;
+    text-decoration: none;
+
+    &:hover {
+      color: $bordeaux-fonce;
+    }
+  }
+
+  &__esperluette {
+    color: $or;
+  }
+
+  // ---- Bouton burger (mobile) ----
+  &__burger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    background: none;
+    border: 0;
+    border-radius: $rayon-petit;
+    cursor: pointer;
+
+    @include focus-clavier;
+
+    @include a-partir-de($point-bureau) {
+      display: none;
+    }
+  }
+
+  &__burger-barre {
+    display: block;
+    height: 3px;
+    background: $texte;
+    border-radius: 2px;
+    transition: transform $transition, opacity $transition;
+  }
+
+  // Les trois barres se transforment en croix quand le menu est ouvert
+  &__burger[aria-expanded='true'] &__burger-barre {
+    &:nth-child(2) {
+      transform: translateY(8px) rotate(45deg);
+    }
+    &:nth-child(3) {
+      opacity: 0;
+    }
+    &:nth-child(4) {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+  }
+
+  // ---- Navigation ----
+  // Mobile : panneau replié sous la barre, affiché quand il est « ouvert »
+  &__nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: $espace-4;
+    padding: $espace-4;
+    background: $blanc;
+    border-bottom: 1px solid $bordure;
+    box-shadow: $ombre;
+
+    &--ouverte {
+      display: flex;
+    }
+
+    // Tablette et ordinateur : navigation toujours visible, en ligne
+    @include a-partir-de($point-bureau) {
+      display: flex;
+      position: static;
+      flex-direction: row;
+      align-items: center;
+      gap: $espace-6;
+      padding: 0;
+      border: 0;
+      box-shadow: none;
+    }
+  }
+
+  &__liens {
+    display: flex;
+    flex-direction: column;
+    gap: $espace-2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include a-partir-de($point-bureau) {
+      flex-direction: row;
+      gap: $espace-6;
+    }
+  }
+
+  // Zone de compte : empilée sur mobile, en ligne à partir de la tablette
+  &__compte {
+    display: flex;
+    flex-direction: column;
+    gap: $espace-2;
+
+    @include a-partir-de($point-bureau) {
+      flex-direction: row;
+      align-items: center;
+      gap: $espace-3;
+    }
+  }
+
+  &__bonjour {
+    color: $texte-doux;
+    font-weight: 600;
+  }
+
+  &__lien {
+    display: block;
+    padding: $espace-2 0;
+    color: $texte;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+
+    &:hover {
+      color: $vert;
+    }
+
+    // Page en cours : soulignement doré
+    &--actif {
+      color: $vert;
+      border-bottom-color: $or;
+    }
+  }
+}

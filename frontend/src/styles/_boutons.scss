@@ -1,0 +1,77 @@
+// =====================================================================
+// Boutons — classes BEM : .btn + une variante (.btn--primaire, ...)
+// =====================================================================
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $espace-2;
+  min-height: 44px; // zone tactile minimale recommandée sur mobile
+  padding: $espace-3 $espace-6;
+  border: 2px solid transparent;
+  border-radius: $rayon;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color $transition, color $transition, border-color $transition;
+
+  @include focus-clavier;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  // Vert : action principale (commander, se connecter...) — 5,1:1
+  &--primaire {
+    background: $vert;
+    color: $blanc;
+
+    &:hover:not(:disabled) {
+      background: $vert-fonce;
+      color: $blanc;
+    }
+  }
+
+  // Contour vert : action secondaire (voir le détail, annuler...)
+  &--secondaire {
+    background: transparent;
+    border-color: $vert;
+    color: $vert;
+
+    &:hover:not(:disabled) {
+      background: $vert;
+      color: $blanc;
+    }
+  }
+
+  // Bordeaux : action mise en avant (appel à l'action de l'accueil) — 9,6:1
+  &--accent {
+    background: $bordeaux;
+    color: $blanc;
+
+    &:hover:not(:disabled) {
+      background: $bordeaux-fonce;
+      color: $blanc;
+    }
+  }
+
+  // Or : texte gris foncé sur or (6:1), jamais de blanc sur l'or (2:1)
+  &--or {
+    background: $or;
+    color: $texte;
+
+    &:hover:not(:disabled) {
+      background: $or-fonce;
+      color: $texte;
+    }
+  }
+
+  // Bouton qui prend toute la largeur (formulaires sur mobile)
+  &--bloc {
+    width: 100%;
+  }
+}

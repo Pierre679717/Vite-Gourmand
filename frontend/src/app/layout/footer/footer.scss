@@ -1,0 +1,80 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Fond vert foncé : texte blanc à 7,9:1
+.pied {
+  background: $vert-fonce;
+  color: $blanc;
+
+  a {
+    color: $blanc;
+
+    &:hover {
+      color: $or;
+    }
+
+    &:focus-visible {
+      outline-color: $or; // le bordeaux serait peu visible sur le vert
+    }
+  }
+
+  &__grille {
+    display: grid;
+    gap: $espace-8;
+    padding-block: $espace-12 $espace-8;
+
+    @include a-partir-de($point-tablette) {
+      grid-template-columns: 2fr 1.5fr 1.5fr;
+    }
+  }
+
+  &__logo {
+    font-family: $police-titres;
+    font-size: 1.5rem;
+    font-weight: 700;
+
+    span {
+      color: $or;
+    }
+  }
+
+  &__titre {
+    color: $blanc;
+    font-size: 1.25rem;
+    padding-bottom: $espace-2;
+    border-bottom: 2px solid $or;
+    display: inline-block;
+  }
+
+  &__horaires {
+    margin: 0;
+  }
+
+  &__horaire {
+    display: flex;
+    justify-content: space-between;
+    gap: $espace-4;
+    max-width: 16rem;
+
+    dd {
+      margin: 0;
+    }
+  }
+
+  &__liens {
+    display: flex;
+    flex-direction: column;
+    gap: $espace-2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__copyright {
+    margin: 0;
+    padding: $espace-4;
+    text-align: center;
+    font-size: 0.875rem;
+    border-top: 1px solid rgba($blanc, 0.2);
+  }
+}

@@ -1,0 +1,40 @@
+<footer class="pied">
+  <div class="conteneur pied__grille">
+    <section>
+      <p class="pied__logo">Vite <span aria-hidden="true">&amp;</span> Gourmand</p>
+      <p>
+        Traiteur à Bordeaux depuis 25 ans, Julie et José préparent des menus pour tous vos
+        événements, livrés chez vous.
+      </p>
+    </section>
+
+    <section aria-labelledby="titre-horaires">
+      <h2 id="titre-horaires" class="pied__titre">Horaires</h2>
+      @if (horaires(); as liste) {
+        <dl class="pied__horaires">
+          @for (horaire of liste; track horaire.jour) {
+            <div class="pied__horaire">
+              <dt>{{ horaire.jour | titlecase }}</dt>
+              <dd>{{ plage(horaire) }}</dd>
+            </div>
+          }
+        </dl>
+      } @else if (horaires() === null) {
+        <p>Horaires momentanément indisponibles.</p>
+      } @else {
+        <p>Chargement des horaires…</p>
+      }
+    </section>
+
+    <section aria-labelledby="titre-informations">
+      <h2 id="titre-informations" class="pied__titre">Informations</h2>
+      <ul class="pied__liens">
+        <li><a routerLink="/mentions-legales">Mentions légales</a></li>
+        <li><a routerLink="/cgv">Conditions générales de vente</a></li>
+        <li><a routerLink="/contact">Nous contacter</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <p class="pied__copyright">© {{ annee }} Vite &amp; Gourmand — Tous droits réservés</p>
+</footer>

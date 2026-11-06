@@ -1,0 +1,38 @@
+<section class="conteneur page">
+  <div class="formulaire-page">
+    <h1 class="titre-section">Mot de passe oublié</h1>
+
+    @if (demandeEnvoyee()) {
+      <p class="alerte alerte--succes" role="status">
+        La réinitialisation par e-mail sera bientôt disponible. En attendant, contactez-nous et nous
+        vous aiderons à retrouver l'accès à votre compte.
+      </p>
+      <a class="btn btn--primaire" routerLink="/contact">Nous contacter</a>
+    } @else {
+      <p>
+        Saisissez l'adresse e-mail de votre compte : vous recevrez un lien pour choisir un nouveau
+        mot de passe.
+      </p>
+
+      <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="envoyer()" novalidate>
+        <div class="champ">
+          <label class="champ__label" for="email">Adresse e-mail</label>
+          <input
+            id="email"
+            class="champ__saisie"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+          />
+          @if (formulaire.controls.email.touched && formulaire.controls.email.invalid) {
+            <p class="champ__erreur">Saisissez une adresse e-mail valide.</p>
+          }
+        </div>
+
+        <button class="btn btn--primaire btn--bloc" type="submit">Envoyer le lien</button>
+      </form>
+    }
+
+    <p class="formulaire-page__bas"><a routerLink="/connexion">Retour à la connexion</a></p>
+  </div>
+</section>
