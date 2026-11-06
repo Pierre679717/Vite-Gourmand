@@ -56,11 +56,13 @@
   }
 
   &__aide {
+    margin: 0;
     font-size: 0.875rem;
     color: $texte-doux;
   }
 
   &__erreur {
+    margin: 0;
     font-size: 0.875rem;
     color: $erreur;
   }
@@ -82,5 +84,95 @@ textarea.champ__saisie {
     height: 1.25rem;
     margin-top: 0.2rem;
     accent-color: $vert;
+  }
+}
+
+// ---- Pages de formulaire (connexion, inscription...) -----------------
+// Carte blanche centrée, à largeur limitée pour rester lisible
+.formulaire-page {
+  max-width: 30rem;
+  margin-inline: auto;
+  padding: $espace-6;
+  background: $blanc;
+  border: 1px solid $bordure;
+  border-radius: $rayon;
+  box-shadow: $ombre;
+
+  @media (min-width: $point-tablette) {
+    padding: $espace-8;
+  }
+
+  &--large {
+    max-width: 44rem;
+  }
+
+  &__intro {
+    font-size: 0.875rem;
+    color: $texte-doux;
+  }
+
+  &__bas {
+    margin: $espace-6 0 0;
+    text-align: center;
+  }
+}
+
+// Groupe de champs avec un titre (<fieldset> + <legend>)
+.formulaire__groupe {
+  display: flex;
+  flex-direction: column;
+  gap: $espace-4;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.formulaire__legende {
+  margin-bottom: $espace-2;
+  padding: 0;
+  font-family: $police-titres;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.formulaire__lien {
+  align-self: flex-end;
+  font-size: 0.875rem;
+}
+
+// Champ + bouton côte à côte (afficher le mot de passe)
+.champ__groupe {
+  display: flex;
+  gap: $espace-2;
+
+  .champ__saisie {
+    flex: 1;
+  }
+}
+
+.champ__bouton {
+  padding-inline: $espace-4;
+}
+
+// Liste des règles du mot de passe, cochées au fil de la saisie
+.criteres {
+  display: grid;
+  gap: $espace-1;
+  margin: $espace-2 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+
+  &__item {
+    color: $erreur;
+
+    &--ok {
+      color: $vert-fonce;
+    }
+  }
+
+  // Avant la première frappe : simple liste d'information, sans rouge
+  &--neutre &__item {
+    color: $texte-doux;
   }
 }

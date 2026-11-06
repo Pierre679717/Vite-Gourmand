@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from './core/auth/auth.guards';
+import { roleGuard, visiteurGuard } from './core/auth/auth.guards';
 import { Accueil } from './pages/accueil/accueil';
 
 /**
@@ -32,6 +32,27 @@ export const routes: Routes = [
     path: 'cgv',
     title: 'Conditions générales de vente — Vite & Gourmand',
     loadComponent: () => import('./pages/cgv/cgv').then((m) => m.Cgv),
+  },
+
+  // Authentification : réservée aux visiteurs (un connecté va vers son espace)
+  {
+    path: 'connexion',
+    title: 'Connexion — Vite & Gourmand',
+    canMatch: [visiteurGuard],
+    loadComponent: () => import('./pages/connexion/connexion').then((m) => m.Connexion),
+  },
+  {
+    path: 'inscription',
+    title: 'Créer un compte — Vite & Gourmand',
+    canMatch: [visiteurGuard],
+    loadComponent: () => import('./pages/inscription/inscription').then((m) => m.Inscription),
+  },
+  {
+    path: 'mot-de-passe-oublie',
+    title: 'Mot de passe oublié — Vite & Gourmand',
+    canMatch: [visiteurGuard],
+    loadComponent: () =>
+      import('./pages/mot-de-passe-oublie/mot-de-passe-oublie').then((m) => m.MotDePasseOublie),
   },
 
   // Espaces réservés : le guard vérifie le rôle avant même de télécharger le code

@@ -1,0 +1,208 @@
+<section class="conteneur page">
+  <div class="formulaire-page formulaire-page--large">
+    <h1 class="titre-section">Créer un compte</h1>
+    <p class="formulaire-page__intro">
+      Tous les champs sont obligatoires (<span class="champ__obligatoire" aria-hidden="true">*</span
+      >). Vos coordonnées servent uniquement à la livraison et au suivi de vos commandes.
+    </p>
+
+    @if (erreur(); as message) {
+      <p class="alerte alerte--erreur" role="alert">{{ message }}</p>
+    }
+
+    <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="envoyer()" novalidate>
+      <fieldset class="formulaire__groupe">
+        <legend class="formulaire__legende">Vos informations</legend>
+
+        <div class="formulaire__ligne">
+          <div class="champ">
+            <label class="champ__label" for="prenom">
+              Prénom <span class="champ__obligatoire" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="prenom"
+              class="champ__saisie"
+              formControlName="prenom"
+              autocomplete="given-name"
+            />
+            @if (aUneErreur('prenom')) {
+              <p class="champ__erreur">Le prénom est obligatoire.</p>
+            }
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="nom">
+              Nom <span class="champ__obligatoire" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="nom"
+              class="champ__saisie"
+              formControlName="nom"
+              autocomplete="family-name"
+            />
+            @if (aUneErreur('nom')) {
+              <p class="champ__erreur">Le nom est obligatoire.</p>
+            }
+          </div>
+        </div>
+
+        <div class="formulaire__ligne">
+          <div class="champ">
+            <label class="champ__label" for="email">
+              Adresse e-mail <span class="champ__obligatoire" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="email"
+              class="champ__saisie"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+            />
+            @if (aUneErreur('email')) {
+              <p class="champ__erreur">
+                Saisissez une adresse e-mail valide (exemple : nom&#64;domaine.fr).
+              </p>
+            }
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="telephone">
+              Téléphone mobile <span class="champ__obligatoire" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="telephone"
+              class="champ__saisie"
+              type="tel"
+              formControlName="telephone"
+              autocomplete="tel-national"
+              aria-describedby="telephone-aide"
+            />
+            <p id="telephone-aide" class="champ__aide">10 chiffres, exemple : 06 12 34 56 78</p>
+            @if (aUneErreur('telephone')) {
+              <p class="champ__erreur">Le numéro doit contenir 10 chiffres et commencer par 0.</p>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="formulaire__groupe">
+        <legend class="formulaire__legende">Adresse postale</legend>
+
+        <div class="champ">
+          <label class="champ__label" for="adresse_postale">
+            Numéro et rue <span class="champ__obligatoire" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="adresse_postale"
+            class="champ__saisie"
+            formControlName="adresse_postale"
+            autocomplete="street-address"
+          />
+          @if (aUneErreur('adresse_postale')) {
+            <p class="champ__erreur">L'adresse est obligatoire.</p>
+          }
+        </div>
+
+        <div class="formulaire__ligne">
+          <div class="champ">
+            <label class="champ__label" for="code_postal">
+              Code postal <span class="champ__obligatoire" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="code_postal"
+              class="champ__saisie"
+              formControlName="code_postal"
+              inputmode="numeric"
+              maxlength="5"
+              autocomplete="postal-code"
+            />
+            @if (aUneErreur('code_postal')) {
+              <p class="champ__erreur">Le code postal contient 5 chiffres.</p>
+            }
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="ville">
+              Ville <span class="champ__obligatoire" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="ville"
+              class="champ__saisie"
+              formControlName="ville"
+              autocomplete="address-level2"
+            />
+            @if (aUneErreur('ville')) {
+              <p class="champ__erreur">La ville est obligatoire.</p>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="formulaire__groupe">
+        <legend class="formulaire__legende">Mot de passe</legend>
+
+        <div class="champ">
+          <label class="champ__label" for="mot_de_passe">
+            Mot de passe <span class="champ__obligatoire" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="mot_de_passe"
+            class="champ__saisie"
+            type="password"
+            formControlName="mot_de_passe"
+            autocomplete="new-password"
+            [attr.maxlength]="longueurMax"
+            aria-describedby="criteres-mot-de-passe"
+          />
+          <!-- Liste mise à jour à chaque frappe ; lue par les lecteurs d'écran -->
+          <ul
+            id="criteres-mot-de-passe"
+            class="criteres"
+            [class.criteres--neutre]="!motDePasse()"
+            aria-live="polite"
+          >
+            @for (critere of criteres(); track critere.libelle) {
+              <li class="criteres__item" [class.criteres__item--ok]="critere.respecte">
+                <span aria-hidden="true">{{ critere.respecte ? '✓' : '✗' }}</span>
+                {{ critere.libelle }}
+                <span class="visuellement-masque">
+                  {{ critere.respecte ? '(respecté)' : '(manquant)' }}
+                </span>
+              </li>
+            }
+          </ul>
+          @if (aUneErreur('mot_de_passe')) {
+            <p class="champ__erreur">
+              @if (c.mot_de_passe.hasError('required')) {
+                Le mot de passe est obligatoire.
+              } @else {
+                Le mot de passe ne respecte pas toutes les règles ci-dessus.
+              }
+            </p>
+          }
+        </div>
+
+        <div class="champ">
+          <label class="champ__label" for="confirmation">
+            Confirmer le mot de passe <span class="champ__obligatoire" aria-hidden="true">*</span>
+          </label>
+          <input
+            id="confirmation"
+            class="champ__saisie"
+            type="password"
+            formControlName="confirmation"
+            autocomplete="new-password"
+          />
+          @if (confirmationDifferente()) {
+            <p class="champ__erreur">Les deux mots de passe ne sont pas identiques.</p>
+          } @else if (aUneErreur('confirmation')) {
+            <p class="champ__erreur">Confirmez votre mot de passe.</p>
+          }
+        </div>
+      </fieldset>
+
+      <button class="btn btn--primaire btn--bloc" type="submit" [disabled]="envoiEnCours()">
+        {{ envoiEnCours() ? 'Création en cours…' : 'Créer mon compte' }}
+      </button>
+    </form>
+
+    <p class="formulaire-page__bas">Déjà inscrit ? <a routerLink="/connexion">Se connecter</a></p>
+  </div>
+</section>
