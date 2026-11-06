@@ -20,21 +20,77 @@ const COLONNES_MENU = `
 class MenuModel {
 
     /**
-     * Récupérer tous les menus actifs, avec leur image principale
+     * Récupérer les menus actifs, avec leur image principale
      * (celle d'ordre 1 dans la galerie, s'il y en a une).
+     *
+     * `filtres` vient de validerFiltresMenus (utils/filtresMenus.js) :
+     * ses valeurs sont déjà des nombres vérifiés. Malgré tout, aucune
+     * valeur n'est collée dans le SQL : chaque condition ajoute un « ? »
+     * et sa valeur va dans le tableau `params` (requête paramétrée,
+     * protection contre l'injection SQL).
      */
-    static async listerActifs() {
+    static async listerActifs(filtres = {}) {
+        const conditions = ['m.actif = 1'];
+        const params = [];
+
+        // On répète le calcul : MySQL n'accepte pas l'alias prix_minimum dans le WHERE
+        if (filtres.prixMin !== undefined) {
+            conditions.push('m.prix_par_personne * m.nombre_personne_min >= ?');
+            params.push(filtres.prixMin);
+        }
+        if (filtres.prixMax !== undefined) {
+            conditions.push('m.prix_par_personne * m.nombre_personne_min <= ?');
+            params.push(filtres.prixMax);
+        }
+        if (filtres.themeId !== undefined) {
+            conditions.push('m.theme_id = ?');
+            params.push(filtres.themeId);
+        }
+        if (filtres.regimeId !== undefined) {
+            conditions.push('m.regime_id = ?');
+            params.push(filtres.regimeId);
+        }
+        if (filtres.personnes !== undefined) {
+            // Menus commandables pour ce nombre de convives
+            conditions.push('m.nombre_personne_min <= ?');
+            params.push(filtres.personnes);
+        }
+
         const [rows] = await pool.query(
             `SELECT ${COLONNES_MENU},
+                    m.theme_id, m.regime_id,
                     i.chemin AS image, i.texte_alternatif AS image_alt
              FROM menu m
              JOIN theme  t ON t.theme_id  = m.theme_id
              JOIN regime r ON r.regime_id = m.regime_id
              LEFT JOIN menu_image i ON i.menu_id = m.menu_id AND i.ordre = 1
-             WHERE m.actif = 1
-             ORDER BY m.titre`
+             WHERE ${conditions.join(' AND ')}
+             ORDER BY m.titre`,
+            params
         );
         return rows;
+    }
+
+    /**
+     * Données utiles pour construire la barre de filtres :
+     * thèmes, régimes, bornes de prix et de nombre de personnes
+     * calculées sur les menus actifs.
+     */
+    static async optionsFiltres() {
+        const [themes] = await pool.query(
+            'SELECT theme_id AS id, libelle FROM theme ORDER BY libelle'
+        );
+        const [regimes] = await pool.query(
+            'SELECT regime_id AS id, libelle FROM regime ORDER BY libelle'
+        );
+        const [[bornes]] = await pool.query(
+            `SELECT MIN(prix_par_personne * nombre_personne_min) AS prix_min,
+                    MAX(prix_par_personne * nombre_personne_min) AS prix_max,
+                    MIN(nombre_personne_min) AS personnes_min
+             FROM menu
+             WHERE actif = 1`
+        );
+        return { themes, regimes, ...bornes };
     }
 
     /**
