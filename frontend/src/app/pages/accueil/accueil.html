@@ -1,0 +1,226 @@
+<!-- ================= Bandeau principal ================= -->
+<section class="hero" aria-labelledby="titre-accueil">
+  <!-- Image décorative (alt vide) : le texte porte le message -->
+  <img
+    class="hero__image"
+    src="assets/images/accueil/salle.jpg"
+    alt=""
+    width="768"
+    height="512"
+    fetchpriority="high"
+  />
+  <div class="conteneur hero__contenu">
+    <p class="hero__surtitre">Traiteur à Bordeaux depuis 25 ans</p>
+    <h1 id="titre-accueil" class="hero__titre">L'élégance culinaire, livrée à votre table.</h1>
+    <p class="hero__texte">
+      Noël, Pâques, repas de famille ou grand évènement : Julie et José composent des menus de
+      saison et les livrent prêts à servir.
+    </p>
+    <div class="hero__actions">
+      <a class="btn btn--or" routerLink="/menus">Découvrir nos menus</a>
+      <a class="btn btn--clair" routerLink="/contact">Nous contacter</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Nos engagements (bande verte) ================= -->
+<section class="engagements" aria-label="Nos engagements">
+  <ul class="conteneur engagements__liste">
+    <li class="engagement">
+      <svg
+        class="engagement__icone"
+        aria-hidden="true"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 21c-4-3-7-6.5-7-10.5a7 7 0 0 1 14 0C19 14.5 16 18 12 21Z" />
+        <path d="M12 21V10" />
+      </svg>
+      <p><strong>Produits frais et locaux</strong> sélectionnés chaque semaine</p>
+    </li>
+    <li class="engagement">
+      <svg
+        class="engagement__icone"
+        aria-hidden="true"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+      </svg>
+      <p><strong>Commande en ligne</strong> suivie étape par étape</p>
+    </li>
+    <li class="engagement">
+      <svg
+        class="engagement__icone"
+        aria-hidden="true"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z" />
+        <circle cx="7" cy="18" r="2" />
+        <circle cx="17" cy="18" r="2" />
+      </svg>
+      <p><strong>Livraison offerte</strong> dans Bordeaux</p>
+    </li>
+  </ul>
+</section>
+
+<!-- ================= Notre maison ================= -->
+<!-- Ordre mobile (maquette) : titre, photo, texte. Sur ordinateur : photo à gauche, titre et texte à droite -->
+<section class="section conteneur maison" aria-labelledby="titre-maison">
+  <div class="maison__entete">
+    <p class="surtitre">Notre maison</p>
+    <h2 id="titre-maison">Julie et José, une équipe de passionnés</h2>
+  </div>
+
+  <div class="maison__photo">
+    <img
+      src="assets/images/accueil/julie-jose.jpg"
+      alt="Julie et José, les fondateurs de Vite & Gourmand, dans leur restaurant"
+      width="1200"
+      height="1600"
+      loading="lazy"
+    />
+    <p class="maison__badge">
+      <span class="maison__badge-nombre">25 ans</span>
+      au service des Bordelais
+    </p>
+  </div>
+
+  <div class="maison__corps">
+    <p class="maison__intro">
+      Depuis 25 ans, nous préparons les repas qui comptent : réveillons, déjeuners de Pâques,
+      mariages, séminaires. Chaque menu évolue au fil des saisons et des produits du marché.
+    </p>
+    <ul class="atouts">
+      <li>
+        <strong>Une cuisine faite maison</strong>, préparée le jour même dans notre laboratoire
+        bordelais.
+      </li>
+      <li>
+        <strong>Des allergènes indiqués plat par plat</strong>, pour que chaque convive mange
+        sereinement.
+      </li>
+      <li><strong>Un interlocuteur unique</strong>, joignable du lundi au dimanche.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= Nos menus du moment ================= -->
+<section class="section conteneur" aria-labelledby="titre-moment">
+  <div class="entete-section">
+    <div>
+      <p class="surtitre">À la carte</p>
+      <h2 id="titre-moment">Nos menus du moment</h2>
+    </div>
+    <ng-container *ngTemplateOutlet="lienMenus; context: { position: 'haut' }" />
+  </div>
+
+  @let moment = menusDuMoment();
+  @if (moment === undefined) {
+    <ul class="defilement" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <li class="carte squelette"></li>
+      }
+    </ul>
+  } @else if (moment === null) {
+    <p class="message-doux">
+      Nos menus sont momentanément indisponibles. <a routerLink="/menus">Réessayer</a>
+    </p>
+  } @else {
+    <ul class="defilement">
+      @for (menu of moment; track menu.menu_id) {
+        <li><app-menu-card [menu]="menu" variante="compacte" /></li>
+      }
+    </ul>
+  }
+  <ng-container *ngTemplateOutlet="lienMenus; context: { position: 'bas' }" />
+
+  <!-- Même lien à deux endroits selon l'écran : un seul est affiché à la fois -->
+  <ng-template #lienMenus let-position="position">
+    <a class="lien-fleche lien-fleche--{{ position }}" routerLink="/menus">
+      @if (menus(); as tous) {
+        Voir les {{ tous.length }} menus
+      } @else {
+        Voir tous les menus
+      }
+      <span aria-hidden="true">→</span>
+    </a>
+  </ng-template>
+</section>
+
+<!-- ================= Avis de nos clients ================= -->
+<section class="section section--sable" aria-labelledby="titre-avis">
+  <div class="conteneur">
+    <div class="entete-section">
+      <div>
+        <p class="surtitre">Ils nous ont fait confiance</p>
+        <h2 id="titre-avis">Avis de nos clients</h2>
+      </div>
+      @if (moyenne(); as note) {
+        <div class="moyenne">
+          <span class="moyenne__valeur"
+            >{{ note | number: '1.1-1' }}<span class="visuellement-masque"> sur 5</span></span
+          >
+          <span class="moyenne__detail">
+            <span class="etoiles" aria-hidden="true">
+              @for (pleine of etoiles(note); track $index) {
+                {{ pleine ? '★' : '☆' }}
+              }
+            </span>
+            Avis vérifiés après commande
+          </span>
+        </div>
+      }
+    </div>
+
+    @let listeAvis = avis();
+    @if (listeAvis === undefined) {
+      <p class="message-doux" role="status">Chargement des avis…</p>
+    } @else if (listeAvis === null || listeAvis.length === 0) {
+      <!-- Erreur ou aucun avis : un message sobre plutôt qu'une section vide -->
+      <p class="message-doux">Les avis de nos clients seront bientôt affichés ici.</p>
+    } @else {
+      <ul class="defilement">
+        @for (unAvis of listeAvis; track unAvis.avis_id) {
+          <li>
+            <figure class="carte avis">
+              <p class="etoiles" [attr.aria-label]="'Note : ' + unAvis.note + ' sur 5'">
+                @for (pleine of etoiles(unAvis.note); track $index) {
+                  <span aria-hidden="true">{{ pleine ? '★' : '☆' }}</span>
+                }
+              </p>
+              <blockquote class="avis__texte">« {{ unAvis.commentaire }} »</blockquote>
+              <figcaption class="avis__auteur">
+                <span class="avis__initiale" aria-hidden="true">{{ unAvis.prenom.charAt(0) }}</span>
+                <span>
+                  <strong>{{ unAvis.prenom }} {{ unAvis.initiale_nom }}</strong>
+                  <span class="avis__menu">{{ unAvis.menu }}</span>
+                </span>
+              </figcaption>
+            </figure>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>
