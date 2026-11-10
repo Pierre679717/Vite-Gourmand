@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/menus/menus').then((m) => m.Menus),
   },
   {
+    // Le titre précis (« Menu Gastronomique — ... ») est posé par le composant une fois le menu chargé
+    path: 'menus/:id',
+    title: 'Menu — Vite & Gourmand',
+    loadComponent: () => import('./pages/menu-detail/menu-detail').then((m) => m.MenuDetail),
+  },
+  {
     path: 'contact',
     title: 'Contact — Vite & Gourmand',
     loadComponent: () => import('./pages/contact/contact').then((m) => m.Contact),
