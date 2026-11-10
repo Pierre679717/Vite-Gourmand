@@ -5,32 +5,36 @@
   position: sticky; // reste visible en haut quand on fait défiler la page
   top: 0;
   z-index: 100;
-  background: $blanc;
+  background: $fond;
   border-bottom: 1px solid $bordure;
-  box-shadow: $ombre;
 
   &__barre {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 4.5rem;
+    gap: $espace-6;
+    min-height: 5.25rem; // 84 px, comme la maquette
   }
 
+  // Logo : « Vite & Gourmand » en Playfair vert, esperluette italique bordeaux
   &__logo {
+    flex-shrink: 0;
     font-family: $police-titres;
     font-size: 1.5rem;
     font-weight: 700;
-    color: $bordeaux;
+    color: $vert;
     text-decoration: none;
 
     &:hover {
-      color: $bordeaux-fonce;
+      color: $vert-fonce;
     }
   }
 
   &__esperluette {
-    color: $or;
+    font-style: italic;
+    font-weight: 400;
+    color: $bordeaux;
   }
 
   // ---- Bouton burger (mobile) ----
@@ -38,13 +42,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 5px;
+    gap: 4px;
     width: 44px;
     height: 44px;
-    padding: 10px;
-    background: none;
-    border: 0;
-    border-radius: $rayon-petit;
+    padding: 12px 11px;
+    background: $blanc;
+    border: 1px solid $bordure;
+    border-radius: $rayon-moyen;
     cursor: pointer;
 
     @include focus-clavier;
@@ -56,22 +60,24 @@
 
   &__burger-barre {
     display: block;
-    height: 3px;
+    height: 2px;
     background: $texte;
     border-radius: 2px;
-    transition: transform $transition, opacity $transition;
+    transition:
+      transform $transition,
+      opacity $transition;
   }
 
   // Les trois barres se transforment en croix quand le menu est ouvert
   &__burger[aria-expanded='true'] &__burger-barre {
     &:nth-child(2) {
-      transform: translateY(8px) rotate(45deg);
+      transform: translateY(6px) rotate(45deg);
     }
     &:nth-child(3) {
       opacity: 0;
     }
     &:nth-child(4) {
-      transform: translateY(-8px) rotate(-45deg);
+      transform: translateY(-6px) rotate(-45deg);
     }
   }
 
@@ -86,22 +92,25 @@
     flex-direction: column;
     gap: $espace-4;
     padding: $espace-4;
-    background: $blanc;
+    background: $fond;
     border-bottom: 1px solid $bordure;
-    box-shadow: $ombre;
+    box-shadow: $ombre-survol;
 
     &--ouverte {
       display: flex;
     }
 
-    // Tablette et ordinateur : navigation toujours visible, en ligne
+    // Ordinateur : liens au centre, compte à droite
     @include a-partir-de($point-bureau) {
       display: flex;
+      flex: 1;
       position: static;
       flex-direction: row;
       align-items: center;
+      justify-content: space-between;
       gap: $espace-6;
       padding: 0;
+      background: none;
       border: 0;
       box-shadow: none;
     }
@@ -110,18 +119,19 @@
   &__liens {
     display: flex;
     flex-direction: column;
-    gap: $espace-2;
+    gap: $espace-1;
     margin: 0;
     padding: 0;
     list-style: none;
 
     @include a-partir-de($point-bureau) {
       flex-direction: row;
-      gap: $espace-6;
+      gap: $espace-8;
+      margin-inline: auto; // centre les liens entre le logo et le compte
     }
   }
 
-  // Zone de compte : empilée sur mobile, en ligne à partir de la tablette
+  // Zone de compte : empilée sur mobile, en ligne sur ordinateur
   &__compte {
     display: flex;
     flex-direction: column;
@@ -143,18 +153,18 @@
     display: block;
     padding: $espace-2 0;
     color: $texte;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
-    border-bottom: 3px solid transparent;
+    border-bottom: 1.5px solid transparent;
 
     &:hover {
       color: $vert;
     }
 
-    // Page en cours : soulignement doré
+    // Page en cours : texte et soulignement verts
     &--actif {
       color: $vert;
-      border-bottom-color: $or;
+      border-bottom-color: $vert;
     }
   }
 }

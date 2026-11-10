@@ -1,40 +1,56 @@
 <footer class="pied">
-  <div class="conteneur pied__grille">
-    <section>
-      <p class="pied__logo">Vite <span aria-hidden="true">&amp;</span> Gourmand</p>
-      <p>
-        Traiteur à Bordeaux depuis 25 ans, Julie et José préparent des menus pour tous vos
-        événements, livrés chez vous.
-      </p>
-    </section>
+  <div class="conteneur">
+    <div class="pied__grille">
+      <section>
+        <p class="pied__logo">
+          Vite <span class="pied__esperluette" aria-hidden="true">&amp;</span>
+          <span class="visuellement-masque">et</span> Gourmand
+        </p>
+        <p class="pied__texte">
+          Traiteur à Bordeaux. Menus de fêtes, de saison et d'évènements, livrés prêts à servir.
+        </p>
+      </section>
 
-    <section aria-labelledby="titre-horaires">
-      <h2 id="titre-horaires" class="pied__titre">Horaires</h2>
-      @if (horaires(); as liste) {
-        <dl class="pied__horaires">
-          @for (horaire of liste; track horaire.jour) {
-            <div class="pied__horaire">
-              <dt>{{ horaire.jour | titlecase }}</dt>
-              <dd>{{ plage(horaire) }}</dd>
-            </div>
-          }
-        </dl>
-      } @else if (horaires() === null) {
-        <p>Horaires momentanément indisponibles.</p>
-      } @else {
-        <p>Chargement des horaires…</p>
-      }
-    </section>
+      <section aria-labelledby="titre-horaires">
+        <h2 id="titre-horaires" class="pied__titre">Horaires</h2>
+        @if (horaires(); as liste) {
+          <dl class="pied__horaires">
+            @for (horaire of liste; track horaire.jour) {
+              <div class="pied__horaire">
+                <dt>{{ horaire.jour | titlecase }}</dt>
+                <dd>{{ plage(horaire) }}</dd>
+              </div>
+            }
+          </dl>
+        } @else if (horaires() === null) {
+          <p class="pied__texte">Horaires momentanément indisponibles.</p>
+        } @else {
+          <p class="pied__texte">Chargement des horaires…</p>
+        }
+      </section>
 
-    <section aria-labelledby="titre-informations">
-      <h2 id="titre-informations" class="pied__titre">Informations</h2>
-      <ul class="pied__liens">
-        <li><a routerLink="/mentions-legales">Mentions légales</a></li>
-        <li><a routerLink="/cgv">Conditions générales de vente</a></li>
-        <li><a routerLink="/contact">Nous contacter</a></li>
-      </ul>
-    </section>
+      <section aria-labelledby="titre-adresse">
+        <h2 id="titre-adresse" class="pied__titre">Nous trouver</h2>
+        <address class="pied__adresse">
+          <p>128, avenue des Vignes<br />33000 Bordeaux</p>
+          <p><a href="tel:+33123456789">01 23 45 67 89</a></p>
+          <p><a href="mailto:contact@vite-gourmand.fr">contact&#64;vite-gourmand.fr</a></p>
+        </address>
+      </section>
+
+      <section aria-labelledby="titre-informations">
+        <h2 id="titre-informations" class="pied__titre">Informations</h2>
+        <ul class="pied__liens">
+          <li><a routerLink="/menus">Nos menus</a></li>
+          <li><a routerLink="/contact">Contact</a></li>
+          <li><a routerLink="/mentions-legales">Mentions légales</a></li>
+          <li><a routerLink="/cgv">Conditions générales de vente</a></li>
+          <!-- Page dédiée à venir avec les pages légales : pour l'instant, vers les mentions légales -->
+          <li><a routerLink="/mentions-legales">Politique de confidentialité</a></li>
+        </ul>
+      </section>
+    </div>
+
+    <p class="pied__copyright">© {{ annee }} Vite &amp; Gourmand — Tous droits réservés</p>
   </div>
-
-  <p class="pied__copyright">© {{ annee }} Vite &amp; Gourmand — Tous droits réservés</p>
 </footer>

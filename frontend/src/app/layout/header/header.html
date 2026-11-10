@@ -12,7 +12,9 @@
       [attr.aria-expanded]="menuOuvert()"
       (click)="basculerMenu()"
     >
-      <span class="visuellement-masque">{{ menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu' }}</span>
+      <span class="visuellement-masque">{{
+        menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'
+      }}</span>
       <span class="entete__burger-barre" aria-hidden="true"></span>
       <span class="entete__burger-barre" aria-hidden="true"></span>
       <span class="entete__burger-barre" aria-hidden="true"></span>
@@ -58,12 +60,13 @@
       <div class="entete__compte">
         @if (auth.utilisateur(); as utilisateur) {
           <span class="entete__bonjour">Bonjour {{ utilisateur.prenom }}</span>
-          <a class="btn btn--secondaire" [routerLink]="auth.lienEspace()">Mon espace</a>
-          <button class="btn btn--accent" type="button" (click)="seDeconnecter()">
+          <a class="btn btn--secondaire btn--petit" [routerLink]="auth.lienEspace()">Mon espace</a>
+          <button class="btn btn--accent btn--petit" type="button" (click)="seDeconnecter()">
             Déconnexion
           </button>
         } @else {
-          <a class="btn btn--primaire" routerLink="/connexion">Connexion</a>
+          <a class="btn btn--secondaire btn--petit" routerLink="/connexion">Se connecter</a>
+          <a class="btn btn--primaire btn--petit" routerLink="/inscription">Créer un compte</a>
         }
       </div>
     </nav>
