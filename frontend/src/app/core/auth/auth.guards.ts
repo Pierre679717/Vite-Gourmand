@@ -11,7 +11,7 @@ import { AuthService } from './auth.service';
  * téléchargé par le navigateur.
  *
  * - Visiteur non connecté -> page de connexion, avec l'adresse demandée
- *   dans ?retour=... pour l'y renvoyer après la connexion.
+ *   (et ses paramètres) dans ?retour=... pour l'y renvoyer après la connexion.
  * - Connecté mais sans le bon rôle -> son propre espace.
  *
  * Ce guard améliore la navigation, mais la vraie protection reste côté
@@ -24,7 +24,13 @@ export function roleGuard(...roles: Role[]): CanMatchFn {
     const utilisateur = auth.utilisateur();
 
     if (!utilisateur) {
-      const retour = '/' + segments.map((segment) => segment.path).join('/');
+      // Adresse demandée, avec ses paramètres (?personnes=8...) : on y revient après la connexion
+      const parametres = router.currentNavigation()?.extractedUrl.queryParams ?? {};
+      const retour = router.serializeUrl(
+        router.createUrlTree(['/', ...segments.map((segment) => segment.path)], {
+          queryParams: parametres,
+        }),
+      );
       return router.createUrlTree(['/connexion'], { queryParams: { retour } });
     }
     if (!roles.includes(utilisateur.role)) {

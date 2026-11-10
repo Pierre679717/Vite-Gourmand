@@ -39,14 +39,16 @@
     padding: $espace-2 $espace-3;
     background: $blanc;
     color: $texte;
-    border: 1px solid #8a8a8a; // 3,4:1 : bordure visible (critère 3:1)
-    border-radius: $rayon-petit;
-    transition: border-color $transition, box-shadow $transition;
+    border: 1px solid $bordure-champ; // 3,4:1 : bordure visible (critère 3:1)
+    border-radius: $rayon-moyen;
+    transition:
+      border-color $transition,
+      box-shadow $transition;
 
     &:focus {
       outline: none;
       border-color: $vert;
-      box-shadow: 0 0 0 3px rgba($vert, 0.25);
+      box-shadow: 0 0 0 3px rgba($vert, 0.2);
     }
 
     // Erreur affichée seulement après que l'utilisateur a quitté le champ

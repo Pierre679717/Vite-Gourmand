@@ -1,0 +1,485 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.detail {
+  padding-block: $espace-6 $espace-16;
+
+  @include a-partir-de($point-tablette) {
+    padding-block: $espace-8 $espace-16;
+  }
+
+  // Ordinateur : fil d'Ariane ; mobile : « ← Tous les menus » (maquettes)
+  &__fil {
+    display: none;
+
+    @include a-partir-de($point-tablette) {
+      display: block;
+    }
+  }
+
+  &__retour {
+    display: inline-flex;
+    gap: $espace-2;
+    margin-bottom: $espace-4;
+    color: $vert;
+    font-weight: 600;
+
+    @include a-partir-de($point-tablette) {
+      display: none;
+    }
+  }
+
+  // Ordre du code = ordre mobile : galerie, présentation, composition, estimation, infos.
+  // Sur ordinateur, la grille place l'estimation à droite, sous la présentation.
+  &__grille {
+    display: grid;
+    // Mobile : une colonne. Les zones doivent être déclarées ici aussi,
+    // sinon le navigateur ne sait pas où placer les blocs nommés (grid-area).
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'galerie'
+      'presentation'
+      'composition'
+      'estimation'
+      'pratique';
+    gap: $espace-8;
+
+    @include a-partir-de($point-bureau) {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      grid-template-areas:
+        'galerie presentation'
+        'galerie estimation'
+        'composition composition'
+        'pratique pratique';
+      column-gap: $espace-12;
+      row-gap: $espace-6;
+    }
+  }
+
+  &__squelette {
+    min-height: 32rem;
+    border-radius: $rayon;
+    background: linear-gradient(90deg, #efe9e0 25%, #f8f4ee 50%, #efe9e0 75%);
+    background-size: 200% 100%;
+    animation: reflet 1.4s ease-in-out infinite;
+  }
+}
+
+// ---- Galerie -----------------------------------------------------------------
+.galerie {
+  grid-area: galerie;
+  align-self: start;
+
+  &__principale {
+    display: block;
+    width: 100%;
+    aspect-ratio: 9 / 7;
+    object-fit: cover;
+    border-radius: $rayon;
+
+    &--vide {
+      display: grid;
+      place-items: center;
+      background: $vert-clair;
+      color: $vert;
+      font-family: $police-titres;
+      font-size: 1.5rem;
+    }
+  }
+
+  &__vignettes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $espace-3;
+    margin: $espace-3 0 0;
+    padding: 0;
+    list-style: none;
+
+    @include a-partir-de($point-tablette) {
+      gap: $espace-4;
+      margin-top: $espace-4;
+    }
+  }
+
+  &__vignette {
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    background: none;
+    border: 2px solid transparent;
+    border-radius: $rayon-moyen;
+    cursor: pointer;
+
+    @include focus-clavier;
+
+    img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      object-fit: cover;
+    }
+
+    // Vignette affichée en grand : cadre vert
+    &[aria-pressed='true'] {
+      border-color: $vert;
+    }
+  }
+}
+
+// ---- Présentation --------------------------------------------------------------
+.presentation {
+  grid-area: presentation;
+  display: flex;
+  flex-direction: column;
+  gap: $espace-4;
+
+  &__titre {
+    margin: $espace-2 0 0;
+    font-size: clamp(2.25rem, 5vw, 3.75rem);
+    line-height: 1.05;
+  }
+
+  &__description {
+    margin: 0;
+    color: $texte-doux;
+    font-size: 1.0625rem;
+
+    @include a-partir-de($point-tablette) {
+      font-size: 1.1875rem;
+    }
+  }
+}
+
+.tuiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $espace-2;
+  margin: $espace-2 0 0;
+
+  @include a-partir-de($point-tablette) {
+    gap: $espace-3;
+  }
+}
+
+.tuile {
+  padding: $espace-3;
+  background: $blanc;
+  border: 1px solid $bordure;
+  border-radius: $rayon-moyen;
+
+  @include a-partir-de($point-tablette) {
+    padding: $espace-4;
+  }
+
+  dt {
+    font-size: 0.8125rem;
+    color: $texte-doux;
+  }
+
+  dd {
+    margin: $espace-1 0 0;
+    font-size: 1rem;
+    font-weight: 700;
+
+    @include a-partir-de($point-tablette) {
+      font-size: 1.125rem;
+    }
+  }
+
+  &--stock dd {
+    color: $bordeaux;
+  }
+}
+
+// Libellés longs sur ordinateur, courts sur mobile (« 6 pers. », « Reste 4 cmd. »)
+.tuile__court {
+  @include a-partir-de($point-tablette) {
+    display: none;
+  }
+}
+
+.tuile__long {
+  display: none;
+
+  @include a-partir-de($point-tablette) {
+    display: inline;
+  }
+}
+
+// ---- Encadré bordeaux des conditions -----------------------------------------------
+.conditions {
+  padding: $espace-6;
+  background: $bordeaux;
+  color: $blanc; // 9,9:1
+  border-radius: $rayon;
+
+  &__titre {
+    display: flex;
+    align-items: center;
+    gap: $espace-3;
+    margin: 0 0 $espace-3;
+    font-family: $police-texte;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $blanc;
+
+    @include a-partir-de($point-tablette) {
+      font-size: 1.25rem;
+    }
+  }
+
+  &__liste {
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: 1.6;
+
+    @include a-partir-de($point-tablette) {
+      padding-left: 3.75rem; // aligné sous le texte du titre
+    }
+
+    strong {
+      font-weight: 700;
+    }
+  }
+}
+
+// ---- Composition ------------------------------------------------------------------
+.composition {
+  grid-area: composition;
+
+  @include a-partir-de($point-bureau) {
+    margin-top: $espace-12;
+  }
+
+  &__titre {
+    margin-bottom: $espace-6;
+  }
+
+  &__colonnes {
+    display: grid;
+    gap: $espace-4;
+
+    @include a-partir-de($point-tablette) {
+      grid-template-columns: repeat(3, 1fr);
+      gap: $espace-6;
+    }
+  }
+
+  &__groupe {
+    padding: $espace-6;
+
+    .surtitre {
+      font-family: $police-texte;
+    }
+  }
+
+  &__plats {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.plat {
+  padding-block: $espace-4;
+  border-bottom: 1px solid $bordure;
+
+  &:first-child {
+    padding-top: $espace-2;
+  }
+
+  &__titre {
+    margin: 0 0 $espace-3;
+    font-family: $police-titres;
+    font-size: 1.25rem;
+    line-height: 1.3;
+
+    @include a-partir-de($point-tablette) {
+      font-size: 1.375rem;
+    }
+  }
+
+  &__allergenes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $espace-2;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $texte-doux;
+  }
+}
+
+// ---- Estimation du prix -----------------------------------------------------------
+.estimation {
+  grid-area: estimation;
+  align-self: start;
+  padding: $espace-6;
+
+  &__titre {
+    margin: 0 0 $espace-6;
+    font-family: $police-texte;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &__convives {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: $espace-4;
+    border-bottom: 1px solid $bordure;
+  }
+
+  &__lignes {
+    margin: $espace-4 0 0;
+  }
+
+  &__ligne {
+    display: flex;
+    justify-content: space-between;
+    gap: $espace-4;
+    margin-bottom: $espace-2;
+    color: $texte-doux;
+
+    dd {
+      margin: 0;
+      color: $texte;
+    }
+  }
+
+  &__aide {
+    margin: -$espace-1 0 $espace-2;
+    font-size: 0.875rem;
+    color: $texte-doux;
+  }
+
+  &__livraison {
+    text-align: right;
+  }
+
+  &__total {
+    align-items: baseline;
+    margin: $espace-4 0 $espace-6;
+    padding-top: $espace-4;
+    border-top: 1px solid $bordure;
+    color: $texte;
+    font-weight: 700;
+
+    dd {
+      font-family: $police-titres;
+      font-size: 2rem;
+      font-weight: 500;
+      color: $vert;
+    }
+  }
+
+  &__commander {
+    min-height: 56px;
+    font-size: 1.0625rem;
+  }
+
+  &__note {
+    margin: $espace-4 0 0;
+    font-size: 0.875rem;
+    color: $texte-doux;
+    text-align: center;
+  }
+}
+
+// Compteur − 6 +
+.compteur {
+  display: flex;
+  align-items: center;
+  gap: $espace-4;
+
+  &__bouton {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: $blanc;
+    border: 1px solid $bordure-champ;
+    border-radius: 50%;
+    color: $texte;
+    font-size: 1.25rem;
+    cursor: pointer;
+
+    @include focus-clavier;
+
+    &:hover:not(:disabled) {
+      border-color: $vert;
+      color: $vert;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__valeur {
+    min-width: 2ch;
+    font-size: 1.375rem;
+    font-weight: 700;
+    text-align: center;
+  }
+}
+
+// ---- Informations pratiques ---------------------------------------------------------
+.pratique {
+  grid-area: pratique;
+  display: grid;
+  gap: $espace-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: $espace-6;
+    margin-top: $espace-8;
+  }
+
+  &__tuile {
+    padding: $espace-6;
+    background: $vert-clair;
+    border-radius: $rayon;
+
+    p {
+      margin: 0;
+      color: $texte;
+    }
+
+    // « Suivi de commande » : ordinateur seulement (maquette mobile)
+    &--bureau {
+      display: none;
+
+      @include a-partir-de($point-tablette) {
+        display: block;
+      }
+    }
+  }
+
+  &__titre {
+    margin: 0 0 $espace-2;
+    font-family: $police-texte;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $vert;
+  }
+}
+
+@keyframes reflet {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}

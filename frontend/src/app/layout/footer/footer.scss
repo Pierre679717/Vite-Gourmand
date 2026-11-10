@@ -1,16 +1,19 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// Fond vert foncé : texte blanc à 7,9:1
+// Fond vert très foncé : texte blanc à 12,6:1
 .pied {
   background: $vert-fonce;
-  color: $blanc;
+  color: rgba($blanc, 0.88);
+  font-size: 0.9375rem;
 
   a {
-    color: $blanc;
+    color: rgba($blanc, 0.88);
+    text-decoration: none;
 
     &:hover {
       color: $or;
+      text-decoration: underline;
     }
 
     &:focus-visible {
@@ -24,46 +27,70 @@
     padding-block: $espace-12 $espace-8;
 
     @include a-partir-de($point-tablette) {
-      grid-template-columns: 2fr 1.5fr 1.5fr;
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include a-partir-de($point-bureau) {
+      grid-template-columns: 1.2fr 1fr 1fr 1fr;
+      gap: $espace-12;
     }
   }
 
   &__logo {
+    margin-bottom: $espace-3;
     font-family: $police-titres;
     font-size: 1.5rem;
     font-weight: 700;
-
-    span {
-      color: $or;
-    }
+    color: $blanc;
   }
 
+  &__esperluette {
+    font-style: italic;
+    font-weight: 400;
+    color: $or;
+  }
+
+  &__texte {
+    margin: 0;
+    max-width: 18rem;
+  }
+
+  // HORAIRES, NOUS TROUVER... : petites capitales dorées
   &__titre {
-    color: $blanc;
-    font-size: 1.25rem;
-    padding-bottom: $espace-2;
-    border-bottom: 2px solid $or;
-    display: inline-block;
+    margin-bottom: $espace-4;
+    font-family: $police-texte;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $or;
   }
 
   &__horaires {
+    display: grid;
+    gap: $espace-1;
     margin: 0;
   }
 
   &__horaire {
-    display: flex;
-    justify-content: space-between;
-    gap: $espace-4;
-    max-width: 16rem;
+    display: grid;
+    grid-template-columns: 6.5rem auto;
 
     dd {
       margin: 0;
     }
   }
 
+  &__adresse {
+    font-style: normal;
+
+    p {
+      margin: 0 0 $espace-2;
+    }
+  }
+
   &__liens {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: $espace-2;
     margin: 0;
     padding: 0;
@@ -72,9 +99,8 @@
 
   &__copyright {
     margin: 0;
-    padding: $espace-4;
-    text-align: center;
-    font-size: 0.875rem;
-    border-top: 1px solid rgba($blanc, 0.2);
+    padding-block: $espace-6;
+    font-size: 0.8125rem;
+    border-top: 1px solid rgba($blanc, 0.15);
   }
 }

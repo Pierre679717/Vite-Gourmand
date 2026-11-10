@@ -1,5 +1,5 @@
 // =====================================================================
-// Cartes — utilisées pour les menus, les avis, les tableaux de bord
+// Cartes et pastilles — menus, avis, tuiles d'information
 // =====================================================================
 @use 'variables' as *;
 
@@ -11,7 +11,9 @@
   border: 1px solid $bordure;
   border-radius: $rayon;
   box-shadow: $ombre;
-  transition: transform $transition, box-shadow $transition;
+  transition:
+    transform $transition,
+    box-shadow $transition;
 
   // Carte cliquable : légère élévation au survol
   &--interactive:hover {
@@ -21,7 +23,7 @@
 
   &__image {
     width: 100%;
-    aspect-ratio: 3 / 2; // évite le décalage de la page pendant le chargement
+    aspect-ratio: 16 / 11; // évite le décalage de la page pendant le chargement
     object-fit: cover;
   }
 
@@ -29,57 +31,63 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: $espace-2;
-    padding: $espace-4 $espace-6;
+    gap: $espace-3;
+    padding: $espace-6;
   }
 
   &__titre {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 500;
   }
 
   &__texte {
     margin: 0;
     color: $texte-doux;
   }
-
-  &__pied {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $espace-2;
-    margin-top: auto; // pousse le pied en bas, même si les textes diffèrent
-    padding: $espace-4 $espace-6;
-    border-top: 1px solid $bordure;
-  }
-
-  &__prix {
-    font-family: $police-titres;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: $bordeaux;
-  }
 }
 
-// Petite étiquette (thème, régime, « épuisé »...)
+// Pastille (thème, régime, allergène, « Épuisé »...)
+// Par défaut : vert clair (régime)
 .badge {
   display: inline-block;
-  padding: $espace-1 $espace-3;
-  border-radius: 999px;
+  padding: 0.2rem $espace-3;
+  border-radius: $rayon-pilule;
   background: $vert-clair;
-  color: $vert-fonce;
-  font-size: 0.875rem;
+  color: $vert;
+  font-size: 0.8125rem;
   font-weight: 600;
+  line-height: 1.5;
 
-  &--or {
-    background: $or;
-    color: $texte;
+  // Rose et bordeaux : thème
+  &--theme {
+    background: $bordeaux-clair;
+    color: $bordeaux;
   }
 
+  // Bordeaux plein : « Épuisé »
   &--bordeaux {
     background: $bordeaux;
     color: $blanc;
   }
+
+  // Beige : allergènes
+  &--neutre {
+    background: $fond;
+    color: $texte-doux;
+    border: 1px solid $bordure;
+    font-weight: 500;
+  }
+}
+
+// Liste de pastilles côte à côte
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $espace-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 // Grille de cartes : 1 colonne sur mobile, puis autant que la place permet

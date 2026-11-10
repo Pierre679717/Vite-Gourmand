@@ -61,15 +61,19 @@ class AvisController {
     /**
      * GET /api/avis
      * Avis validés uniquement, pour la page d'accueil.
-     * On n'expose que le prénom et l'initiale du nom (minimisation RGPD).
+     * On n'expose que le prénom et l'initiale du nom (minimisation RGPD),
+     * ainsi que le titre du menu commandé (« Lucie M. · Menu Gastronomique »).
      */
     static async lister(req, res) {
         try {
             const [avis] = await pool.query(
                 `SELECT a.avis_id, a.note, a.commentaire, a.date_creation,
-                        u.prenom, CONCAT(LEFT(u.nom, 1), '.') AS initiale_nom
+                        u.prenom, CONCAT(LEFT(u.nom, 1), '.') AS initiale_nom,
+                        m.titre AS menu
                  FROM avis a
                  JOIN utilisateur u ON u.utilisateur_id = a.utilisateur_id
+                 JOIN commande c    ON c.commande_id    = a.commande_id
+                 JOIN menu m        ON m.menu_id        = c.menu_id
                  WHERE a.statut = 'valide'
                  ORDER BY a.date_creation DESC
                  LIMIT 20`

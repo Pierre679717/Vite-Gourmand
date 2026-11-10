@@ -30,8 +30,9 @@
               }
             ],
             "styles": [
-              "@fontsource-variable/open-sans/index.css",
+              "@fontsource-variable/dm-sans/index.css",
               "@fontsource-variable/playfair-display/index.css",
+              "@fontsource-variable/playfair-display/wght-italic.css",
               "src/styles.scss"
             ],
             "stylePreprocessorOptions": {
@@ -50,8 +51,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "12kB"
                 }
               ],
               "outputHashing": "all"

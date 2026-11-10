@@ -32,7 +32,7 @@ export class Footer {
 
   protected readonly annee = new Date().getFullYear();
 
-  /** "09:00" + "19:00" -> "9h00 – 19h00", ou "Fermé" */
+  /** "09:00" + "19:00" -> "9h – 19h" (comme sur la maquette), ou "Fermé" */
   protected plage(horaire: Horaire): string {
     if (!horaire.heure_ouverture || !horaire.heure_fermeture) {
       return 'Fermé';
@@ -42,6 +42,7 @@ export class Footer {
 
   private heure(valeur: string): string {
     const [heures, minutes] = valeur.split(':');
-    return `${Number(heures)}h${minutes}`;
+    // "09:30" -> "9h30", mais "09:00" -> "9h"
+    return minutes === '00' ? `${Number(heures)}h` : `${Number(heures)}h${minutes}`;
   }
 }

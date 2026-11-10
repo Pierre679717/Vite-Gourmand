@@ -1,5 +1,6 @@
 // =====================================================================
 // Boutons — classes BEM : .btn + une variante (.btn--primaire, ...)
+// Forme « pilule » des maquettes (coins entièrement arrondis).
 // =====================================================================
 @use 'variables' as *;
 @use 'mixins' as *;
@@ -10,22 +11,28 @@
   justify-content: center;
   gap: $espace-2;
   min-height: 44px; // zone tactile minimale recommandée sur mobile
-  padding: $espace-3 $espace-6;
-  border: 2px solid transparent;
-  border-radius: $rayon;
+  padding: $espace-2 $espace-6;
+  border: 1.5px solid transparent;
+  border-radius: $rayon-pilule;
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color $transition, color $transition, border-color $transition;
+  transition:
+    background-color $transition,
+    color $transition,
+    border-color $transition;
 
   @include focus-clavier;
 
-  &:disabled {
-    opacity: 0.6;
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.55;
     cursor: not-allowed;
   }
 
-  // Vert : action principale (commander, se connecter...) — 5,1:1
+  // Vert foncé plein : action principale (Créer un compte, Voir le détail, Commander)
   &--primaire {
     background: $vert;
     color: $blanc;
@@ -36,7 +43,7 @@
     }
   }
 
-  // Contour vert : action secondaire (voir le détail, annuler...)
+  // Contour : action secondaire (Se connecter, Réinitialiser...)
   &--secondaire {
     background: transparent;
     border-color: $vert;
@@ -48,7 +55,7 @@
     }
   }
 
-  // Bordeaux : action mise en avant (appel à l'action de l'accueil) — 9,6:1
+  // Bordeaux : déconnexion, actions sensibles — 9,9:1
   &--accent {
     background: $bordeaux;
     color: $blanc;
@@ -59,7 +66,8 @@
     }
   }
 
-  // Or : texte gris foncé sur or (6:1), jamais de blanc sur l'or (2:1)
+  // Or : « Découvrir nos menus » sur la photo de l'accueil.
+  // Texte presque noir sur or (8,9:1), jamais de blanc sur l'or (2:1)
   &--or {
     background: $or;
     color: $texte;
@@ -70,8 +78,54 @@
     }
   }
 
-  // Bouton qui prend toute la largeur (formulaires sur mobile)
+  // Contour blanc : bouton posé sur une photo sombre (« Nous contacter »)
+  &--clair {
+    background: transparent;
+    border-color: rgba($blanc, 0.85);
+    color: $blanc;
+
+    &:hover:not(:disabled) {
+      background: $blanc;
+      color: $texte;
+    }
+
+    &:focus-visible {
+      outline-color: $or;
+    }
+  }
+
+  // Bouton de l'en-tête (Se connecter, Créer un compte)
+  &--petit {
+    min-height: 46px;
+    padding-inline: $espace-6;
+  }
+
+  // Bouton qui prend toute la largeur (cartes, formulaires sur mobile)
   &--bloc {
     width: 100%;
+  }
+}
+
+// Lien d'action souligné (« Réinitialiser », « Voir les menus → »)
+.lien-action {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: $vert;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+
+  @include focus-clavier;
+
+  &:hover {
+    color: $vert-fonce;
+  }
+
+  &:disabled {
+    color: $texte-doux;
+    text-decoration: none;
+    cursor: default;
   }
 }

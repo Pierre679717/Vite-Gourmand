@@ -1,0 +1,313 @@
+@let e = etat();
+
+@switch (e.statut) {
+  @case ('introuvable') {
+    <app-page-introuvable />
+  }
+
+  @case ('erreur') {
+    <section class="conteneur page">
+      <div class="alerte alerte--erreur">
+        <p>Impossible de charger ce menu. {{ e.message }}</p>
+        <a class="btn btn--primaire" routerLink="/menus">Retour aux menus</a>
+      </div>
+    </section>
+  }
+
+  @case ('chargement') {
+    <section class="conteneur detail" aria-busy="true">
+      <p class="visuellement-masque" role="status">Chargement du menu…</p>
+      <div class="detail__squelette" aria-hidden="true"></div>
+    </section>
+  }
+
+  @case ('succes') {
+    @let m = e.detail.menu;
+    @let estim = estimation();
+
+    <article class="conteneur detail">
+      <!-- Ordinateur : fil d'Ariane ; mobile : simple lien retour (maquettes) -->
+      <nav class="fil-ariane detail__fil" aria-label="Fil d'Ariane">
+        <ol>
+          <li><a routerLink="/">Accueil</a></li>
+          <li><a routerLink="/menus">Nos menus</a></li>
+          <li aria-current="page">{{ m.titre }}</li>
+        </ol>
+      </nav>
+      <a class="detail__retour" routerLink="/menus"
+        ><span aria-hidden="true">←</span> Tous les menus</a
+      >
+
+      <div class="detail__grille">
+        <!-- ============ Galerie ============ -->
+        <section class="galerie" aria-label="Photos du menu">
+          @if (image(); as img) {
+            <img
+              class="galerie__principale"
+              [src]="img.chemin"
+              [alt]="img.texte_alternatif"
+              width="1000"
+              height="780"
+              fetchpriority="high"
+            />
+          } @else {
+            <div class="galerie__principale galerie__principale--vide" aria-hidden="true">
+              Vite &amp; Gourmand
+            </div>
+          }
+
+          <!-- Vignettes seulement s'il y a plusieurs photos -->
+          @if (e.detail.images.length > 1) {
+            <ul class="galerie__vignettes">
+              @for (vignette of e.detail.images; track vignette.image_id; let i = $index) {
+                <li>
+                  <button
+                    type="button"
+                    class="galerie__vignette"
+                    [attr.aria-pressed]="i === imageActive()"
+                    [attr.aria-label]="
+                      'Afficher la photo ' + (i + 1) + ' : ' + vignette.texte_alternatif
+                    "
+                    (click)="afficherImage(i)"
+                  >
+                    <img [src]="vignette.chemin" alt="" width="240" height="120" loading="lazy" />
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <!-- ============ Présentation ============ -->
+        <div class="presentation">
+          <ul class="badges" aria-label="Caractéristiques du menu">
+            <li class="badge badge--theme">
+              <span class="visuellement-masque">Thème : </span>{{ m.theme }}
+            </li>
+            <li class="badge"><span class="visuellement-masque">Régime : </span>{{ m.regime }}</li>
+          </ul>
+
+          <h1 class="presentation__titre">{{ m.titre }}</h1>
+          <p class="presentation__description">{{ m.description }}</p>
+
+          <dl class="tuiles">
+            <div class="tuile">
+              <dt>Minimum</dt>
+              <dd>
+                {{ m.nombre_personne_min }} <span class="tuile__long">personnes</span
+                ><span class="tuile__court">pers.</span>
+              </dd>
+            </div>
+            <div class="tuile">
+              <dt>Prix pour {{ m.nombre_personne_min }}</dt>
+              <dd>{{ m.prix_minimum | prix }}</dd>
+            </div>
+            <div class="tuile tuile--stock">
+              <dt>
+                <span class="tuile__long">Disponibilité</span
+                ><span class="tuile__court">Reste</span>
+              </dt>
+              <dd>
+                @if (epuise()) {
+                  Épuisé
+                } @else {
+                  {{ m.quantite_restante }}
+                  <span class="tuile__long">{{
+                    m.quantite_restante > 1 ? 'restantes' : 'restante'
+                  }}</span>
+                  <span class="tuile__court">cmd.</span>
+                }
+              </dd>
+            </div>
+          </dl>
+
+          <!-- Encadré des conditions : bien visible, avant toute commande -->
+          <section class="conditions" aria-labelledby="titre-conditions">
+            <h2 id="titre-conditions" class="conditions__titre">
+              <svg
+                aria-hidden="true"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 7v6M12 17h.01" />
+              </svg>
+              À lire avant de commander
+            </h2>
+            <ul class="conditions__liste">
+              @for (phrase of conditions(); track $index) {
+                <li>
+                  @for (morceau of phrase; track $index) {
+                    @if (morceau.gras) {
+                      <strong>{{ morceau.texte }}</strong>
+                    } @else {
+                      {{ morceau.texte }}
+                    }
+                  }
+                </li>
+              }
+              <li>{{ conditionMateriel }}</li>
+            </ul>
+          </section>
+        </div>
+
+        <!-- ============ Composition ============ -->
+        <section class="composition" aria-labelledby="titre-composition">
+          <h2 id="titre-composition" class="composition__titre">Composition du menu</h2>
+          <div class="composition__colonnes">
+            @for (groupe of groupes(); track groupe.categorie) {
+              <section class="carte composition__groupe" [attr.aria-label]="groupe.libelle">
+                <h3 class="surtitre">{{ groupe.libelle }}</h3>
+                <ul class="composition__plats">
+                  @for (plat of groupe.plats; track plat.plat_id) {
+                    <li class="plat">
+                      <p class="plat__titre">{{ plat.titre }}</p>
+                      <div class="plat__allergenes">
+                        @if (plat.allergenes.length > 0) {
+                          <span class="plat__label">Allergènes :</span>
+                          <ul class="badges">
+                            @for (allergene of plat.allergenes; track allergene) {
+                              <li class="badge badge--neutre">{{ allergene }}</li>
+                            }
+                          </ul>
+                        } @else {
+                          <span class="plat__label">Aucun allergène majeur déclaré</span>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+          </div>
+        </section>
+
+        <!-- ============ Estimation et commande ============ -->
+        <section class="carte estimation" aria-labelledby="titre-estimation">
+          <h2 id="titre-estimation" class="estimation__titre">Estimer le prix</h2>
+
+          <div class="estimation__convives">
+            <span id="label-convives">
+              <span class="tuile__long">Nombre de convives</span
+              ><span class="tuile__court">Convives</span>
+            </span>
+            <div class="compteur" role="group" aria-labelledby="label-convives">
+              <button
+                type="button"
+                class="compteur__bouton"
+                aria-label="Retirer un convive"
+                [disabled]="convives() <= m.nombre_personne_min"
+                (click)="retirerConvive()"
+              >
+                −
+              </button>
+              <output class="compteur__valeur" aria-live="polite">{{ convives() }}</output>
+              <button
+                type="button"
+                class="compteur__bouton"
+                aria-label="Ajouter un convive"
+                (click)="ajouterConvive()"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          @if (estim) {
+            <dl class="estimation__lignes">
+              <div class="estimation__ligne">
+                <dt>
+                  {{ convives() }} ×
+                  {{ m.prix_par_personne | prix }}
+                </dt>
+                <dd>{{ estim.brut | prix }}</dd>
+              </div>
+              <div class="estimation__ligne">
+                <dt>Réduction −10 %</dt>
+                <dd>
+                  @if (estim.reduction > 0) {
+                    − {{ estim.reduction | prix }}
+                  } @else {
+                    <span aria-label="aucune">—</span>
+                  }
+                </dd>
+              </div>
+              <p class="estimation__aide" aria-live="polite">
+                @if (estim.convivesManquants > 0) {
+                  Encore {{ estim.convivesManquants }}
+                  {{ estim.convivesManquants > 1 ? 'convives' : 'convive' }}
+                  pour bénéficier de −10 %.
+                } @else {
+                  Réduction de 10 % appliquée.
+                }
+              </p>
+              <div class="estimation__ligne">
+                <dt>Livraison</dt>
+                <dd class="estimation__livraison">calculée à l'étape suivante</dd>
+              </div>
+              <div class="estimation__ligne estimation__total">
+                <dt>Total menu</dt>
+                <dd>{{ estim.total | prix }}</dd>
+              </div>
+            </dl>
+          }
+
+          @if (epuise()) {
+            <button type="button" class="btn btn--primaire btn--bloc" disabled>Menu épuisé</button>
+            <p class="estimation__note">Ce menu n'est plus disponible pour le moment.</p>
+          } @else if (commandeReservee()) {
+            <button type="button" class="btn btn--primaire btn--bloc" disabled>
+              Commander ce menu
+            </button>
+            <p class="estimation__note">La commande est réservée aux comptes clients.</p>
+          } @else {
+            <!-- Non connecté : le guard redirige vers la connexion, puis revient ici (?retour) -->
+            <a
+              class="btn btn--primaire btn--bloc estimation__commander"
+              [routerLink]="['/espace-utilisateur/commander', m.menu_id]"
+              [queryParams]="{ personnes: convives() }"
+            >
+              Commander ce menu
+            </a>
+            <p class="estimation__note">
+              @if (role() === null) {
+                Vous serez invité à vous connecter ou à créer un compte.
+              } @else {
+                Vous pourrez vérifier votre commande avant de la valider.
+              }
+            </p>
+          }
+        </section>
+
+        <!-- ============ Informations pratiques ============ -->
+        <ul class="pratique">
+          <li class="pratique__tuile">
+            <h2 class="pratique__titre">
+              −10 % dès {{ m.nombre_personne_min + personnesEnPlus }} convives
+            </h2>
+            <p>
+              La réduction s'applique dès {{ personnesEnPlus }} personnes de plus que le minimum du
+              menu.
+            </p>
+          </li>
+          <li class="pratique__tuile">
+            <h2 class="pratique__titre">Livraison</h2>
+            <p>Offerte dans Bordeaux. Ailleurs : 5 € + 0,59 € par kilomètre parcouru.</p>
+          </li>
+          <li class="pratique__tuile pratique__tuile--bureau">
+            <h2 class="pratique__titre">Suivi de commande</h2>
+            <p>
+              Chaque étape, de l'acceptation à la livraison, s'affiche dans votre espace avec sa
+              date et son heure.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </article>
+  }
+}

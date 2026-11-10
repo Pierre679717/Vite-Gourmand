@@ -1,0 +1,417 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ---- Bandeau principal (photo sombre) -------------------------------------
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 32rem;
+  overflow: hidden;
+  background: #1a1410; // couleur de secours le temps que la photo charge
+  color: $blanc;
+
+  @include a-partir-de($point-tablette) {
+    min-height: 37.5rem; // 600 px, comme la maquette
+  }
+
+  &__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // Voile sombre : plus fort à gauche, sous le texte (contraste du blanc ≥ 7:1)
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(10, 8, 6, 0.85) 0%,
+      rgba(10, 8, 6, 0.6) 55%,
+      rgba(10, 8, 6, 0.35) 100%
+    );
+  }
+
+  &__contenu {
+    position: relative;
+    z-index: 1; // au-dessus du voile
+    padding-block: $espace-12;
+  }
+
+  &__surtitre {
+    margin: 0 0 $espace-4;
+    color: $or;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+
+    @include a-partir-de($point-tablette) {
+      font-size: 0.9375rem;
+    }
+  }
+
+  &__titre {
+    max-width: 50rem; // « L'élégance culinaire, » tient sur une ligne, comme la maquette
+    margin-bottom: $espace-6;
+    color: $blanc;
+    font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+    line-height: 1.05;
+  }
+
+  &__texte {
+    max-width: 38rem;
+    margin: 0 0 $espace-8;
+    font-size: 1.0625rem;
+    color: rgba($blanc, 0.92);
+
+    @include a-partir-de($point-tablette) {
+      font-size: 1.1875rem;
+    }
+  }
+
+  // Mobile : boutons empilés, pleine largeur ; ordinateur : côte à côte
+  &__actions {
+    display: grid;
+    gap: $espace-3;
+
+    @include a-partir-de($point-tablette) {
+      display: flex;
+      gap: $espace-4;
+    }
+
+    .btn {
+      min-height: 48px;
+    }
+  }
+}
+
+// ---- Bande verte des engagements ----------------------------------------------
+.engagements {
+  background: $vert;
+  color: $blanc;
+
+  &__liste {
+    display: grid;
+    gap: $espace-4;
+    margin: 0;
+    padding-block: $espace-6;
+    list-style: none;
+
+    @include a-partir-de($point-tablette) {
+      grid-template-columns: repeat(3, 1fr);
+      padding-block: $espace-8;
+    }
+  }
+}
+
+.engagement {
+  display: flex;
+  align-items: center;
+  gap: $espace-4;
+
+  p {
+    margin: 0;
+    line-height: 1.4;
+
+    // Ordinateur : le complément passe à la ligne, comme la maquette
+    @include a-partir-de($point-tablette) {
+      strong {
+        display: block;
+      }
+    }
+  }
+
+  &__icone {
+    flex-shrink: 0;
+    color: $or;
+  }
+}
+
+// ---- Notre maison ---------------------------------------------------------------
+.maison {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'entete'
+    'photo'
+    'corps';
+  gap: $espace-6;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'photo entete'
+      'photo corps';
+    grid-template-rows: auto 1fr; // titre en haut, texte juste dessous
+    column-gap: $espace-16;
+    row-gap: 0;
+    align-items: center;
+  }
+
+  &__entete {
+    grid-area: entete;
+
+    @include a-partir-de($point-bureau) {
+      align-self: end;
+    }
+
+    h2 {
+      margin: 0;
+
+      @include a-partir-de($point-bureau) {
+        margin-bottom: $espace-6;
+      }
+    }
+  }
+
+  &__corps {
+    grid-area: corps;
+
+    @include a-partir-de($point-bureau) {
+      align-self: start;
+    }
+  }
+
+  &__intro {
+    margin: 0 0 $espace-6;
+    color: $texte-doux;
+    font-size: 1.0625rem;
+  }
+
+  &__photo {
+    grid-area: photo;
+    position: relative;
+
+    img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 15 / 13;
+      object-fit: cover;
+      object-position: center 30%; // garde les visages dans le cadre
+      border-radius: $rayon;
+    }
+  }
+
+  // Encart « 25 ans » posé sur la photo
+  &__badge {
+    position: absolute;
+    left: $espace-4;
+    bottom: $espace-4;
+    margin: 0;
+    padding: $espace-4 $espace-6;
+    background: $blanc;
+    border-radius: $rayon-moyen;
+    box-shadow: $ombre-survol;
+    font-size: 0.875rem;
+    color: $texte-doux;
+
+    @include a-partir-de($point-bureau) {
+      left: auto;
+      right: -$espace-6;
+      bottom: $espace-8;
+    }
+  }
+
+  &__badge-nombre {
+    display: block;
+    font-family: $police-titres;
+    font-size: 2.25rem;
+    line-height: 1.2;
+    color: $bordeaux;
+  }
+}
+
+// Liste à coches vertes
+.atouts {
+  display: grid;
+  gap: $espace-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    min-height: 2.5rem;
+    padding-left: 3.5rem;
+    line-height: 1.6;
+  }
+
+  li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: $rayon-moyen;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%231f482e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E")
+        center / 18px no-repeat,
+      $vert-clair;
+  }
+}
+
+// ---- En-têtes des sections « menus » et « avis » --------------------------------
+.entete-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $espace-4;
+  margin-bottom: $espace-8;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.lien-fleche {
+  display: inline-flex;
+  gap: $espace-2;
+  color: $vert;
+  font-weight: 600;
+  text-underline-offset: 4px;
+
+  &:hover {
+    color: $vert-fonce;
+  }
+}
+
+// Le lien « Voir les menus » est en haut à droite sur ordinateur, sous les cartes sur mobile
+.lien-fleche--haut {
+  display: none;
+
+  @include a-partir-de($point-tablette) {
+    display: inline-flex;
+  }
+}
+
+.lien-fleche--bas {
+  margin-top: $espace-6;
+
+  @include a-partir-de($point-tablette) {
+    display: none;
+  }
+}
+
+// ---- Liste de cartes : défilement horizontal sur mobile, grille sur ordinateur ----
+.defilement {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 82%;
+  gap: $espace-4;
+  margin: 0 (-$espace-4); // la liste va jusqu'au bord de l'écran
+  padding: 0 $espace-4 $espace-2;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  list-style: none;
+
+  > li {
+    scroll-snap-align: start;
+  }
+
+  @include a-partir-de($point-tablette) {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+.squelette {
+  min-height: 26rem;
+  background: linear-gradient(90deg, #efe9e0 25%, #f8f4ee 50%, #efe9e0 75%);
+  background-size: 200% 100%;
+  animation: reflet 1.4s ease-in-out infinite;
+}
+
+.message-doux {
+  margin: 0;
+  color: $texte-doux;
+}
+
+// ---- Avis -----------------------------------------------------------------------
+.moyenne {
+  display: flex;
+  align-items: center;
+  gap: $espace-3;
+
+  &__valeur {
+    font-family: $police-titres;
+    font-size: 2.75rem;
+    line-height: 1;
+  }
+
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+    color: $texte-doux;
+  }
+}
+
+.etoiles {
+  margin: 0;
+  color: $or-texte; // 5,8:1 : l'or clair serait trop pâle sur le blanc
+  letter-spacing: 0.1em;
+}
+
+.avis {
+  display: flex;
+  flex-direction: column;
+  gap: $espace-4;
+  height: 100%;
+  margin: 0;
+  padding: $espace-8;
+
+  &__texte {
+    flex: 1;
+    margin: 0;
+    font-family: $police-titres;
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  &__auteur {
+    display: flex;
+    align-items: center;
+    gap: $espace-3;
+
+    strong {
+      display: block;
+    }
+  }
+
+  &__initiale {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: $vert;
+    color: $blanc;
+    font-weight: 700;
+  }
+
+  &__menu {
+    font-size: 0.875rem;
+    color: $texte-doux;
+  }
+}
+
+@keyframes reflet {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}

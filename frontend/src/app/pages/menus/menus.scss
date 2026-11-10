@@ -1,0 +1,333 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ---- En-tête de page -----------------------------------------------------
+.entete-page {
+  padding-block: $espace-6 $espace-8;
+  border-bottom: 1px solid $bordure;
+
+  @include a-partir-de($point-tablette) {
+    padding-block: $espace-8 + $espace-2 $espace-12;
+  }
+
+  .fil-ariane {
+    margin-bottom: $espace-4;
+  }
+
+  &__titre {
+    margin-bottom: $espace-3;
+  }
+
+  &__intro {
+    max-width: 40rem;
+    margin: 0;
+    font-size: 1.0625rem;
+    color: $texte-doux;
+
+    // Mobile : la 2e phrase seule, plus courte (comme la maquette)
+    br {
+      display: none;
+
+      @include a-partir-de($point-tablette) {
+        display: inline;
+      }
+    }
+  }
+}
+
+// ---- Mise en page : colonne de filtres + résultats -------------------------
+.catalogue {
+  display: grid;
+  gap: $espace-6;
+  padding-block: $espace-6 $espace-16;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: 17.5rem 1fr;
+    align-items: start;
+    gap: $espace-8;
+    padding-block: $espace-8 $espace-16;
+  }
+}
+
+// ---- Filtres ----------------------------------------------------------------
+.filtres-zone {
+  display: flex;
+  flex-direction: column;
+  gap: $espace-4;
+  min-width: 0; // sans cela, la ligne de pastilles élargit toute la page sur mobile
+
+  // Ordinateur : la colonne reste visible pendant le défilement
+  @include a-partir-de($point-bureau) {
+    position: sticky;
+    top: 5.5rem; // sous le header collant
+  }
+
+  &__bascule {
+    @include a-partir-de($point-bureau) {
+      display: none;
+    }
+  }
+}
+
+.filtres {
+  display: flex;
+  flex-direction: column;
+  gap: $espace-6;
+  padding: $espace-6;
+  background: $blanc;
+  border: 1px solid $bordure;
+  border-radius: $rayon;
+
+  // Mobile : panneau replié (toujours ouvert sur ordinateur)
+  &--ferme {
+    display: none;
+
+    @include a-partir-de($point-bureau) {
+      display: flex;
+    }
+  }
+
+  &__entete {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  &__titre {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  // Sur mobile, « Réinitialiser » est en bas du panneau
+  &__reinitialiser-haut {
+    display: none;
+
+    @include a-partir-de($point-bureau) {
+      display: inline;
+    }
+  }
+
+  &__groupe {
+    display: flex;
+    flex-direction: column;
+    gap: $espace-2;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  &__label {
+    margin-bottom: $espace-1;
+    padding: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  &__valeur {
+    margin: 0;
+    font-size: 0.875rem;
+    color: $texte-doux;
+
+    strong {
+      color: $texte;
+    }
+  }
+
+  &__aide {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: $texte-doux;
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $espace-3;
+
+    @include a-partir-de($point-bureau) {
+      display: none;
+    }
+  }
+}
+
+// Curseur de prix aux couleurs de la charte
+.curseur {
+  width: 100%;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: $vert;
+  cursor: pointer;
+
+  @include focus-clavier;
+
+  &:disabled {
+    cursor: wait;
+  }
+}
+
+.fourchette {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: $espace-2;
+  color: $texte-doux;
+}
+
+// Pastilles (boutons radio stylés) : thème et régime
+.pastilles {
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  legend {
+    width: 100%;
+  }
+
+  // Mobile : une seule ligne qui défile horizontalement
+  &--defilantes {
+    min-width: 0; // un <fieldset> refuse par défaut d'être plus étroit que son contenu
+    position: relative; // garde la légende masquée à l'intérieur de la zone qui défile
+    flex-wrap: nowrap;
+    gap: $espace-2;
+    margin: 0;
+    padding: 0 0 $espace-1;
+    border: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  &--mobile {
+    display: flex;
+
+    @include a-partir-de($point-bureau) {
+      display: none;
+    }
+  }
+
+  &--bureau {
+    display: none;
+
+    @include a-partir-de($point-bureau) {
+      display: flex;
+    }
+  }
+}
+
+.pastille {
+  position: relative;
+  flex-shrink: 0;
+
+  // Le vrai bouton radio est invisible mais reste utilisable au clavier
+  input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  span {
+    display: inline-block;
+    padding: $espace-2 $espace-4;
+    background: $blanc;
+    border: 1px solid $bordure-champ;
+    border-radius: $rayon-pilule;
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    transition:
+      background-color $transition,
+      color $transition,
+      border-color $transition;
+  }
+
+  input:hover + span {
+    border-color: $vert;
+  }
+
+  input:checked + span {
+    background: $vert;
+    border-color: $vert;
+    color: $blanc;
+  }
+
+  input:focus-visible + span {
+    outline: 3px solid $bordeaux;
+    outline-offset: 2px;
+  }
+}
+
+// ---- Résultats ---------------------------------------------------------------
+.resultats {
+  min-width: 0;
+
+  &__entete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: $espace-1 $espace-4;
+    margin-bottom: $espace-4;
+  }
+
+  &__nombre {
+    margin: 0;
+    font-family: $police-texte;
+    font-size: 1rem;
+    font-weight: 600;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__info {
+    display: none;
+    margin: 0;
+    font-size: 0.875rem;
+    color: $texte-doux;
+
+    @include a-partir-de($point-tablette) {
+      display: block;
+    }
+  }
+
+  &__liste {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: $espace-6;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transition: opacity $transition;
+
+    // Nouvelle recherche en cours : les anciennes cartes restent, atténuées
+    &--chargement {
+      opacity: 0.5;
+    }
+  }
+
+  // Emplacement gris animé pendant le premier chargement
+  &__squelette {
+    min-height: 30rem;
+    background: linear-gradient(90deg, #efe9e0 25%, #f8f4ee 50%, #efe9e0 75%);
+    background-size: 200% 100%;
+    animation: reflet 1.4s ease-in-out infinite;
+  }
+
+  &__vide {
+    padding: $espace-8 $espace-4;
+    text-align: center;
+    background: $blanc;
+    border: 1px dashed $bordure-champ;
+    border-radius: $rayon;
+  }
+}
+
+@keyframes reflet {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
