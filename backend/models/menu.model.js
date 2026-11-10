@@ -152,14 +152,16 @@ class MenuModel {
      * Version minimale utilisée par la commande :
      * prix, minimum de personnes, délai de commande et stock d'un menu actif.
      * `conn` permet de lire dans une transaction (SELECT ... FOR UPDATE).
+     * Pour un simple devis, `verrouiller: false` : on lit sans bloquer
+     * les autres clients, rien n'est enregistré.
      */
-    static async trouverPourCommande(id, conn = pool) {
+    static async trouverPourCommande(id, conn = pool, { verrouiller = true } = {}) {
         const [rows] = await conn.query(
             `SELECT menu_id, titre, nombre_personne_min, delai_minimum_jours,
                     prix_par_personne, quantite_restante
              FROM menu
              WHERE menu_id = ? AND actif = 1
-             FOR UPDATE`,
+             ${verrouiller ? 'FOR UPDATE' : ''}`,
             [id]
         );
         return rows[0] || null;

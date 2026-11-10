@@ -59,4 +59,4 @@ function calculerPrixCommande({ prixParPersonne, nombrePersonneMin, nombrePerson
     };
 }
 
-module.exports = { calculerPrixCommande, estBordeaux };
+module.exports = { calculerPrixCommande, estBordeaux, PERSONNES_EN_PLUS };

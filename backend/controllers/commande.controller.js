@@ -9,9 +9,10 @@
    ================================================================ */
 
 const { CommandeModel, ErreurCommande } = require('../models/commande.model');
-const { calculerPrixCommande } = require('../utils/prix');
+const MenuModel = require('../models/menu.model');
+const { calculerPrixCommande, PERSONNES_EN_PLUS } = require('../utils/prix');
 const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance');
-const { validerCommande, aujourdhuiParis } = require('../utils/validationCommande');
+const { validerCommande, validerDevis, aujourdhuiParis } = require('../utils/validationCommande');
 const { sauvegarderStat } = require('../config/db.mongo');
 
 // Statuts qu'un employé peut appliquer ('en_attente' est l'état de départ)
@@ -27,6 +28,70 @@ const STATUTS_EMPLOYE = [
 const MODES_CONTACT = ['gsm', 'mail'];
 
 class CommandeController {
+
+    /**
+     * POST /api/commandes/devis
+     * Calcule le prix d'une commande SANS l'enregistrer, pour le
+     * récapitulatif affiché avant validation.
+     * Le navigateur ne connaît pas la distance (calculée ici, via l'API
+     * de géocodage) : il demande donc le détail du prix au serveur.
+     * Rien n'est verrouillé ni modifié. Au moment de valider, POST
+     * /api/commandes refait tout le calcul : le devis n'engage à rien.
+     */
+    static async devis(req, res) {
+        try {
+            const { donnees, erreurs } = validerDevis(req.body);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+
+            const menu = await MenuModel.trouverPourCommande(donnees.menuId, undefined, { verrouiller: false });
+            if (!menu) {
+                return res.status(404).json({ error: 'Menu introuvable.' });
+            }
+            if (donnees.nombrePersonne < menu.nombre_personne_min) {
+                return res.status(400).json({ error: `Minimum ${menu.nombre_personne_min} personnes pour ce menu.` });
+            }
+            if (menu.quantite_restante < 1) {
+                return res.status(409).json({ error: 'Ce menu n\'est plus disponible (stock épuisé).' });
+            }
+
+            const livraison = await calculerDistanceLivraison(donnees.adressePrestation, donnees.villePrestation);
+            const prix = calculerPrixCommande({
+                prixParPersonne:   menu.prix_par_personne,
+                nombrePersonneMin: menu.nombre_personne_min,
+                nombrePersonne:    donnees.nombrePersonne,
+                ville:             livraison.ville,
+                distanceKm:        livraison.distance_km
+            });
+
+            res.json({
+                menu: {
+                    menu_id:             menu.menu_id,
+                    titre:               menu.titre,
+                    nombre_personne_min: menu.nombre_personne_min,
+                    delai_minimum_jours: menu.delai_minimum_jours
+                },
+                nombre_personne: donnees.nombrePersonne,
+                // Pour afficher « réduction de 10 % à partir de N personnes »
+                personnes_pour_reduction: menu.nombre_personne_min + PERSONNES_EN_PLUS,
+                livraison: {
+                    adresse_trouvee: livraison.adresse_trouvee,
+                    ville:           livraison.ville,
+                    code_postal:     livraison.code_postal,
+                    est_bordeaux:    livraison.est_bordeaux
+                },
+                ...prix
+            });
+
+        } catch (err) {
+            if (err instanceof ErreurDistance) {
+                return res.status(err.status).json({ error: err.message });
+            }
+            console.error('Erreur devis :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
 
     /**
      * POST /api/commandes
