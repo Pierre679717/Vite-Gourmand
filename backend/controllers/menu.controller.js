@@ -73,7 +73,7 @@ class MenuController {
     static async creer(req, res) {
         try {
             const {
-                titre, description, nombre_personne_min, prix_par_personne,
+                titre, description, nombre_personne_min, delai_minimum_jours, prix_par_personne,
                 conditions, quantite_restante, theme_id, regime_id
             } = req.body;
 
@@ -82,6 +82,9 @@ class MenuController {
             }
             if (!Number.isInteger(nombre_personne_min) || nombre_personne_min < 1) {
                 return res.status(400).json({ error: 'Le nombre minimum de personnes doit être un entier positif.' });
+            }
+            if (!Number.isInteger(delai_minimum_jours) || delai_minimum_jours < 0 || delai_minimum_jours > 365) {
+                return res.status(400).json({ error: 'Le délai de commande doit être un nombre de jours entre 0 et 365.' });
             }
             if (!(Number(prix_par_personne) > 0)) {
                 return res.status(400).json({ error: 'Le prix par personne doit être supérieur à 0.' });
@@ -93,6 +96,7 @@ class MenuController {
             const id = await MenuModel.creer({
                 titre, description, conditions,
                 nombrePersonneMin: nombre_personne_min,
+                delaiMinimumJours: delai_minimum_jours,
                 prixParPersonne:   prix_par_personne,
                 quantiteRestante:  quantite_restante,
                 themeId:  theme_id,

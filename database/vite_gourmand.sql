@@ -102,12 +102,16 @@ CREATE TABLE regime (
 -- menu : on stocke le prix PAR PERSONNE.
 -- Prix minimum affiché = prix_par_personne x nombre_personne_min.
 -- quantite_restante = stock (nombre de commandes encore possibles).
+-- delai_minimum_jours = délai de commande (« au moins 7 jours avant
+--   la prestation ») stocké en nombre pour être vérifié par le serveur ;
+--   le texte de « conditions » reste la version affichée au client.
 -- ----------------------------------------------------------------
 CREATE TABLE menu (
     menu_id              INT AUTO_INCREMENT PRIMARY KEY,
     titre                VARCHAR(100)  NOT NULL,
     description          TEXT          NOT NULL,
     nombre_personne_min  INT           NOT NULL,
+    delai_minimum_jours  INT           NOT NULL,
     prix_par_personne    DECIMAL(6,2)  NOT NULL,
     conditions           TEXT          NOT NULL,
     quantite_restante    INT           NOT NULL DEFAULT 0,
@@ -118,6 +122,7 @@ CREATE TABLE menu (
     CONSTRAINT fk_menu_theme  FOREIGN KEY (theme_id)  REFERENCES theme (theme_id),
     CONSTRAINT fk_menu_regime FOREIGN KEY (regime_id) REFERENCES regime (regime_id),
     CONSTRAINT ck_menu_personne_min CHECK (nombre_personne_min >= 1),
+    CONSTRAINT ck_menu_delai        CHECK (delai_minimum_jours BETWEEN 0 AND 365),
     CONSTRAINT ck_menu_prix         CHECK (prix_par_personne > 0),
     CONSTRAINT ck_menu_stock        CHECK (quantite_restante >= 0)
 ) ENGINE=InnoDB;
@@ -388,56 +393,56 @@ INSERT INTO allergene (allergene_id, libelle) VALUES
 -- Menus
 -- ----------------------------------------------------------------
 INSERT INTO menu
-    (menu_id, titre, description, nombre_personne_min, prix_par_personne, conditions, quantite_restante, actif, theme_id, regime_id)
+    (menu_id, titre, description, nombre_personne_min, delai_minimum_jours, prix_par_personne, conditions, quantite_restante, actif, theme_id, regime_id)
 VALUES
 (1, 'Menu Gastronomique',
     'Une expérience de haute gastronomie pour vos grandes occasions : foie gras maison, magret de canard et dessert au chocolat grand cru.',
-    6, 65.00,
+    6, 10, 65.00,
     'À commander au moins 10 jours avant la prestation. Plats livrés frais : à conserver au réfrigérateur entre 0 et 4 °C et à consommer dans les 24 heures.',
     10, 1, 4, 1),
 (2, 'Menu Traditionnel',
     'Les saveurs du terroir du Sud-Ouest : velouté de saison, cassoulet toulousain mijoté et tarte au citron meringuée.',
-    6, 48.00,
+    6, 7, 48.00,
     'À commander au moins 7 jours avant la prestation. Le cassoulet se réchauffe 45 minutes au four à 160 °C.',
     15, 1, 3, 1),
 (3, 'Menu Méditerranéen',
     'Un voyage ensoleillé autour de la Méditerranée : houmous et falafels, moussaka d''agneau, saumon aux herbes et tiramisu.',
-    6, 50.00,
+    6, 7, 50.00,
     'À commander au moins 7 jours avant la prestation. À conserver au réfrigérateur entre 0 et 4 °C.',
     12, 1, 3, 1),
 (4, 'Menu Végétarien',
     'Une cuisine créative et gourmande, 100 % végétarienne : velouté de potimarron, buddha bowl ou lasagnes aux légumes du soleil.',
-    6, 40.00,
+    6, 5, 40.00,
     'À commander au moins 5 jours avant la prestation. À conserver au réfrigérateur entre 0 et 4 °C.',
     12, 1, 3, 2),
 (5, 'Menu Vegan',
     'Sans aucun produit d''origine animale : gaspacho, rouleaux de printemps, curry de pois chiches et panna cotta végétale.',
-    6, 42.00,
+    6, 5, 42.00,
     'À commander au moins 5 jours avant la prestation. À conserver au réfrigérateur entre 0 et 4 °C.',
     10, 1, 3, 3),
 (6, 'Menu Sans Porc',
     'Un menu iodé et parfumé, garanti sans porc : accras de morue, cocotte de la mer ou curry de poulet au lait de coco.',
-    6, 45.00,
+    6, 7, 45.00,
     'À commander au moins 7 jours avant la prestation. Produits de la mer : à consommer le jour de la livraison.',
     10, 1, 3, 4),
 (7, 'Menu Exotique',
     'Un voyage culinaire aux saveurs des îles : accras, curry de poulet au lait de coco et fruits exotiques.',
-    6, 55.00,
+    6, 7, 55.00,
     'À commander au moins 7 jours avant la prestation. À conserver au réfrigérateur entre 0 et 4 °C.',
     8, 1, 4, 1),
 (8, 'Menu de Noël',
     'Le grand repas des fêtes : foie gras, Saint-Jacques, dinde farcie aux marrons et bûche chocolat praliné.',
-    8, 75.00,
+    8, 21, 75.00,
     'Disponible pour des prestations du 1er au 31 décembre. À commander au moins 3 semaines avant la prestation. Chauffe-plats prêtés sur demande, à restituer sous 10 jours ouvrés.',
     20, 1, 1, 1),
 (9, 'Menu de Pâques Terre et Mer',
     'Le printemps à table : plateau de fruits de mer, carpaccio de Saint-Jacques, gigot d''agneau et nid de Pâques au chocolat.',
-    6, 58.00,
+    6, 15, 58.00,
     'Disponible pour des prestations en mars et avril. À commander au moins 15 jours avant la prestation. Fruits de mer à consommer le jour de la livraison.',
     0, 1, 2, 1),
 (10, 'Menu Prestige',
     'Notre menu signature pour les réceptions d''exception : foie gras, plateau de fruits de mer, filet de bœuf ou magret, fondant au chocolat.',
-    10, 85.00,
+    10, 21, 85.00,
     'À commander au moins 3 semaines avant la prestation. Service en vaisselle prêtée, à restituer sous 10 jours ouvrés.',
     5, 1, 4, 1);
 
