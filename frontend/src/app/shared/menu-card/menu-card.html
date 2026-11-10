@@ -53,7 +53,7 @@
         }
       </p>
       <p class="menu-carte__prix">
-        <strong>{{ m.prix_minimum | currency: 'EUR' : 'symbol' : '1.0-2' }}</strong>
+        <strong>{{ m.prix_minimum | prix }}</strong>
         @if (!compacte) {
           <span>pour {{ m.nombre_personne_min }} pers.</span>
         }

@@ -1,6 +1,6 @@
-import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PrixPipe } from '../prix.pipe';
 import { MenuResume } from '../../core/models/menu';
 
 /**
@@ -15,7 +15,7 @@ import { MenuResume } from '../../core/models/menu';
  */
 @Component({
   selector: 'app-menu-card',
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, PrixPipe],
   templateUrl: './menu-card.html',
   styleUrl: './menu-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
