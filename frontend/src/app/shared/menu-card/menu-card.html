@@ -1,0 +1,70 @@
+@let m = menu();
+@let compacte = variante() === 'compacte';
+
+<article
+  class="carte carte--interactive menu-carte"
+  [class.menu-carte--compacte]="compacte"
+  [class.menu-carte--epuise]="m.quantite_restante === 0"
+>
+  @if (m.image) {
+    <img
+      class="carte__image menu-carte__image"
+      [src]="m.image"
+      [alt]="m.image_alt ?? ''"
+      width="640"
+      height="440"
+      loading="lazy"
+    />
+  } @else {
+    <div class="carte__image menu-carte__image menu-carte__image--vide" aria-hidden="true">
+      Vite &amp; Gourmand
+    </div>
+  }
+
+  <div class="carte__corps">
+    <ul class="badges" aria-label="Caractéristiques du menu">
+      <li class="badge badge--theme">
+        <span class="visuellement-masque">Thème : </span>{{ m.theme }}
+      </li>
+      @if (!compacte) {
+        <li class="badge"><span class="visuellement-masque">Régime : </span>{{ m.regime }}</li>
+      }
+      @if (m.quantite_restante === 0) {
+        <li class="badge badge--bordeaux">Épuisé</li>
+      }
+    </ul>
+
+    <h2 class="carte__titre menu-carte__titre">
+      @if (compacte) {
+        <!-- Variante compacte : le titre est le lien, étendu à toute la carte en CSS -->
+        <a class="menu-carte__lien" [routerLink]="['/menus', m.menu_id]">{{ m.titre }}</a>
+      } @else {
+        {{ m.titre }}
+      }
+    </h2>
+    <p class="carte__texte menu-carte__description">{{ m.description }}</p>
+
+    <div class="menu-carte__bas">
+      <p class="menu-carte__minimum">
+        @if (compacte) {
+          Dès {{ m.nombre_personne_min }} personnes
+        } @else {
+          Minimum<br /><strong>{{ m.nombre_personne_min }} personnes</strong>
+        }
+      </p>
+      <p class="menu-carte__prix">
+        <strong>{{ m.prix_minimum | currency: 'EUR' : 'symbol' : '1.0-2' }}</strong>
+        @if (!compacte) {
+          <span>pour {{ m.nombre_personne_min }} pers.</span>
+        }
+      </p>
+    </div>
+
+    @if (!compacte) {
+      <p class="menu-carte__stock">{{ stock() }}</p>
+      <a class="btn btn--primaire btn--bloc" [routerLink]="['/menus', m.menu_id]">
+        Voir le détail<span class="visuellement-masque"> du {{ m.titre }}</span>
+      </a>
+    }
+  </div>
+</article>
