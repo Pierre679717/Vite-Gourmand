@@ -57,17 +57,22 @@ export function decouperConditions(texte: string | null | undefined): Segment[][
   return phrases.map(mettreEnGrasLeDelai);
 }
 
-/** Met en gras « 7 jours », « 3 semaines »... : l'information la plus importante */
+/**
+ * Met en gras le délai de commande : « au moins **7 jours** », « au moins **3 semaines** ».
+ * Seul ce délai est mis en avant : « restituer sous 10 jours » reste en texte normal.
+ */
 export function mettreEnGrasLeDelai(phrase: string): Segment[] {
-  const correspondance = /\d+\s+(?:jours?|semaines?)/.exec(phrase);
+  // i : « au moins » comme « Au moins » ; le délai est le groupe entre parenthèses
+  const correspondance = /au moins (\d+\s+(?:jours?|semaines?))/i.exec(phrase);
   if (!correspondance) {
     return [{ texte: phrase, gras: false }];
   }
-  const debut = correspondance.index;
-  const fin = debut + correspondance[0].length;
+  const delai = correspondance[1]; // « 7 jours » (sans « au moins »)
+  const fin = correspondance.index + correspondance[0].length;
+  const debut = fin - delai.length;
   return [
     { texte: phrase.slice(0, debut), gras: false },
-    { texte: correspondance[0], gras: true },
+    { texte: delai, gras: true },
     { texte: phrase.slice(fin), gras: false },
   ].filter((segment) => segment.texte !== '');
 }

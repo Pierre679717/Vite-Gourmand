@@ -66,6 +66,12 @@ describe('mettreEnGrasLeDelai', () => {
     ]);
   });
 
+  it('ne met pas en gras un autre délai que celui de la commande', () => {
+    expect(mettreEnGrasLeDelai('Chauffe-plats prêtés, à restituer sous 10 jours ouvrés.')).toEqual([
+      { texte: 'Chauffe-plats prêtés, à restituer sous 10 jours ouvrés.', gras: false },
+    ]);
+  });
+
   it('reconnaît aussi les semaines', () => {
     expect(mettreEnGrasLeDelai('Au moins 3 semaines avant.')[1]).toEqual({
       texte: '3 semaines',
