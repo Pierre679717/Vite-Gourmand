@@ -15,6 +15,7 @@
   --vg-texte-doux: #{$texte-doux};
   --vg-bordure: #{$bordure};
   --vg-erreur: #{$erreur};
+  --vg-sable: #{$sable};
 }
 
 *,
@@ -46,17 +47,17 @@ h3,
 h4 {
   margin: 0 0 $espace-4;
   font-family: $police-titres;
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 500; // les maquettes utilisent un Playfair fin et élégant
+  line-height: 1.15;
   color: $texte;
 }
 
 h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
 }
 
 h2 {
-  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
 }
 
 h3 {
@@ -104,19 +105,57 @@ textarea {
   }
 }
 
-// Titre de section avec un filet doré décoratif
+// Titre de section (Playfair, sans décoration : maquettes)
 .titre-section {
-  position: relative;
-  padding-bottom: $espace-3;
+  margin-bottom: $espace-4;
+}
 
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 4rem;
-    height: 3px;
-    background: $or;
+// Petit texte en capitales au-dessus d'un titre (« NOTRE MAISON », « À LA CARTE »)
+.surtitre {
+  margin: 0 0 $espace-3;
+  color: $bordeaux;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+// Fil d'Ariane : Accueil / Nos menus / Menu Gastronomique
+.fil-ariane {
+  margin-bottom: $espace-6;
+  font-size: 0.875rem;
+  color: $texte-doux;
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $espace-1;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li + li::before {
+    content: '/';
+    margin-right: $espace-1;
+  }
+
+  a {
+    color: $texte;
+  }
+}
+
+// Bande de section pleine largeur
+.section {
+  padding-block: $espace-12;
+
+  @include a-partir-de($point-tablette) {
+    padding-block: $espace-16;
+  }
+
+  // Fond sable : section des avis
+  &--sable {
+    background: $sable;
   }
 }
 

@@ -30,8 +30,9 @@
               }
             ],
             "styles": [
-              "@fontsource-variable/open-sans/index.css",
+              "@fontsource-variable/dm-sans/index.css",
               "@fontsource-variable/playfair-display/index.css",
+              "@fontsource-variable/playfair-display/wght-italic.css",
               "src/styles.scss"
             ],
             "stylePreprocessorOptions": {

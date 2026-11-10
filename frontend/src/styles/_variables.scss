@@ -1,33 +1,42 @@
 // =====================================================================
-// Variables du thème — reprises de la charte graphique Vite & Gourmand
+// Variables du thème — maquettes haute fidélité Vite & Gourmand
+// (docs/Maquettes_Vite_Gourmand.pdf : accueil, menus, détail)
 // =====================================================================
-// Les contrastes indiqués ont été vérifiés selon les critères WCAG 2.1
-// (4,5:1 minimum pour un texte normal, 3:1 pour un grand texte ou un
-// élément d'interface).
+// Couleurs relevées directement sur les maquettes. Les contrastes
+// indiqués ont été vérifiés selon les critères WCAG 2.1 (4,5:1 minimum
+// pour un texte normal, 3:1 pour un grand texte ou un élément d'interface).
 
 // ---- Couleurs de la charte ------------------------------------------
-$vert: #2e7d32;       // principale : fraîcheur, nature
-$or: #d4af37;         // secondaire : luxe, qualité
-$bordeaux: #722f37;   // accent : vin, gastronomie
-$fond: #fafafa;       // fond clair (blanc cassé)
-$texte: #333333;      // texte (gris foncé)
+$vert: #1f482e; // principale : boutons, liens, logo (10,6:1 sur blanc)
+$or: #ccae5d; // secondaire : bouton d'accueil, détails (décoration)
+$bordeaux: #792e35; // accent : encadré « À lire avant de commander », stock
+$fond: #f6f1eb; // fond crème de toutes les pages
+$texte: #1f1d1a; // texte et titres (presque noir, chaud)
 
 // ---- Nuances dérivées -----------------------------------------------
-$vert-fonce: #1b5e20;     // survol des boutons verts, pied de page
-$vert-clair: #e8f5e9;     // fonds de messages de succès
-$bordeaux-fonce: #5a252b; // survol des boutons bordeaux
-$or-fonce: #c19d2a;       // survol des boutons dorés
-$or-texte: #7a5f12;       // l'or de la charte n'a que 2:1 sur fond clair :
-                          // cette nuance foncée (5,8:1) sert pour du texte
+$vert-fonce: #153621; // survol des boutons verts, pied de page
+$vert-clair: #e4ece3; // pastille « régime », encadrés d'information
+$bordeaux-fonce: #5e2329; // survol
+$bordeaux-clair: #f7e3e5; // pastille « thème »
+$or-fonce: #b8984a; // survol du bouton doré
+$or-texte: #7a5f12; // l'or n'a que 2:1 sur fond clair : cette nuance
+// foncée (5,8:1) sert pour du texte (étoiles, surtitres)
+$sable: #eee8dc; // fond de la section des avis
 $blanc: #ffffff;
-$texte-doux: #5f5f5f;     // textes secondaires (6,1:1 sur le fond)
-$bordure: #d6d6d6;
-$erreur: #b3261e;         // messages d'erreur (6,3:1 sur le fond)
+$texte-doux: #5c5750; // textes secondaires (6,4:1 sur le fond crème)
+$bordure: #e6dfd4; // bordures des cartes et séparateurs
+$bordure-champ: #8c857b; // bordure des champs (3,4:1 : critère 3:1)
+$erreur: #b3261e; // messages d'erreur (6,3:1 sur le fond)
 $erreur-clair: #fdecea;
 
 // ---- Typographies (polices auto-hébergées, voir angular.json) -------
 $police-titres: 'Playfair Display Variable', Georgia, 'Times New Roman', serif;
-$police-texte: 'Open Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+$police-texte:
+  'DM Sans Variable',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  sans-serif;
 
 // ---- Espacements (échelle de 4 px) ------------------------------------
 $espace-1: 0.25rem;
@@ -37,15 +46,20 @@ $espace-4: 1rem;
 $espace-6: 1.5rem;
 $espace-8: 2rem;
 $espace-12: 3rem;
+$espace-16: 4rem;
 
 // ---- Formes ----------------------------------------------------------
-$rayon: 8px;
-$rayon-petit: 4px;
-$ombre: 0 2px 8px rgba(0, 0, 0, 0.08);
-$ombre-survol: 0 8px 24px rgba(0, 0, 0, 0.12);
+$rayon: 16px; // cartes (coins bien arrondis des maquettes)
+$rayon-moyen: 10px; // champs de saisie, tuiles
+$rayon-petit: 6px;
+$rayon-pilule: 999px; // boutons et pastilles
+$ombre:
+  0 1px 2px rgba(31, 29, 26, 0.04),
+  0 4px 16px rgba(31, 29, 26, 0.05);
+$ombre-survol: 0 10px 28px rgba(31, 29, 26, 0.1);
 $transition: 0.2s ease;
 
 // ---- Mise en page (mobile d'abord) ------------------------------------
-$largeur-max: 1200px;
+$largeur-max: 1344px; // 1 280 px de contenu + marges : maquette dessinée pour un écran de 1 440 px
 $point-tablette: 768px;
 $point-bureau: 1024px;
