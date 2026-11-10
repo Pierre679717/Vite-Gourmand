@@ -13,6 +13,7 @@
 const crypto = require('crypto');
 const { pool } = require('../config/db.mysql');
 const MenuModel = require('./menu.model');
+const { verifierDelai } = require('../utils/validationCommande');
 
 // Erreur "métier" : le contrôleur la transforme en réponse 4xx
 class ErreurCommande extends Error {
@@ -45,6 +46,11 @@ class CommandeModel {
             if (menu.quantite_restante < 1) {
                 throw new ErreurCommande('Ce menu n\'est plus disponible (stock épuisé).', 409);
             }
+            // Délai lu dans la même transaction que le stock : c'est la valeur à jour
+            const erreurDelai = verifierDelai(donnees.datePrestation, menu.delai_minimum_jours, donnees.aujourdhui);
+            if (erreurDelai) {
+                throw new ErreurCommande(erreurDelai);
+            }
 
             const prix = calculerPrix(menu);
 
@@ -56,13 +62,15 @@ class CommandeModel {
                 `INSERT INTO commande
                  (numero_commande, date_prestation, heure_livraison, adresse_prestation, ville_prestation,
                   distance_km, nombre_personne, prix_par_personne, reduction, prix_menu, prix_livraison,
-                  prix_total, pret_materiel, utilisateur_id, menu_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  prix_total, pret_materiel, contact_nom, contact_prenom, contact_email,
+                  contact_telephone, utilisateur_id, menu_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [numeroProvisoire, donnees.datePrestation, donnees.heureLivraison,
                  donnees.adressePrestation, donnees.villePrestation, prix.distance_km,
                  donnees.nombrePersonne, prix.prix_par_personne, prix.reduction, prix.prix_menu,
                  prix.prix_livraison, prix.prix_total, donnees.pretMateriel ? 1 : 0,
-                 donnees.utilisateurId, menu.menu_id]
+                 donnees.contactNom, donnees.contactPrenom, donnees.contactEmail,
+                 donnees.contactTelephone, donnees.utilisateurId, menu.menu_id]
             );
             const commandeId = result.insertId;
 

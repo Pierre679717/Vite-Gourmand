@@ -9,7 +9,9 @@
    ================================================================ */
 
 const { CommandeModel, ErreurCommande } = require('../models/commande.model');
-const { calculerPrixCommande, estBordeaux } = require('../utils/prix');
+const { calculerPrixCommande } = require('../utils/prix');
+const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance');
+const { validerCommande, aujourdhuiParis } = require('../utils/validationCommande');
 const { sauvegarderStat } = require('../config/db.mongo');
 
 // Statuts qu'un employé peut appliquer ('en_attente' est l'état de départ)
@@ -24,79 +26,76 @@ const STATUTS_EMPLOYE = [
 ];
 const MODES_CONTACT = ['gsm', 'mail'];
 
-const REGEX_DATE  = /^\d{4}-\d{2}-\d{2}$/;      // 2026-11-21
-const REGEX_HEURE = /^\d{2}:\d{2}(:\d{2})?$/;   // 12:30 ou 12:30:00
-
 class CommandeController {
 
     /**
      * POST /api/commandes
-     * Passer une nouvelle commande
+     * Passer une nouvelle commande (client connecté uniquement).
+     *
+     * Ordre des étapes :
+     *  1. valider les champs reçus (utils/validationCommande.js) ;
+     *  2. calculer la distance via l'API de géocodage, AVANT d'ouvrir la
+     *     transaction : un appel réseau peut prendre plusieurs secondes,
+     *     on ne garde pas le menu verrouillé pendant ce temps ;
+     *  3. transaction : minimum de personnes, stock, délai du menu, prix
+     *     recalculé, insertion, suivi, stock décrémenté.
      */
     static async creer(req, res) {
         try {
-            const {
-                menu_id, nombre_personne, date_prestation, heure_livraison,
-                adresse_prestation, ville_prestation, distance_km, pret_materiel
-            } = req.body;
-
-            // --- Validation des données reçues ---
-            if (!menu_id || !date_prestation || !heure_livraison || !adresse_prestation || !ville_prestation) {
-                return res.status(400).json({ error: 'Menu, date, heure, adresse et ville de la prestation sont requis.' });
-            }
-            if (!Number.isInteger(nombre_personne) || nombre_personne < 1) {
-                return res.status(400).json({ error: 'Le nombre de personnes doit être un entier positif.' });
-            }
-            if (!REGEX_DATE.test(date_prestation) || !REGEX_HEURE.test(heure_livraison)) {
-                return res.status(400).json({ error: 'Date (AAAA-MM-JJ) ou heure (HH:MM) invalide.' });
-            }
-            const aujourdHui = new Date().toISOString().slice(0, 10);
-            if (date_prestation <= aujourdHui) {
-                return res.status(400).json({ error: 'La date de prestation doit être dans le futur.' });
-            }
-            // Hors Bordeaux, la distance est nécessaire au calcul de la livraison.
-            // (Elle sera calculée côté serveur via l'API Adresse dans une étape suivante.)
-            const distanceValide = typeof distance_km === 'number' && Number.isFinite(distance_km) && distance_km >= 0;
-            if (!estBordeaux(ville_prestation) && !distanceValide) {
-                return res.status(400).json({ error: 'La distance (en km) est requise pour une livraison hors de Bordeaux.' });
+            // Les comptes employé et administrateur ne passent pas de commande
+            if (req.user.role !== 'utilisateur') {
+                return res.status(403).json({ error: 'Seuls les clients peuvent passer commande.' });
             }
 
-            // --- Création en transaction (le modèle vérifie minimum et stock) ---
+            // --- 1. Validation (les champs inattendus sont ignorés) ---
+            const aujourdhui = aujourdhuiParis();
+            const { donnees, erreurs } = validerCommande(req.body, aujourdhui);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+
+            // --- 2. Distance calculée par le serveur (jamais lue dans la requête) ---
+            const livraison = await calculerDistanceLivraison(donnees.adressePrestation, donnees.villePrestation);
+
+            // --- 3. Création en transaction (le modèle vérifie minimum, stock et délai) ---
             const { commandeId, numeroCommande, menu, prix } = await CommandeModel.creer(
                 {
-                    utilisateurId:     req.user.id,
-                    menuId:            menu_id,
-                    nombrePersonne:    nombre_personne,
-                    datePrestation:    date_prestation,
-                    heureLivraison:    heure_livraison,
-                    adressePrestation: adresse_prestation,
-                    villePrestation:   ville_prestation.trim(),
-                    pretMateriel:      pret_materiel === true
+                    ...donnees,
+                    villePrestation: livraison.ville,   // ville officielle renvoyée par l'API
+                    utilisateurId:   req.user.id,
+                    aujourdhui
                 },
                 (menuVerrouille) => calculerPrixCommande({
                     prixParPersonne:   menuVerrouille.prix_par_personne,
                     nombrePersonneMin: menuVerrouille.nombre_personne_min,
-                    nombrePersonne:    nombre_personne,
-                    ville:             ville_prestation,
-                    distanceKm:        distance_km
+                    nombrePersonne:    donnees.nombrePersonne,
+                    ville:             livraison.ville,
+                    distanceKm:        livraison.distance_km
                 })
             );
 
-            await sauvegarderStat('commande', { menu_id, prix_total: prix.prix_total, personnes: nombre_personne });
+            await sauvegarderStat('commande', {
+                menu_id: menu.menu_id, prix_total: prix.prix_total, personnes: donnees.nombrePersonne
+            });
 
             res.status(201).json({
                 message: 'Commande enregistrée !',
                 commande: {
-                    commande_id:     commandeId,
-                    numero_commande: numeroCommande,
-                    menu:            menu.titre,
-                    nombre_personne,
+                    commande_id:      commandeId,
+                    numero_commande:  numeroCommande,
+                    menu:             menu.titre,
+                    nombre_personne:  donnees.nombrePersonne,
+                    date_prestation:  donnees.datePrestation,
+                    heure_livraison:  donnees.heureLivraison,
+                    adresse_prestation: donnees.adressePrestation,
+                    ville_prestation: livraison.ville,
+                    pret_materiel:    donnees.pretMateriel,
                     ...prix
                 }
             });
 
         } catch (err) {
-            if (err instanceof ErreurCommande) {
+            if (err instanceof ErreurCommande || err instanceof ErreurDistance) {
                 return res.status(err.status).json({ error: err.message });
             }
             console.error('Erreur commande :', err);

@@ -229,6 +229,14 @@ CREATE TABLE commande (
     materiel_restitue   TINYINT(1)    NOT NULL DEFAULT 0,
     mode_contact        ENUM('gsm', 'mail') DEFAULT NULL,   -- renseigné par l'employé qui annule ou modifie
     motif               TEXT          DEFAULT NULL,
+    -- Coordonnées du client POUR CETTE COMMANDE : pré-remplies depuis son
+    -- compte mais modifiables (ex. commande pour un proche). Copiées dans
+    -- la commande pour que l'employé garde le bon contact, même si le
+    -- client modifie son compte plus tard.
+    contact_nom         VARCHAR(50)   NOT NULL,
+    contact_prenom      VARCHAR(50)   NOT NULL,
+    contact_email       VARCHAR(254)  NOT NULL,
+    contact_telephone   VARCHAR(20)   NOT NULL,
     utilisateur_id      INT           NOT NULL,
     menu_id             INT           NOT NULL,
     CONSTRAINT uq_commande_numero UNIQUE (numero_commande),
@@ -589,36 +597,37 @@ INSERT INTO commande
     (commande_id, numero_commande, date_commande, date_prestation, heure_livraison,
      adresse_prestation, ville_prestation, distance_km, nombre_personne, prix_par_personne,
      reduction, prix_menu, prix_livraison, prix_total, statut, pret_materiel, materiel_restitue,
-     mode_contact, motif, utilisateur_id, menu_id)
+     mode_contact, motif, contact_nom, contact_prenom, contact_email, contact_telephone,
+     utilisateur_id, menu_id)
 VALUES
 (1, 'VG-2026-0001', '2026-09-10 10:15:00', '2026-10-03', '12:00:00',
     '22 rue Judaïque', 'Bordeaux', 0, 12, 65.00,
-    78.00, 702.00, 0.00, 702.00, 'terminee', 0, 0, NULL, NULL, 4, 1),
+    78.00, 702.00, 0.00, 702.00, 'terminee', 0, 0, NULL, NULL, 'Bernard', 'Sophie', 'sophie.bernard@example.com', '0645128937', 4, 1),
 (2, 'VG-2026-0002', '2026-09-15 18:40:00', '2026-10-10', '19:30:00',
     '5 avenue de la Libération', 'Mérignac', 12.00, 8, 48.00,
-    0.00, 384.00, 12.08, 396.08, 'terminee', 1, 1, NULL, NULL, 5, 2),
+    0.00, 384.00, 12.08, 396.08, 'terminee', 1, 1, NULL, NULL, 'Moreau', 'Lucas', 'lucas.moreau@example.com', '0778451296', 5, 2),
 (3, 'VG-2026-0003', '2026-10-01 09:05:00', '2026-10-17', '12:30:00',
     '7 cours de l''Intendance', 'Bordeaux', 0, 6, 50.00,
-    0.00, 300.00, 0.00, 300.00, 'terminee', 0, 0, NULL, NULL, 3, 3),
+    0.00, 300.00, 0.00, 300.00, 'terminee', 0, 0, NULL, NULL, 'Laurent', 'Camille', 'utilisateur@vite-gourmand.fr', '0698765432', 3, 3),
 (4, 'VG-2026-0004', '2026-10-08 14:20:00', '2026-10-31', '18:00:00',
     '12 avenue Jean Jaurès', 'Pessac', 7.00, 20, 55.00,
-    110.00, 990.00, 9.13, 999.13, 'attente_retour_materiel', 1, 0, NULL, NULL, 4, 7),
+    110.00, 990.00, 9.13, 999.13, 'attente_retour_materiel', 1, 0, NULL, NULL, 'Bernard', 'Sophie', 'sophie.bernard@example.com', '0645128937', 4, 7),
 (5, 'VG-2026-0005', '2026-10-20 20:10:00', '2026-12-24', '19:00:00',
     '18 quai des Chartrons', 'Bordeaux', 0, 10, 75.00,
-    0.00, 750.00, 0.00, 750.00, 'accepte', 1, 0, NULL, NULL, 5, 8),
+    0.00, 750.00, 0.00, 750.00, 'accepte', 1, 0, NULL, NULL, 'Moreau', 'Lucas', 'lucas.moreau@example.com', '0778451296', 5, 8),
 (6, 'VG-2026-0006', '2026-11-01 11:45:00', '2026-11-21', '12:30:00',
     '30 cours de la Libération', 'Talence', 5.00, 6, 42.00,
-    0.00, 252.00, 7.95, 259.95, 'en_attente', 0, 0, NULL, NULL, 3, 5),
+    0.00, 252.00, 7.95, 259.95, 'en_attente', 0, 0, NULL, NULL, 'Laurent', 'Camille', 'utilisateur@vite-gourmand.fr', '0698765432', 3, 5),
 (7, 'VG-2026-0007', '2026-10-12 16:30:00', '2026-10-25', '13:00:00',
     '22 rue Judaïque', 'Bordeaux', 0, 7, 45.00,
     0.00, 315.00, 0.00, 315.00, 'annulee', 0, 0, 'gsm',
-    'Cliente jointe par téléphone : l''évènement est reporté, annulation à sa demande.', 4, 6),
+    'Cliente jointe par téléphone : l''évènement est reporté, annulation à sa demande.', 'Bernard', 'Sophie', 'sophie.bernard@example.com', '0645128937', 4, 6),
 (8, 'VG-2026-0008', '2026-10-05 15:00:00', '2026-11-04', '19:00:00',
     '9 boulevard de la Plage', 'Arcachon', 65.00, 15, 85.00,
-    127.50, 1147.50, 43.35, 1190.85, 'en_preparation', 1, 0, NULL, NULL, 3, 10),
+    127.50, 1147.50, 43.35, 1190.85, 'en_preparation', 1, 0, NULL, NULL, 'Laurent', 'Camille', 'utilisateur@vite-gourmand.fr', '0698765432', 3, 10),
 (9, 'VG-2026-0009', '2026-09-02 12:00:00', '2026-09-12', '12:00:00',
     '5 avenue de la Libération', 'Mérignac', 12.00, 6, 40.00,
-    0.00, 240.00, 12.08, 252.08, 'terminee', 0, 0, NULL, NULL, 5, 4);
+    0.00, 240.00, 12.08, 252.08, 'terminee', 0, 0, NULL, NULL, 'Moreau', 'Lucas', 'lucas.moreau@example.com', '0778451296', 5, 4);
 
 -- ----------------------------------------------------------------
 -- Suivi des commandes (historique des statuts)
