@@ -13,7 +13,7 @@ const MenuModel = require('../models/menu.model');
 const { calculerPrixCommande, PERSONNES_EN_PLUS } = require('../utils/prix');
 const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance');
 const { validerCommande, validerDevis, aujourdhuiParis } = require('../utils/validationCommande');
-const { sauvegarderStat } = require('../config/db.mongo');
+const { enregistrerStatCommande } = require('../models/statCommande.model');
 const { genererMailConfirmationCommande } = require('../email/templateCommande');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
 
@@ -169,10 +169,19 @@ class CommandeController {
             };
 
             // Lancés sans « await » : la réponse part tout de suite.
-            // Les fonctions attrapent leurs propres erreurs.
+            // Les deux fonctions attrapent leurs propres erreurs.
             envoyerMailConfirmation({ ...commande, contact_prenom: donnees.contactPrenom }, donnees.contactEmail);
-            sauvegarderStat('commande', {
-                menu_id: menu.menu_id, prix_total: prix.prix_total, personnes: donnees.nombrePersonne
+            enregistrerStatCommande({
+                commande_id:     commandeId,
+                numero_commande: numeroCommande,
+                menu_id:         menu.menu_id,
+                menu_titre:      menu.titre,
+                nombre_personne: donnees.nombrePersonne,
+                prix_total:      prix.prix_total,
+                reduction:       prix.reduction,
+                prix_livraison:  prix.prix_livraison,
+                ville:           livraison.ville,
+                date_prestation: donnees.datePrestation
             });
 
             res.status(201).json({ message: 'Commande enregistrée !', commande });
