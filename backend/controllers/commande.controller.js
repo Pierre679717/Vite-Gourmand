@@ -14,6 +14,22 @@ const { calculerPrixCommande, PERSONNES_EN_PLUS } = require('../utils/prix');
 const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance');
 const { validerCommande, validerDevis, aujourdhuiParis } = require('../utils/validationCommande');
 const { sauvegarderStat } = require('../config/db.mongo');
+const { genererMailConfirmationCommande } = require('../email/templateCommande');
+const { transporter, EXPEDITEUR } = require('../email/mailer');
+
+/**
+ * Envoie le mail de confirmation sans bloquer la réponse :
+ * la commande est déjà enregistrée, un serveur de mail lent ou en panne
+ * ne doit pas faire croire au client que sa commande a échoué.
+ */
+async function envoyerMailConfirmation(commande, destinataire) {
+    try {
+        const mail = genererMailConfirmationCommande(commande);
+        await transporter.sendMail({ from: EXPEDITEUR, to: destinataire, ...mail });
+    } catch (err) {
+        console.error(`Mail de confirmation non envoyé (${commande.numero_commande}) :`, err.message);
+    }
+}
 
 // Statuts qu'un employé peut appliquer ('en_attente' est l'état de départ)
 const STATUTS_EMPLOYE = [
@@ -139,25 +155,27 @@ class CommandeController {
                 })
             );
 
-            await sauvegarderStat('commande', {
+            const commande = {
+                commande_id:        commandeId,
+                numero_commande:    numeroCommande,
+                menu:               menu.titre,
+                nombre_personne:    donnees.nombrePersonne,
+                date_prestation:    donnees.datePrestation,
+                heure_livraison:    donnees.heureLivraison,
+                adresse_prestation: donnees.adressePrestation,
+                ville_prestation:   livraison.ville,
+                pret_materiel:      donnees.pretMateriel,
+                ...prix
+            };
+
+            // Lancés sans « await » : la réponse part tout de suite.
+            // Les fonctions attrapent leurs propres erreurs.
+            envoyerMailConfirmation({ ...commande, contact_prenom: donnees.contactPrenom }, donnees.contactEmail);
+            sauvegarderStat('commande', {
                 menu_id: menu.menu_id, prix_total: prix.prix_total, personnes: donnees.nombrePersonne
             });
 
-            res.status(201).json({
-                message: 'Commande enregistrée !',
-                commande: {
-                    commande_id:      commandeId,
-                    numero_commande:  numeroCommande,
-                    menu:             menu.titre,
-                    nombre_personne:  donnees.nombrePersonne,
-                    date_prestation:  donnees.datePrestation,
-                    heure_livraison:  donnees.heureLivraison,
-                    adresse_prestation: donnees.adressePrestation,
-                    ville_prestation: livraison.ville,
-                    pret_materiel:    donnees.pretMateriel,
-                    ...prix
-                }
-            });
+            res.status(201).json({ message: 'Commande enregistrée !', commande });
 
         } catch (err) {
             if (err instanceof ErreurCommande || err instanceof ErreurDistance) {
