@@ -153,13 +153,43 @@ class AuthController {
 
     /**
      * GET /api/profil
-     * Retourner les informations de l'utilisateur connecté
-     * Les infos viennent maintenant du token décodé (req.user)
-     * injecté par le middleware JWT
+     * Retourner le profil de l'utilisateur connecté, lu en base.
+     * Le token ne contient que id, nom, prénom, e-mail et rôle :
+     * le téléphone et l'adresse (pour pré-remplir la commande) sont
+     * dans la table utilisateur. Lire la base garantit aussi des
+     * données à jour (le token peut dater de 24 h).
      */
-    static profil(req, res) {
-        // req.user est injecté par le middleware auth.middleware.js
-        res.json({ user: req.user });
+    static async profil(req, res) {
+        try {
+            const user = await UtilisateurModel.trouverParId(req.user.id);
+
+            // Compte supprimé depuis la connexion : le token n'a plus de titulaire
+            if (!user) {
+                return res.status(404).json({ error: 'Compte introuvable.' });
+            }
+            // Compte désactivé depuis la connexion : même règle qu'à la connexion
+            if (!user.actif) {
+                return res.status(403).json({ error: 'Ce compte est désactivé. Contactez Vite & Gourmand.' });
+            }
+
+            // Champs choisis un par un (liste blanche) : jamais le mot de passe
+            res.json({
+                user: {
+                    id:              user.utilisateur_id,
+                    nom:             user.nom,
+                    prenom:          user.prenom,
+                    email:           user.email,
+                    telephone:       user.telephone,
+                    adresse_postale: user.adresse_postale,
+                    code_postal:     user.code_postal,
+                    ville:           user.ville,
+                    role:            user.role
+                }
+            });
+        } catch (err) {
+            console.error('Erreur profil :', err.message);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
     }
 }
 
