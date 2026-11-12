@@ -15,3 +15,19 @@ export function messageErreur(erreur: unknown): string {
   }
   return 'Une erreur inattendue est survenue. Réessayez dans quelques instants.';
 }
+
+/**
+ * Toutes les erreurs d'une réponse, pour les afficher en liste.
+ * En cas de validation refusée (400), l'API renvoie aussi un tableau
+ * { error: "première erreur", erreurs: ["...", "..."] } ;
+ * sinon on se contente du message unique de messageErreur().
+ */
+export function messagesErreur(erreur: unknown): string[] {
+  if (erreur instanceof HttpErrorResponse) {
+    const liste: unknown = erreur.error?.erreurs;
+    if (Array.isArray(liste) && liste.length > 0 && liste.every((m) => typeof m === 'string')) {
+      return liste;
+    }
+  }
+  return [messageErreur(erreur)];
+}
