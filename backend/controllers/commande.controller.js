@@ -16,6 +16,7 @@ const { validerCommande, validerDevis, aujourdhuiParis } = require('../utils/val
 const { enregistrerStatCommande } = require('../models/statCommande.model');
 const { genererMailConfirmationCommande } = require('../email/templateCommande');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
+const { idValide, versResumeCommande, versCommandeClient } = require('../utils/commandeClient');
 
 /**
  * Envoie le mail de confirmation sans bloquer la réponse :
@@ -202,9 +203,34 @@ class CommandeController {
     static async mesCommandes(req, res) {
         try {
             const commandes = await CommandeModel.listerParClient(req.user.id);
-            res.json(commandes);
+            res.json(commandes.map(versResumeCommande));
         } catch (err) {
             console.error('Erreur mes commandes :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * GET /api/commandes/:id
+     * Détail d'une commande du client connecté, avec l'historique de
+     * ses statuts (frise du suivi) et son avis s'il en a donné un.
+     * La commande d'un autre client renvoie 404, comme une commande qui
+     * n'existe pas : on ne révèle pas qu'elle existe.
+     */
+    static async detail(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const ligne = await CommandeModel.trouverPourClient(commandeId, req.user.id);
+            if (!ligne) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const suivi = await CommandeModel.listerSuivi(commandeId);
+            res.json(versCommandeClient(ligne, suivi));
+        } catch (err) {
+            console.error('Erreur détail commande :', err);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }

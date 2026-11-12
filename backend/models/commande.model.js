@@ -105,16 +105,62 @@ class CommandeModel {
     }
 
     /**
-     * Récupérer les commandes d'un client
+     * Récupérer les commandes d'un client (liste de « Mes commandes »).
+     * Colonnes choisies une par une : la liste n'a besoin que du résumé.
+     * avis_donne vaut 1 si le client a déjà laissé un avis (LEFT JOIN :
+     * les commandes sans avis restent dans la liste).
      */
     static async listerParClient(utilisateurId) {
         const [rows] = await pool.query(
-            `SELECT c.*, m.titre AS menu_titre
+            `SELECT c.commande_id, c.numero_commande, c.date_commande, c.date_prestation,
+                    c.heure_livraison, c.ville_prestation, c.nombre_personne, c.prix_total,
+                    c.statut, m.titre AS menu_titre,
+                    (a.avis_id IS NOT NULL) AS avis_donne
              FROM commande c
-             JOIN menu m ON m.menu_id = c.menu_id
+             JOIN menu m      ON m.menu_id = c.menu_id
+             LEFT JOIN avis a ON a.commande_id = c.commande_id
              WHERE c.utilisateur_id = ?
-             ORDER BY c.date_commande DESC`,
+             ORDER BY c.date_commande DESC, c.commande_id DESC`,
             [utilisateurId]
+        );
+        return rows;
+    }
+
+    /**
+     * Une commande, seulement si elle appartient à ce client.
+     * La condition « utilisateur_id = ? » est dans la requête elle-même :
+     * la commande d'un autre client est introuvable (null), exactement
+     * comme une commande qui n'existe pas.
+     */
+    static async trouverPourClient(commandeId, utilisateurId) {
+        const [rows] = await pool.query(
+            `SELECT c.commande_id, c.numero_commande, c.date_commande, c.date_prestation,
+                    c.heure_livraison, c.adresse_prestation, c.ville_prestation, c.distance_km,
+                    c.nombre_personne, c.prix_par_personne, c.reduction, c.prix_menu,
+                    c.prix_livraison, c.prix_total, c.statut, c.pret_materiel, c.materiel_restitue,
+                    c.contact_nom, c.contact_prenom, c.contact_email, c.contact_telephone,
+                    c.menu_id, m.titre AS menu_titre, m.nombre_personne_min, m.delai_minimum_jours,
+                    a.note AS avis_note, a.commentaire AS avis_commentaire, a.statut AS avis_statut
+             FROM commande c
+             JOIN menu m      ON m.menu_id = c.menu_id
+             LEFT JOIN avis a ON a.commande_id = c.commande_id
+             WHERE c.commande_id = ? AND c.utilisateur_id = ?`,
+            [commandeId, utilisateurId]
+        );
+        return rows[0] || null;
+    }
+
+    /**
+     * Historique des statuts d'une commande, du plus ancien au plus récent.
+     * suivi_id départage deux changements faits dans la même seconde.
+     */
+    static async listerSuivi(commandeId) {
+        const [rows] = await pool.query(
+            `SELECT statut, date_changement
+             FROM suivi_commande
+             WHERE commande_id = ?
+             ORDER BY date_changement, suivi_id`,
+            [commandeId]
         );
         return rows;
     }

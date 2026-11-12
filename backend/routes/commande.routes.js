@@ -9,6 +9,7 @@ const { authRequired }    = require('../middleware/auth.middleware');
 // Devis : calcul du prix sans enregistrer (récapitulatif avant validation)
 router.post('/devis', authRequired, CommandeController.devis);
 router.post('/',      authRequired, CommandeController.creer);
-router.get('/',  authRequired, CommandeController.mesCommandes);
+router.get('/',       authRequired, CommandeController.mesCommandes);
+router.get('/:id',    authRequired, CommandeController.detail);
 
 module.exports = router;
