@@ -305,6 +305,35 @@ class CommandeController {
     }
 
     /**
+     * POST /api/commandes/:id/annulation
+     * Le client annule sa commande tant qu'elle est « en attente ».
+     * POST et non DELETE : rien n'est supprimé, la commande passe au
+     * statut « annulee » (voir CommandeModel.annulerParClient).
+     */
+    static async annuler(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+
+            const numeroCommande = await CommandeModel.annulerParClient(commandeId, req.user.id);
+
+            // Non bloquant : les commandes annulées sont exclues du chiffre d'affaires
+            mettreAJourStatCommande(commandeId, { statut: 'annulee' });
+
+            res.json({ message: `Commande ${numeroCommande} annulée.`, numero_commande: numeroCommande, statut: 'annulee' });
+
+        } catch (err) {
+            if (err instanceof ErreurCommande) {
+                return res.status(err.status).json({ error: err.message });
+            }
+            console.error('Erreur annulation commande :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
      * GET /api/employe/commandes ou /api/admin/commandes
      * Récupérer toutes les commandes
      */

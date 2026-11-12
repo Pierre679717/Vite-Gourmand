@@ -23,6 +23,20 @@ class ErreurCommande extends Error {
     }
 }
 
+/**
+ * Erreur 409 quand le client veut modifier ou annuler une commande
+ * qui n'est plus « en_attente ». Le message dépend du statut :
+ * une commande déjà annulée n'a pas été « prise en charge ».
+ */
+function erreurCommandeVerrouillee(statut, action) {
+    if (statut === 'annulee') {
+        return new ErreurCommande('Cette commande est déjà annulée.', 409);
+    }
+    return new ErreurCommande(
+        `Cette commande a déjà été prise en charge : elle ne peut plus être ${action} en ligne. Contactez-nous.`, 409
+    );
+}
+
 class CommandeModel {
 
     /**
@@ -105,6 +119,58 @@ class CommandeModel {
     }
 
     /**
+     * Annulation par le client, tant que la commande est « en_attente ».
+     * Transaction de 3 écritures : statut de la commande, unité rendue
+     * au stock du menu, nouvelle ligne de suivi (employe_id NULL : c'est
+     * le client qui agit). La commande n'est pas supprimée : elle reste
+     * dans l'historique du client et dans les statistiques.
+     * mode_contact et motif restent NULL : ils sont réservés à
+     * l'annulation par un employé, qui doit d'abord contacter le client.
+     * Renvoie le numéro de la commande.
+     */
+    static async annulerParClient(commandeId, utilisateurId) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            const [rows] = await conn.query(
+                `SELECT numero_commande, statut, menu_id
+                 FROM commande
+                 WHERE commande_id = ? AND utilisateur_id = ?
+                 FOR UPDATE`,
+                [commandeId, utilisateurId]
+            );
+            if (rows.length === 0) throw new ErreurCommande('Commande introuvable.', 404);
+            const commande = rows[0];
+            if (commande.statut !== 'en_attente') {
+                throw erreurCommandeVerrouillee(commande.statut, 'annulée');
+            }
+
+            await conn.query(
+                'UPDATE commande SET statut = \'annulee\' WHERE commande_id = ?',
+                [commandeId]
+            );
+            await conn.query(
+                'UPDATE menu SET quantite_restante = quantite_restante + 1 WHERE menu_id = ?',
+                [commande.menu_id]
+            );
+            await conn.query(
+                'INSERT INTO suivi_commande (commande_id, statut) VALUES (?, \'annulee\')',
+                [commandeId]
+            );
+
+            await conn.commit();
+            return commande.numero_commande;
+
+        } catch (err) {
+            await conn.rollback();
+            throw err;
+        } finally {
+            conn.release();
+        }
+    }
+
+    /**
      * Modifier une commande par le client, dans une transaction.
      * Règles :
      *  - la commande doit être à lui (sinon 404, comme une commande inexistante) ;
@@ -132,9 +198,7 @@ class CommandeModel {
             if (rows.length === 0) throw new ErreurCommande('Commande introuvable.', 404);
             const commande = rows[0];
             if (commande.statut !== 'en_attente') {
-                throw new ErreurCommande(
-                    'Cette commande a déjà été prise en charge : elle ne peut plus être modifiée. Contactez-nous.', 409
-                );
+                throw erreurCommandeVerrouillee(commande.statut, 'modifiée');
             }
 
             // Menu de la commande, même s'il a été retiré de la carte depuis
