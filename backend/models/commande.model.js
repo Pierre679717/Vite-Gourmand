@@ -105,6 +105,77 @@ class CommandeModel {
     }
 
     /**
+     * Modifier une commande par le client, dans une transaction.
+     * Règles :
+     *  - la commande doit être à lui (sinon 404, comme une commande inexistante) ;
+     *  - son statut doit être « en_attente » (relu avec FOR UPDATE : si un
+     *    employé l'accepte au même moment, l'une des deux opérations attend
+     *    l'autre) ;
+     *  - le menu ne change pas : on relit celui de la commande ;
+     *  - mêmes contrôles qu'à la création (minimum de personnes, délai),
+     *    prix recalculé par `calculerPrix(menu)` ;
+     *  - le stock ne bouge pas : la commande garde son unité.
+     * Renvoie { numeroCommande, menu, prix }.
+     */
+    static async modifierParClient({ commandeId, utilisateurId, donnees, aujourdhui }, calculerPrix) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            const [rows] = await conn.query(
+                `SELECT numero_commande, statut, menu_id
+                 FROM commande
+                 WHERE commande_id = ? AND utilisateur_id = ?
+                 FOR UPDATE`,
+                [commandeId, utilisateurId]
+            );
+            if (rows.length === 0) throw new ErreurCommande('Commande introuvable.', 404);
+            const commande = rows[0];
+            if (commande.statut !== 'en_attente') {
+                throw new ErreurCommande(
+                    'Cette commande a déjà été prise en charge : elle ne peut plus être modifiée. Contactez-nous.', 409
+                );
+            }
+
+            // Menu de la commande, même s'il a été retiré de la carte depuis
+            const menu = await MenuModel.trouverPourCommande(commande.menu_id, conn, { actifSeulement: false });
+            if (!menu) throw new ErreurCommande('Menu introuvable.', 404);
+            if (donnees.nombrePersonne < menu.nombre_personne_min) {
+                throw new ErreurCommande(`Minimum ${menu.nombre_personne_min} personnes pour ce menu.`);
+            }
+            const erreurDelai = verifierDelai(donnees.datePrestation, menu.delai_minimum_jours, aujourdhui);
+            if (erreurDelai) {
+                throw new ErreurCommande(erreurDelai);
+            }
+
+            const prix = calculerPrix(menu);
+
+            await conn.query(
+                `UPDATE commande
+                 SET date_prestation = ?, heure_livraison = ?, adresse_prestation = ?, ville_prestation = ?,
+                     distance_km = ?, nombre_personne = ?, prix_par_personne = ?, reduction = ?,
+                     prix_menu = ?, prix_livraison = ?, prix_total = ?, pret_materiel = ?,
+                     contact_nom = ?, contact_prenom = ?, contact_email = ?, contact_telephone = ?
+                 WHERE commande_id = ?`,
+                [donnees.datePrestation, donnees.heureLivraison, donnees.adressePrestation,
+                 donnees.villePrestation, prix.distance_km, donnees.nombrePersonne, prix.prix_par_personne,
+                 prix.reduction, prix.prix_menu, prix.prix_livraison, prix.prix_total,
+                 donnees.pretMateriel ? 1 : 0, donnees.contactNom, donnees.contactPrenom,
+                 donnees.contactEmail, donnees.contactTelephone, commandeId]
+            );
+
+            await conn.commit();
+            return { numeroCommande: commande.numero_commande, menu, prix };
+
+        } catch (err) {
+            await conn.rollback();
+            throw err;
+        } finally {
+            conn.release();
+        }
+    }
+
+    /**
      * Récupérer les commandes d'un client (liste de « Mes commandes »).
      * Colonnes choisies une par une : la liste n'a besoin que du résumé.
      * avis_donne vaut 1 si le client a déjà laissé un avis (LEFT JOIN :

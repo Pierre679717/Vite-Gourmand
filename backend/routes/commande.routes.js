@@ -11,5 +11,6 @@ router.post('/devis', authRequired, CommandeController.devis);
 router.post('/',      authRequired, CommandeController.creer);
 router.get('/',       authRequired, CommandeController.mesCommandes);
 router.get('/:id',    authRequired, CommandeController.detail);
+router.put('/:id',    authRequired, CommandeController.modifier);
 
 module.exports = router;
