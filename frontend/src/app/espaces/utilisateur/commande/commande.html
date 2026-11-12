@@ -1,0 +1,600 @@
+@let e = etat();
+
+@switch (e.statut) {
+  @case ('introuvable') {
+    <app-page-introuvable />
+  }
+
+  @case ('erreur') {
+    <section class="conteneur page">
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible de préparer la commande. {{ e.message }}</p>
+        <a class="btn btn--primaire" routerLink="/menus">Retour aux menus</a>
+      </div>
+    </section>
+  }
+
+  @case ('chargement') {
+    <section class="conteneur commande" aria-busy="true">
+      <p class="visuellement-masque" role="status">Préparation de votre commande…</p>
+      <div class="commande__squelette" aria-hidden="true"></div>
+    </section>
+  }
+
+  @case ('pret') {
+    @let m = e.menu;
+
+    <div class="conteneur commande">
+      <nav class="fil-ariane commande__fil" aria-label="Fil d'Ariane">
+        <ol>
+          <li><a routerLink="/menus">Nos menus</a></li>
+          <li>
+            <a [routerLink]="['/menus', m.menu_id]">{{ m.titre }}</a>
+          </li>
+          <li aria-current="page">Commander</li>
+        </ol>
+      </nav>
+
+      <p class="surtitre">Commande</p>
+      <h1 class="commande__titre">Commander le {{ m.titre }}</h1>
+
+      @if (m.quantite_restante <= 0) {
+        <div class="alerte alerte--erreur" role="alert">
+          <p>Ce menu n'est plus disponible pour le moment.</p>
+          <a class="btn btn--primaire" routerLink="/menus">Voir les autres menus</a>
+        </div>
+      } @else {
+        <!-- ============ Indicateur de progression ============ -->
+        <ol class="progression" aria-label="Étapes de la commande">
+          @for (numero of numerosEtapes; track numero) {
+            <li
+              class="progression__etape"
+              [class.progression__etape--active]="numero === etape()"
+              [class.progression__etape--faite]="numero < etapeAtteinte() && numero !== etape()"
+              [attr.aria-current]="numero === etape() ? 'step' : null"
+            >
+              @if (peutAllerA(numero) && numero !== etape()) {
+                <button type="button" class="progression__lien" (click)="allerA(numero)">
+                  <span class="progression__numero" aria-hidden="true">{{ numero }}</span>
+                  <span class="progression__libelle"
+                    ><span class="visuellement-masque">Revenir à l'étape {{ numero }} : </span
+                    >{{ libellesEtapes[numero] }}</span
+                  >
+                </button>
+              } @else {
+                <span class="progression__lien">
+                  <span class="progression__numero" aria-hidden="true">{{ numero }}</span>
+                  <span class="progression__libelle"
+                    ><span class="visuellement-masque">Étape {{ numero }} : </span
+                    >{{ libellesEtapes[numero] }}</span
+                  >
+                </span>
+              }
+            </li>
+          }
+        </ol>
+
+        <div class="commande__grille">
+          <!-- ============ Formulaire ============ -->
+          <form
+            class="carte commande__formulaire"
+            [formGroup]="formulaire"
+            (ngSubmit)="etape() === 4 ? valider() : continuer()"
+            novalidate
+          >
+            <p class="commande__etape-sur">Étape {{ etape() }} sur 4</p>
+
+            @switch (etape()) {
+              @case (1) {
+                <!-- ---------- Étape 1 : coordonnées ---------- -->
+                <fieldset class="formulaire__groupe" formGroupName="contact">
+                  <legend class="visuellement-masque">Vos coordonnées</legend>
+                  <h2 #titreEtape class="commande__etape-titre" tabindex="-1">Vos coordonnées</h2>
+                  <p class="champ__aide">
+                    Pré-remplies depuis votre compte. Vous pouvez les modifier, par exemple pour une
+                    commande passée pour un proche. Champs obligatoires :
+                    <span class="champ__obligatoire" aria-hidden="true">*</span>
+                  </p>
+
+                  <div class="formulaire__ligne">
+                    <div class="champ">
+                      <label class="champ__label" for="prenom">
+                        Prénom <span class="champ__obligatoire" aria-hidden="true">*</span>
+                      </label>
+                      <input
+                        id="prenom"
+                        class="champ__saisie"
+                        formControlName="prenom"
+                        autocomplete="given-name"
+                        required
+                        [attr.aria-invalid]="!!erreur('contact', 'prenom')"
+                        [attr.aria-describedby]="
+                          erreur('contact', 'prenom') ? 'prenom-erreur' : null
+                        "
+                      />
+                      @if (erreur('contact', 'prenom'); as message) {
+                        <p id="prenom-erreur" class="champ__erreur">{{ message }}</p>
+                      }
+                    </div>
+                    <div class="champ">
+                      <label class="champ__label" for="nom">
+                        Nom <span class="champ__obligatoire" aria-hidden="true">*</span>
+                      </label>
+                      <input
+                        id="nom"
+                        class="champ__saisie"
+                        formControlName="nom"
+                        autocomplete="family-name"
+                        required
+                        [attr.aria-invalid]="!!erreur('contact', 'nom')"
+                        [attr.aria-describedby]="erreur('contact', 'nom') ? 'nom-erreur' : null"
+                      />
+                      @if (erreur('contact', 'nom'); as message) {
+                        <p id="nom-erreur" class="champ__erreur">{{ message }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="formulaire__ligne">
+                    <div class="champ">
+                      <label class="champ__label" for="email">
+                        Adresse e-mail <span class="champ__obligatoire" aria-hidden="true">*</span>
+                      </label>
+                      <input
+                        id="email"
+                        class="champ__saisie"
+                        type="email"
+                        formControlName="email"
+                        autocomplete="email"
+                        required
+                        aria-describedby="email-aide"
+                        [attr.aria-invalid]="!!erreur('contact', 'email')"
+                      />
+                      <p id="email-aide" class="champ__aide">La confirmation y sera envoyée.</p>
+                      @if (erreur('contact', 'email'); as message) {
+                        <p class="champ__erreur" role="alert">{{ message }}</p>
+                      }
+                    </div>
+                    <div class="champ">
+                      <label class="champ__label" for="telephone">
+                        Téléphone <span class="champ__obligatoire" aria-hidden="true">*</span>
+                      </label>
+                      <input
+                        id="telephone"
+                        class="champ__saisie"
+                        type="tel"
+                        formControlName="telephone"
+                        autocomplete="tel-national"
+                        required
+                        aria-describedby="telephone-aide"
+                        [attr.aria-invalid]="!!erreur('contact', 'telephone')"
+                      />
+                      <p id="telephone-aide" class="champ__aide">
+                        10 chiffres, exemple : 06 12 34 56 78
+                      </p>
+                      @if (erreur('contact', 'telephone'); as message) {
+                        <p class="champ__erreur" role="alert">{{ message }}</p>
+                      }
+                    </div>
+                  </div>
+                </fieldset>
+              }
+
+              @case (2) {
+                <!-- ---------- Étape 2 : livraison ---------- -->
+                <fieldset class="formulaire__groupe" formGroupName="livraison">
+                  <legend class="visuellement-masque">Livraison</legend>
+                  <h2 #titreEtape class="commande__etape-titre" tabindex="-1">Livraison</h2>
+
+                  <div class="champ">
+                    <label class="champ__label" for="adresse">
+                      Adresse de la prestation
+                      <span class="champ__obligatoire" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="adresse"
+                      class="champ__saisie"
+                      formControlName="adresse"
+                      autocomplete="street-address"
+                      required
+                      aria-describedby="adresse-aide"
+                      [attr.aria-invalid]="!!erreur('livraison', 'adresse')"
+                    />
+                    <p id="adresse-aide" class="champ__aide">
+                      Numéro et rue. Livraison offerte dans Bordeaux ; ailleurs 5 € + 0,59 € par
+                      kilomètre.
+                    </p>
+                    @if (erreur('livraison', 'adresse'); as message) {
+                      <p class="champ__erreur" role="alert">{{ message }}</p>
+                    }
+                  </div>
+
+                  <div class="champ">
+                    <label class="champ__label" for="ville">
+                      Ville <span class="champ__obligatoire" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="ville"
+                      class="champ__saisie"
+                      formControlName="ville"
+                      autocomplete="address-level2"
+                      required
+                      [attr.aria-invalid]="!!erreur('livraison', 'ville')"
+                    />
+                    @if (erreur('livraison', 'ville'); as message) {
+                      <p class="champ__erreur" role="alert">{{ message }}</p>
+                    }
+                  </div>
+
+                  <div class="formulaire__ligne">
+                    <div class="champ">
+                      <label class="champ__label" for="date">
+                        Date de la prestation
+                        <span class="champ__obligatoire" aria-hidden="true">*</span>
+                      </label>
+                      <input
+                        id="date"
+                        class="champ__saisie"
+                        type="date"
+                        formControlName="date"
+                        required
+                        [min]="dateMinimum()"
+                        aria-describedby="date-aide"
+                        [attr.aria-invalid]="!!erreur('livraison', 'date')"
+                      />
+                      <p id="date-aide" class="champ__aide">
+                        À commander au moins {{ m.delai_minimum_jours }} jour{{
+                          m.delai_minimum_jours > 1 ? 's' : ''
+                        }}
+                        à l'avance : à partir du
+                        <strong>{{ dateFr(dateMinimum()) }}</strong
+                        >.
+                      </p>
+                      @if (erreur('livraison', 'date'); as message) {
+                        <p class="champ__erreur" role="alert">{{ message }}</p>
+                      }
+                    </div>
+                    <div class="champ">
+                      <label class="champ__label" for="heure">
+                        Heure de livraison
+                        <span class="champ__obligatoire" aria-hidden="true">*</span>
+                      </label>
+                      <input
+                        id="heure"
+                        class="champ__saisie"
+                        type="time"
+                        formControlName="heure"
+                        required
+                        aria-describedby="heure-aide"
+                        [attr.aria-invalid]="!!erreur('livraison', 'heure')"
+                      />
+                      <p id="heure-aide" class="champ__aide">
+                        Heure souhaitée d'arrivée chez vous.
+                      </p>
+                      @if (erreur('livraison', 'heure'); as message) {
+                        <p class="champ__erreur" role="alert">{{ message }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="materiel">
+                    <div class="champ-case">
+                      <input
+                        id="pret-materiel"
+                        type="checkbox"
+                        formControlName="pretMateriel"
+                        aria-describedby="materiel-cgv"
+                      />
+                      <label for="pret-materiel">
+                        J'ai besoin d'un prêt de matériel (vaisselle, plats de service, réchauds)
+                      </label>
+                    </div>
+                    <p id="materiel-cgv" class="materiel__cgv">
+                      Le matériel prêté est à restituer sous
+                      <strong>{{ joursOuvres }} jours ouvrés</strong> après la prestation. Sans
+                      restitution, <strong>{{ fraisMateriel }} € de frais</strong> sont facturés (<a
+                        routerLink="/cgv"
+                        >conditions générales de vente</a
+                      >).
+                    </p>
+                  </div>
+                </fieldset>
+              }
+
+              @case (3) {
+                <!-- ---------- Étape 3 : menu ---------- -->
+                <fieldset class="formulaire__groupe" formGroupName="menu">
+                  <legend class="visuellement-masque">Votre menu</legend>
+                  <h2 #titreEtape class="commande__etape-titre" tabindex="-1">Votre menu</h2>
+
+                  <div class="menu-choisi">
+                    <div>
+                      <p class="menu-choisi__titre">{{ m.titre }}</p>
+                      <p class="champ__aide">
+                        {{ m.prix_par_personne | prix }} par personne · minimum
+                        {{ m.nombre_personne_min }} personnes
+                      </p>
+                    </div>
+                    <a class="lien-action" routerLink="/menus">Changer de menu</a>
+                  </div>
+
+                  <div class="champ champ--personnes">
+                    <label class="champ__label" for="personnes">
+                      Nombre de personnes
+                      <span class="champ__obligatoire" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      id="personnes"
+                      class="champ__saisie"
+                      type="number"
+                      inputmode="numeric"
+                      formControlName="personnes"
+                      required
+                      [min]="m.nombre_personne_min"
+                      max="1000"
+                      step="1"
+                      aria-describedby="personnes-aide personnes-reduction"
+                      [attr.aria-invalid]="!!erreur('menu', 'personnes')"
+                    />
+                    <p id="personnes-aide" class="champ__aide">
+                      Minimum {{ m.nombre_personne_min }}. Réduction de 10 % à partir de
+                      {{ seuilReduction() }} personnes.
+                    </p>
+                    @if (erreur('menu', 'personnes'); as message) {
+                      <p class="champ__erreur" role="alert">{{ message }}</p>
+                    }
+                    <p id="personnes-reduction" class="reduction" aria-live="polite">
+                      @if (indicationReduction(); as indication) {
+                        <span class="badge">{{ indication }}</span>
+                      }
+                    </p>
+                  </div>
+                </fieldset>
+              }
+
+              @case (4) {
+                <!-- ---------- Étape 4 : récapitulatif ---------- -->
+                @let r = recap();
+                <h2 #titreEtape class="commande__etape-titre" tabindex="-1">
+                  Vérifiez votre commande
+                </h2>
+
+                @if (r) {
+                  <section class="recap" aria-labelledby="recap-contact">
+                    <div class="recap__entete">
+                      <h3 id="recap-contact" class="recap__titre">Coordonnées</h3>
+                      <button type="button" class="lien-action" (click)="allerA(1)">
+                        Modifier<span class="visuellement-masque"> les coordonnées</span>
+                      </button>
+                    </div>
+                    <p>
+                      {{ r.contact.prenom }} {{ r.contact.nom }}<br />
+                      {{ r.contact.email }}<br />
+                      {{ r.contact.telephone }}
+                    </p>
+                  </section>
+
+                  <section class="recap" aria-labelledby="recap-livraison">
+                    <div class="recap__entete">
+                      <h3 id="recap-livraison" class="recap__titre">Livraison</h3>
+                      <button type="button" class="lien-action" (click)="allerA(2)">
+                        Modifier<span class="visuellement-masque"> la livraison</span>
+                      </button>
+                    </div>
+                    <p>
+                      Le {{ dateFr(r.livraison.date) }} à {{ r.livraison.heure }}<br />
+                      @if (devis(); as dv) {
+                        {{ dv.livraison.adresse_trouvee }}
+                      } @else {
+                        {{ r.livraison.adresse }}, {{ r.livraison.ville }}
+                      }
+                      <br />
+                      Prêt de matériel : {{ r.livraison.pretMateriel ? 'oui' : 'non' }}
+                    </p>
+                  </section>
+
+                  <section class="recap" aria-labelledby="recap-prix">
+                    <div class="recap__entete">
+                      <h3 id="recap-prix" class="recap__titre">Menu et prix</h3>
+                      <button type="button" class="lien-action" (click)="allerA(3)">
+                        Modifier<span class="visuellement-masque"> le nombre de personnes</span>
+                      </button>
+                    </div>
+
+                    @switch (etatDevis().statut) {
+                      @case ('chargement') {
+                        <p class="recap__attente" role="status">
+                          Calcul du prix et de la livraison…
+                        </p>
+                      }
+                      @case ('erreur') {
+                        @if (erreurDevis(); as d) {
+                          <div class="alerte alerte--erreur" role="alert">
+                            <p>{{ d.message }}</p>
+                            @switch (d.action) {
+                              @case ('corriger-adresse') {
+                                <p>
+                                  Adresse saisie : {{ r.livraison.adresse }},
+                                  {{ r.livraison.ville }}
+                                </p>
+                                <button
+                                  type="button"
+                                  class="btn btn--secondaire"
+                                  (click)="allerA(2)"
+                                >
+                                  Corriger l'adresse
+                                </button>
+                              }
+                              @case ('changer-menu') {
+                                <a class="btn btn--secondaire" routerLink="/menus"
+                                  >Voir les menus</a
+                                >
+                              }
+                              @default {
+                                <button
+                                  type="button"
+                                  class="btn btn--secondaire"
+                                  (click)="demanderDevis()"
+                                >
+                                  Réessayer
+                                </button>
+                              }
+                            }
+                          </div>
+                        }
+                      }
+                      @case ('succes') {
+                        @if (devis(); as devis) {
+                          <dl class="prix">
+                            <div class="prix__ligne">
+                              <dt>
+                                {{ devis.menu.titre }} : {{ devis.nombre_personne }} ×
+                                {{ devis.prix_par_personne | prix }}
+                              </dt>
+                              <dd>{{ montantAvantReduction(devis) | prix }}</dd>
+                            </div>
+                            <div class="prix__ligne">
+                              <dt>Réduction −10 %</dt>
+                              <dd>
+                                @if (devis.reduction > 0) {
+                                  − {{ devis.reduction | prix }}
+                                } @else {
+                                  <span class="visuellement-masque">aucune</span
+                                  ><span aria-hidden="true">—</span>
+                                }
+                              </dd>
+                            </div>
+                            @if (devis.reduction === 0) {
+                              <p class="prix__aide">
+                                Dès {{ devis.personnes_pour_reduction }} personnes, 10 % de
+                                réduction.
+                              </p>
+                            }
+                            <div class="prix__ligne">
+                              <dt>
+                                Livraison
+                                @if (devis.livraison.est_bordeaux) {
+                                  (Bordeaux)
+                                } @else {
+                                  ({{ devis.distance_km | number: '1.0-1' }} km depuis Bordeaux)
+                                }
+                              </dt>
+                              <dd>
+                                @if (devis.prix_livraison === 0) {
+                                  Offerte
+                                } @else {
+                                  {{ devis.prix_livraison | prix }}
+                                }
+                              </dd>
+                            </div>
+                            <div class="prix__ligne prix__total">
+                              <dt>Total TTC</dt>
+                              <dd>{{ devis.prix_total | prix }}</dd>
+                            </div>
+                          </dl>
+                        }
+                      }
+                    }
+                  </section>
+
+                  @if (erreursEnvoi(); as messages) {
+                    <div #alerteEnvoi class="alerte alerte--erreur" role="alert" tabindex="-1">
+                      <p>La commande n'a pas pu être enregistrée :</p>
+                      <ul class="alerte__liste">
+                        @for (message of messages; track $index) {
+                          <li>{{ message }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                  <p class="champ__aide">
+                    En validant, vous acceptez les
+                    <a routerLink="/cgv">conditions générales de vente</a>. Le prix est recalculé
+                    par nos services au moment de l'enregistrement.
+                  </p>
+                }
+              }
+            }
+
+            <!-- ---------- Boutons ---------- -->
+            <div class="commande__actions">
+              @if (etape() > 1) {
+                <button type="button" class="btn btn--secondaire" (click)="retour()">
+                  <span aria-hidden="true">←</span> Retour
+                </button>
+              } @else {
+                <a class="btn btn--secondaire" [routerLink]="['/menus', m.menu_id]">
+                  <span aria-hidden="true">←</span> Revenir au menu
+                </a>
+              }
+
+              @if (etape() < 4) {
+                <button type="submit" class="btn btn--primaire">
+                  Continuer <span aria-hidden="true">→</span>
+                </button>
+              } @else {
+                <button
+                  type="submit"
+                  class="btn btn--primaire"
+                  [disabled]="etatDevis().statut !== 'succes' || etatEnvoi().statut === 'envoi'"
+                >
+                  @if (etatEnvoi().statut === 'envoi') {
+                    Enregistrement…
+                  } @else {
+                    Valider la commande
+                  }
+                </button>
+              }
+            </div>
+          </form>
+
+          <!-- ============ Rappel du menu (à droite sur ordinateur) ============ -->
+          <aside class="carte rappel" aria-labelledby="rappel-titre">
+            @if (e.image) {
+              <img
+                class="rappel__image"
+                [src]="e.image"
+                [alt]="e.imageAlt"
+                width="480"
+                height="300"
+              />
+            }
+            <div class="rappel__corps">
+              <ul class="badges" aria-label="Caractéristiques du menu">
+                <li class="badge badge--theme">
+                  <span class="visuellement-masque">Thème : </span>{{ m.theme }}
+                </li>
+                <li class="badge">
+                  <span class="visuellement-masque">Régime : </span>{{ m.regime }}
+                </li>
+              </ul>
+              <h2 id="rappel-titre" class="rappel__titre">{{ m.titre }}</h2>
+              <dl class="rappel__infos">
+                <div>
+                  <dt>Prix par personne</dt>
+                  <dd>{{ m.prix_par_personne | prix }}</dd>
+                </div>
+                <div>
+                  <dt>Minimum</dt>
+                  <dd>{{ m.nombre_personne_min }} personnes</dd>
+                </div>
+                <div>
+                  <dt>Délai</dt>
+                  <dd>{{ m.delai_minimum_jours }} jours</dd>
+                </div>
+              </dl>
+              <p class="rappel__note">
+                @if (prenomConnecte(); as prenom) {
+                  {{ prenom }}, vous
+                } @else {
+                  Vous
+                }
+                recevrez un e-mail de confirmation dès l'enregistrement.
+              </p>
+            </div>
+          </aside>
+        </div>
+      }
+    </div>
+  }
+}

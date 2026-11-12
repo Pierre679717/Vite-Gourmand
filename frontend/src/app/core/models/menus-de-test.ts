@@ -9,6 +9,7 @@ export const MENU_GASTRO: MenuResume = {
   titre: 'Menu Gastronomique',
   description: 'Foie gras maison, magret de canard et dessert au chocolat grand cru.',
   nombre_personne_min: 6,
+  delai_minimum_jours: 7,
   prix_par_personne: 65,
   prix_minimum: 390,
   conditions: 'À commander 7 jours avant.',

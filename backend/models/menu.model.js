@@ -12,7 +12,7 @@ const { pool } = require('../config/db.mysql');
 // prix_minimum = prix pour le nombre minimum de personnes (exigé par le sujet).
 const COLONNES_MENU = `
     m.menu_id, m.titre, m.description, m.nombre_personne_min,
-    m.prix_par_personne,
+    m.delai_minimum_jours, m.prix_par_personne,
     m.prix_par_personne * m.nombre_personne_min AS prix_minimum,
     m.conditions, m.quantite_restante, m.actif,
     t.libelle AS theme, r.libelle AS regime`;
@@ -150,15 +150,18 @@ class MenuModel {
 
     /**
      * Version minimale utilisée par la commande :
-     * prix, minimum de personnes et stock d'un menu actif.
+     * prix, minimum de personnes, délai de commande et stock d'un menu actif.
      * `conn` permet de lire dans une transaction (SELECT ... FOR UPDATE).
+     * Pour un simple devis, `verrouiller: false` : on lit sans bloquer
+     * les autres clients, rien n'est enregistré.
      */
-    static async trouverPourCommande(id, conn = pool) {
+    static async trouverPourCommande(id, conn = pool, { verrouiller = true } = {}) {
         const [rows] = await conn.query(
-            `SELECT menu_id, titre, nombre_personne_min, prix_par_personne, quantite_restante
+            `SELECT menu_id, titre, nombre_personne_min, delai_minimum_jours,
+                    prix_par_personne, quantite_restante
              FROM menu
              WHERE menu_id = ? AND actif = 1
-             FOR UPDATE`,
+             ${verrouiller ? 'FOR UPDATE' : ''}`,
             [id]
         );
         return rows[0] || null;
@@ -167,12 +170,12 @@ class MenuModel {
     /**
      * Créer un nouveau menu (sans plats ni images : ils s'ajoutent ensuite)
      */
-    static async creer({ titre, description, nombrePersonneMin, prixParPersonne, conditions, quantiteRestante, themeId, regimeId }) {
+    static async creer({ titre, description, nombrePersonneMin, delaiMinimumJours, prixParPersonne, conditions, quantiteRestante, themeId, regimeId }) {
         const [result] = await pool.query(
             `INSERT INTO menu
-             (titre, description, nombre_personne_min, prix_par_personne, conditions, quantite_restante, theme_id, regime_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [titre, description, nombrePersonneMin, prixParPersonne, conditions, quantiteRestante, themeId, regimeId]
+             (titre, description, nombre_personne_min, delai_minimum_jours, prix_par_personne, conditions, quantite_restante, theme_id, regime_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [titre, description, nombrePersonneMin, delaiMinimumJours, prixParPersonne, conditions, quantiteRestante, themeId, regimeId]
         );
         return result.insertId;
     }

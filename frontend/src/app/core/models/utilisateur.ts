@@ -10,6 +10,18 @@ export interface Utilisateur {
   role: Role;
 }
 
+/**
+ * Profil complet de l'utilisateur connecté : GET /api/profil.
+ * Lu en base par le serveur (le token ne contient ni téléphone ni adresse).
+ * Les coordonnées sont facultatives à l'inscription : elles peuvent valoir null.
+ */
+export interface Profil extends Utilisateur {
+  telephone: string | null;
+  adresse_postale: string | null;
+  code_postal: string | null;
+  ville: string | null;
+}
+
 /** Réponse de POST /api/connexion */
 export interface ReponseConnexion {
   message: string;

@@ -9,6 +9,8 @@ export interface MenuResume {
   titre: string;
   description: string;
   nombre_personne_min: number;
+  /** Nombre de jours minimum entre la commande et la prestation */
+  delai_minimum_jours: number;
   prix_par_personne: number;
   /** Prix pour le nombre minimum de personnes (calculé par le serveur) */
   prix_minimum: number;
