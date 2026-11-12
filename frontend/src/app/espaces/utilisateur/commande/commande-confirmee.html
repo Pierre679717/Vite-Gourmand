@@ -1,0 +1,108 @@
+@if (!numeroValide()) {
+  <app-page-introuvable />
+} @else {
+  <section class="conteneur page confirmation">
+    <div class="carte confirmation__carte">
+      <div class="confirmation__entete">
+        <svg
+          class="confirmation__icone"
+          aria-hidden="true"
+          width="56"
+          height="56"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="m8 12 3 3 5-6" />
+        </svg>
+        <p class="surtitre">Commande enregistrée</p>
+        <h1 class="confirmation__titre">
+          Merci{{ prenom() ? ' ' + prenom() : '' }}, votre commande est enregistrée
+        </h1>
+        <p class="confirmation__numero">
+          Numéro de commande<br />
+          <strong>{{ numero() }}</strong>
+        </p>
+        @if (email(); as adresse) {
+          <p>
+            Un e-mail de confirmation vient d'être envoyé à <strong>{{ adresse }}</strong
+            >.
+          </p>
+        } @else {
+          <p>Un e-mail de confirmation vous a été envoyé.</p>
+        }
+      </div>
+
+      @if (commande(); as c) {
+        <h2 class="confirmation__sous-titre">Récapitulatif</h2>
+        <dl class="confirmation__details">
+          <div>
+            <dt>Menu</dt>
+            <dd>{{ c.menu }} pour {{ c.nombre_personne }} personnes</dd>
+          </div>
+          <div>
+            <dt>Livraison</dt>
+            <dd>
+              Le {{ dateFr(c.date_prestation) }} à {{ c.heure_livraison }}<br />
+              {{ c.adresse_prestation }}, {{ c.ville_prestation }}
+            </dd>
+          </div>
+          <div>
+            <dt>Prêt de matériel</dt>
+            <dd>
+              @if (c.pret_materiel) {
+                Oui : à restituer sous 10 jours ouvrés (sinon 600 € de frais)
+              } @else {
+                Non
+              }
+            </dd>
+          </div>
+        </dl>
+
+        <dl class="confirmation__prix">
+          <div>
+            <dt>{{ c.nombre_personne }} × {{ c.prix_par_personne | prix }}</dt>
+            <dd>{{ montantAvantReduction(c) | prix }}</dd>
+          </div>
+          @if (c.reduction > 0) {
+            <div>
+              <dt>Réduction −10 %</dt>
+              <dd>− {{ c.reduction | prix }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Livraison</dt>
+            <dd>
+              @if (c.prix_livraison === 0) {
+                Offerte
+              } @else {
+                {{ c.prix_livraison | prix }}
+              }
+            </dd>
+          </div>
+          <div class="confirmation__total">
+            <dt>Total TTC</dt>
+            <dd>{{ c.prix_total | prix }}</dd>
+          </div>
+        </dl>
+      }
+
+      <div class="confirmation__suite">
+        <h2 class="confirmation__sous-titre">Et maintenant ?</h2>
+        <p>
+          Notre équipe va valider votre commande. Vous suivrez chaque étape, de l'acceptation à la
+          livraison, depuis votre espace client.
+        </p>
+      </div>
+
+      <div class="confirmation__actions">
+        <a class="btn btn--primaire" routerLink="/espace-utilisateur">Accéder à mon espace</a>
+        <a class="btn btn--secondaire" routerLink="/menus">Voir les autres menus</a>
+      </div>
+    </div>
+  </section>
+}

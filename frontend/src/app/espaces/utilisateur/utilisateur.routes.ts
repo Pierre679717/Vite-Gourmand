@@ -11,10 +11,14 @@ export const UTILISATEUR_ROUTES: Routes = [
     loadComponent: () => import('./tableau-de-bord').then((m) => m.TableauDeBordUtilisateur),
   },
   {
-    // Bouton « Commander ce menu » de la page détail. Page provisoire :
-    // le formulaire de commande est le bloc suivant du planning.
+    // Bouton « Commander ce menu » de la page détail (?personnes=N)
     path: 'commander/:menuId',
     title: 'Commander — Vite & Gourmand',
-    loadComponent: () => import('./commander').then((m) => m.Commander),
+    loadComponent: () => import('./commande/commande').then((m) => m.Commande),
+  },
+  {
+    path: 'commande-confirmee/:numero',
+    title: 'Commande enregistrée — Vite & Gourmand',
+    loadComponent: () => import('./commande/commande-confirmee').then((m) => m.CommandeConfirmee),
   },
 ];

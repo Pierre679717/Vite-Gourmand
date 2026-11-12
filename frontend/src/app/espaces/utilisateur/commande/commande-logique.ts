@@ -344,3 +344,38 @@ export function versDonneesCommande(menuId: number, valeurs: ValeursFormulaire):
     contact_telephone: nettoyerTelephone(contact.telephone.trim()),
   };
 }
+
+// ---------------------------------------------------------------------
+// 7. Récapitulatif
+// ---------------------------------------------------------------------
+
+/** Libellés de l'indicateur de progression (les 3 étapes + le récapitulatif) */
+export const LIBELLES_ETAPES: Record<NumeroEtape, string> = {
+  1: 'Coordonnées',
+  2: 'Livraison',
+  3: 'Menu',
+  4: 'Récapitulatif',
+};
+
+/** Prix du menu avant réduction : 11 × 48 € = 528 € (calcul en centimes) */
+export function montantAvantReduction(prixParPersonne: number, personnes: number): number {
+  return (Math.round(prixParPersonne * 100) * personnes) / 100;
+}
+
+/**
+ * Que proposer quand le devis échoue ?
+ * - 400 : l'adresse n'a pas été trouvée → corriger l'adresse (étape 2) ;
+ * - 503, 0 (serveur injoignable), 500 : panne passagère → réessayer ;
+ * - autre (404 menu, 409 stock) : rien à réessayer, revenir aux menus.
+ */
+export type ActionErreurDevis = 'corriger-adresse' | 'reessayer' | 'changer-menu';
+
+export function actionErreurDevis(statut: number): ActionErreurDevis {
+  if (statut === 400) {
+    return 'corriger-adresse';
+  }
+  if (statut === 404 || statut === 409) {
+    return 'changer-menu';
+  }
+  return 'reessayer';
+}

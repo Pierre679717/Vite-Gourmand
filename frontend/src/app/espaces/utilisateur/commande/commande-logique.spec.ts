@@ -2,6 +2,8 @@ import { FormControl } from '@angular/forms';
 import { Profil } from '../../../core/models/utilisateur';
 import {
   ValeursFormulaire,
+  actionErreurDevis,
+  montantAvantReduction,
   adresseValide,
   ajouterJours,
   aujourdhuiParis,
@@ -287,5 +289,20 @@ describe('données envoyées au serveur', () => {
       contact_telephone: '0698765432',
     });
     expect('prix_total' in commande).toBe(false);
+  });
+});
+
+describe('récapitulatif', () => {
+  it('calcule le prix avant réduction sans erreur d’arrondi', () => {
+    expect(montantAvantReduction(48, 11)).toBe(528);
+    expect(montantAvantReduction(25.9, 3)).toBe(77.7);
+  });
+
+  it('propose la bonne action selon l’erreur du devis', () => {
+    expect(actionErreurDevis(400)).toBe('corriger-adresse');
+    expect(actionErreurDevis(503)).toBe('reessayer');
+    expect(actionErreurDevis(0)).toBe('reessayer');
+    expect(actionErreurDevis(409)).toBe('changer-menu');
+    expect(actionErreurDevis(404)).toBe('changer-menu');
   });
 });
