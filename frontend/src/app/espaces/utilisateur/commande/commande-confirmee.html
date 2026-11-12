@@ -27,13 +27,15 @@
           Numéro de commande<br />
           <strong>{{ numero() }}</strong>
         </p>
+        <!-- Le serveur répond avant la fin de l'envoi du mail (envoi sans await) :
+             on ne peut pas affirmer que le mail est déjà parti. -->
         @if (email(); as adresse) {
           <p>
-            Un e-mail de confirmation vient d'être envoyé à <strong>{{ adresse }}</strong
+            Vous allez recevoir un e-mail de confirmation à <strong>{{ adresse }}</strong
             >.
           </p>
         } @else {
-          <p>Un e-mail de confirmation vous a été envoyé.</p>
+          <p>Vous allez recevoir un e-mail de confirmation.</p>
         }
       </div>
 
