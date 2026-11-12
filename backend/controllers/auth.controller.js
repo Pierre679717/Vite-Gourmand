@@ -18,6 +18,31 @@ const { genererMailBienvenue } = require('../email/templates');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
 const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
 const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
+const { validerProfil } = require('../utils/validationProfil');
+
+/**
+ * Signe un token pour un compte. Le payload contient l'identité affichée
+ * par le front (nom, prénom, e-mail) et le rôle, jamais le mot de passe.
+ */
+function creerToken({ id, nom, prenom, email, role }) {
+    const payload = { id, nom, prenom, email, role };
+    return { payload, token: jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES }) };
+}
+
+/** Champs du profil renvoyés au front (liste blanche : jamais le mot de passe) */
+function versProfilPublic(user) {
+    return {
+        id:              user.utilisateur_id,
+        nom:             user.nom,
+        prenom:          user.prenom,
+        email:           user.email,
+        telephone:       user.telephone,
+        adresse_postale: user.adresse_postale,
+        code_postal:     user.code_postal,
+        ville:           user.ville,
+        role:            user.role
+    };
+}
 
 /**
  * Envoie le mail de bienvenue sans bloquer l'inscription :
@@ -40,18 +65,17 @@ class AuthController {
      */
     static async inscription(req, res) {
         try {
-            const { nom, prenom, email, telephone, adresse_postale, code_postal, ville, mot_de_passe } = req.body;
-
-            // Validation des champs obligatoires (le sujet exige le GSM et l'adresse postale)
-            if (!nom || !prenom || !email || !telephone || !adresse_postale || !code_postal || !ville || !mot_de_passe) {
-                return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
+            // Mêmes règles que la modification du profil (utils/validationProfil.js).
+            // Le sujet exige le GSM et l'adresse postale : tous les champs sont requis.
+            const { donnees, erreurs } = validerProfil(req.body);
+            const motDePasse = req.body ? req.body.mot_de_passe : undefined;
+            if (!motDePasseValide(motDePasse)) {
+                erreurs.push(MESSAGE_MOT_DE_PASSE);
             }
-            if (!/^[0-9]{5}$/.test(code_postal)) {
-                return res.status(400).json({ error: 'Le code postal doit contenir 5 chiffres.' });
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
             }
-            if (!motDePasseValide(mot_de_passe)) {
-                return res.status(400).json({ error: MESSAGE_MOT_DE_PASSE });
-            }
+            const { nom, prenom, email, telephone, adresse_postale, code_postal, ville } = donnees;
 
             // Vérifier si l'email existe déjà
             const emailPris = await UtilisateurModel.emailExiste(email);
@@ -60,7 +84,7 @@ class AuthController {
             }
 
             // Hasher le mot de passe avec bcrypt (10 tours de salage)
-            const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
+            const motDePasseHash = await bcrypt.hash(motDePasse, 10);
 
             // Créer l'utilisateur en base.
             // Le rôle est forcé à 'utilisateur' : il n'est jamais lu dans req.body,
@@ -114,16 +138,8 @@ class AuthController {
 
             // ── JWT : Générer le token ────────────────────────────────
             // Le payload contient les infos de l'utilisateur (pas le mot de passe !)
-            const payload = {
-                id:     user.utilisateur_id,
-                nom:    user.nom,
-                prenom: user.prenom,
-                email:  user.email,
-                role:   user.role
-            };
-
-            // Signer le token avec la clé secrète + durée d'expiration
-            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+            // Signé avec la clé secrète + durée d'expiration (voir creerToken)
+            const { payload, token } = creerToken({ ...user, id: user.utilisateur_id });
 
             // Retourner le token au client
             // Le client devra l'envoyer dans chaque requête :
@@ -173,21 +189,55 @@ class AuthController {
             }
 
             // Champs choisis un par un (liste blanche) : jamais le mot de passe
-            res.json({
-                user: {
-                    id:              user.utilisateur_id,
-                    nom:             user.nom,
-                    prenom:          user.prenom,
-                    email:           user.email,
-                    telephone:       user.telephone,
-                    adresse_postale: user.adresse_postale,
-                    code_postal:     user.code_postal,
-                    ville:           user.ville,
-                    role:            user.role
-                }
-            });
+            res.json({ user: versProfilPublic(user) });
         } catch (err) {
             console.error('Erreur profil :', err.message);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * PUT /api/profil
+     * Modifier ses informations personnelles (« Mes informations »).
+     * - mêmes validations qu'à l'inscription (utils/validationProfil.js) ;
+     * - l'e-mail sert d'identifiant de connexion : il doit rester unique ;
+     * - le rôle, le mot de passe et l'état actif ne sont jamais lus ici.
+     * Le token contient nom, prénom et e-mail : on en renvoie un nouveau,
+     * sinon le site afficherait les anciennes valeurs jusqu'à la
+     * prochaine connexion.
+     */
+    static async modifierProfil(req, res) {
+        try {
+            const user = await UtilisateurModel.trouverParId(req.user.id);
+            if (!user) {
+                return res.status(404).json({ error: 'Compte introuvable.' });
+            }
+            if (!user.actif) {
+                return res.status(403).json({ error: 'Ce compte est désactivé. Contactez Vite & Gourmand.' });
+            }
+
+            const { donnees, erreurs } = validerProfil(req.body);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+
+            if (await UtilisateurModel.emailUtiliseParAutre(donnees.email, user.utilisateur_id)) {
+                return res.status(409).json({ error: 'Cet e-mail est déjà utilisé par un autre compte.' });
+            }
+
+            await UtilisateurModel.mettreAJourProfil(user.utilisateur_id, donnees);
+
+            const profil = { ...user, ...donnees };
+            const { token } = creerToken({ ...profil, id: user.utilisateur_id });
+            res.json({ message: 'Vos informations ont été mises à jour.', user: versProfilPublic(profil), token });
+
+        } catch (err) {
+            // Deux comptes qui prennent le même e-mail au même instant :
+            // la contrainte UNIQUE de la base refuse le second
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ error: 'Cet e-mail est déjà utilisé par un autre compte.' });
+            }
+            console.error('Erreur modification profil :', err.message);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }
