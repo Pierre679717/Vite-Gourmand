@@ -40,3 +40,13 @@ export interface DonneesInscription {
   ville: string;
   mot_de_passe: string;
 }
+
+/** Corps de PUT /api/profil (« Mes informations ») : l'inscription sans le mot de passe */
+export type DonneesProfil = Omit<DonneesInscription, 'mot_de_passe'>;
+
+/** Réponse de PUT /api/profil : le profil à jour et un nouveau token */
+export interface ReponseModificationProfil {
+  message: string;
+  user: Profil;
+  token: string;
+}

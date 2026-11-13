@@ -1,7 +1,14 @@
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { CommandeCreee, DemandeDevis, Devis, DonneesCommande } from '../models/commande';
+import {
+  CommandeCreee,
+  DemandeDevis,
+  Devis,
+  DonneesCommande,
+  DonneesModification,
+  ResumeCommande,
+} from '../models/commande';
 import { CommandeService } from './commande.service';
 
 /** Cas réel vérifié sur l'API : Pessac, 11 personnes, Menu Traditionnel */
@@ -118,5 +125,89 @@ describe('CommandeService', () => {
       );
 
     expect(recu).toEqual(commande);
+  });
+});
+
+describe('CommandeService : espace client', () => {
+  let service: CommandeService;
+  let controleur: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(CommandeService);
+    controleur = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => controleur.verify());
+
+  it('liste les commandes par GET /api/commandes', () => {
+    const liste = [{ commande_id: 14, numero_commande: 'VG-2026-0014' }] as ResumeCommande[];
+    let recu: ResumeCommande[] | undefined;
+
+    service.lister().subscribe((commandes) => (recu = commandes));
+    const requete = controleur.expectOne('/api/commandes');
+    expect(requete.request.method).toBe('GET');
+    requete.flush(liste);
+
+    expect(recu).toEqual(liste);
+  });
+
+  it('lit le détail par GET /api/commandes/:id', () => {
+    service.detail(14).subscribe();
+    const requete = controleur.expectOne('/api/commandes/14');
+    expect(requete.request.method).toBe('GET');
+    requete.flush({});
+  });
+
+  it('transmet le 404 d’une commande qui n’est pas au client', () => {
+    let statut = 0;
+    service.detail(1).subscribe({ error: (e: HttpErrorResponse) => (statut = e.status) });
+    controleur
+      .expectOne('/api/commandes/1')
+      .flush({ error: 'Commande introuvable.' }, { status: 404, statusText: 'Not Found' });
+    expect(statut).toBe(404);
+  });
+
+  it('modifie par PUT /api/commandes/:id, sans menu ni prix, et renvoie la commande', () => {
+    const { menu_id: _menu, ...modification } = DONNEES;
+    const donnees: DonneesModification = { ...modification, nombre_personne: 12 };
+    const commande = { commande_id: 14, prix_total: 518.4 } as CommandeCreee;
+    let recu: CommandeCreee | undefined;
+
+    service.modifier(14, donnees).subscribe((c) => (recu = c));
+    const requete = controleur.expectOne('/api/commandes/14');
+    expect(requete.request.method).toBe('PUT');
+    expect(requete.request.body).toEqual(donnees);
+    expect('menu_id' in requete.request.body).toBe(false);
+    expect('prix_total' in requete.request.body).toBe(false);
+    requete.flush({ message: 'Commande modifiée.', commande });
+
+    expect(recu).toEqual(commande);
+  });
+
+  it('transmet le 409 d’une commande déjà prise en charge', () => {
+    let statut = 0;
+    service
+      .modifier(14, {} as DonneesModification)
+      .subscribe({ error: (e: HttpErrorResponse) => (statut = e.status) });
+    controleur
+      .expectOne('/api/commandes/14')
+      .flush({ error: 'Déjà prise en charge.' }, { status: 409, statusText: 'Conflict' });
+    expect(statut).toBe(409);
+  });
+
+  it('annule par POST /api/commandes/:id/annulation', () => {
+    let recu = '';
+    service.annuler(14).subscribe((reponse) => (recu = reponse.statut));
+    const requete = controleur.expectOne('/api/commandes/14/annulation');
+    expect(requete.request.method).toBe('POST');
+    requete.flush({
+      message: 'Commande VG-2026-0014 annulée.',
+      numero_commande: 'VG-2026-0014',
+      statut: 'annulee',
+    });
+    expect(recu).toBe('annulee');
   });
 });

@@ -29,4 +29,24 @@ describe('AvisService', () => {
     requete.flush(avis);
     expect(recu).toEqual(avis);
   });
+
+  it('donne un avis par POST /api/avis et renvoie l’avis créé (en attente)', () => {
+    let recu: { statut: string } | undefined;
+
+    service
+      .creer({ commande_id: 3, note: 5, commentaire: 'Parfait' })
+      .subscribe((avis) => (recu = avis));
+
+    const requete = controleur.expectOne('/api/avis');
+    expect(requete.request.method).toBe('POST');
+    expect(requete.request.body).toEqual({ commande_id: 3, note: 5, commentaire: 'Parfait' });
+    requete.flush(
+      {
+        message: 'Merci !',
+        avis: { note: 5, commentaire: 'Parfait', statut: 'en_attente' },
+      },
+      { status: 201, statusText: 'Created' },
+    );
+    expect(recu).toEqual({ note: 5, commentaire: 'Parfait', statut: 'en_attente' });
+  });
 });

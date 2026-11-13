@@ -86,3 +86,91 @@ export interface ReponseCreationCommande {
   message: string;
   commande: CommandeCreee;
 }
+
+// ---------------------------------------------------------------------
+// Espace client : « Mes commandes » (GET, PUT, annulation)
+// ---------------------------------------------------------------------
+
+/** Les 8 statuts possibles (ENUM de la table commande) */
+export type StatutCommande =
+  | 'en_attente'
+  | 'accepte'
+  | 'en_preparation'
+  | 'en_cours_livraison'
+  | 'livre'
+  | 'attente_retour_materiel'
+  | 'terminee'
+  | 'annulee';
+
+/** Une ligne de GET /api/commandes (liste « Mes commandes ») */
+export interface ResumeCommande {
+  commande_id: number;
+  numero_commande: string;
+  /** AAAA-MM-JJ HH:MM:SS, heure de Paris */
+  date_commande: string;
+  statut: StatutCommande;
+  menu_titre: string;
+  nombre_personne: number;
+  date_prestation: string;
+  /** HH:MM */
+  heure_livraison: string;
+  ville_prestation: string;
+  prix_total: number;
+  avis_donne: boolean;
+}
+
+/** Une étape de la frise du suivi */
+export interface EtapeSuivi {
+  statut: StatutCommande;
+  /** AAAA-MM-JJ HH:MM:SS, heure de Paris */
+  date: string;
+}
+
+/** Avis laissé sur une commande (visible par son auteur, même en attente) */
+export interface AvisCommande {
+  note: number;
+  commentaire: string;
+  statut: 'en_attente' | 'valide' | 'refuse';
+}
+
+/** GET /api/commandes/:id : le détail complet, avec le suivi */
+export interface CommandeDetaillee extends DetailPrix {
+  commande_id: number;
+  numero_commande: string;
+  date_commande: string;
+  statut: StatutCommande;
+  menu: {
+    menu_id: number;
+    titre: string;
+    nombre_personne_min: number;
+    delai_minimum_jours: number;
+  };
+  nombre_personne: number;
+  date_prestation: string;
+  heure_livraison: string;
+  adresse_prestation: string;
+  ville_prestation: string;
+  pret_materiel: boolean;
+  materiel_restitue: boolean;
+  contact_nom: string;
+  contact_prenom: string;
+  contact_email: string;
+  contact_telephone: string;
+  avis: AvisCommande | null;
+  /** Du plus ancien au plus récent */
+  suivi: EtapeSuivi[];
+  /** Vrai tant que la commande est « en attente » (le serveur revérifie) */
+  peut_modifier: boolean;
+  /** Vrai si la commande est terminée et sans avis */
+  peut_donner_avis: boolean;
+}
+
+/** Corps de PUT /api/commandes/:id : tout sauf le menu */
+export type DonneesModification = Omit<DonneesCommande, 'menu_id'>;
+
+/** Réponse de POST /api/commandes/:id/annulation */
+export interface ReponseAnnulation {
+  message: string;
+  numero_commande: string;
+  statut: 'annulee';
+}

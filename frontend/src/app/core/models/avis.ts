@@ -11,3 +11,17 @@ export interface Avis {
   /** Titre du menu commandé */
   menu: string;
 }
+
+/** Corps de POST /api/avis : sur une commande « terminée » du client */
+export interface NouvelAvis {
+  commande_id: number;
+  /** Entier de 1 à 5 */
+  note: number;
+  commentaire: string;
+}
+
+/** Réponse 201 de POST /api/avis : l'avis créé, en attente de validation */
+export interface ReponseAvis {
+  message: string;
+  avis: { note: number; commentaire: string; statut: 'en_attente' };
+}
