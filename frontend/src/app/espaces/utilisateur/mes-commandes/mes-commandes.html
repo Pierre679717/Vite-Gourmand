@@ -1,0 +1,89 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Mon espace</p>
+    <h1 class="titre-section">Mes commandes</h1>
+    @if (prenom()) {
+      <p class="espace__bonjour">
+        Bonjour {{ prenom() }}, retrouvez ici vos commandes et leur suivi.
+      </p>
+    }
+  </header>
+
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Chargement de vos commandes…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher vos commandes. {{ e.message }}</p>
+        <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+      </div>
+    }
+
+    @case ('succes') {
+      @if (e.total === 0) {
+        <div class="carte espace__vide">
+          <h2>Vous n'avez pas encore passé de commande</h2>
+          <p>Choisissez un menu, nous nous occupons du reste.</p>
+          <a class="btn btn--primaire" routerLink="/menus">Découvrir nos menus</a>
+        </div>
+      } @else {
+        @for (groupe of e.groupes; track groupe.id) {
+          <section class="espace__groupe" [attr.aria-labelledby]="'titre-' + groupe.id">
+            <h2 [id]="'titre-' + groupe.id" class="espace__sous-titre">
+              {{ groupe.titre }} <span class="espace__compte">({{ groupe.commandes.length }})</span>
+            </h2>
+            <ul class="liste-commandes">
+              @for (c of groupe.commandes; track c.commande_id) {
+                <li>
+                  <article class="carte commande-ligne">
+                    <div class="commande-ligne__entete">
+                      <h3 class="commande-ligne__numero">{{ c.numero_commande }}</h3>
+                      <span [class]="classeBadge(c.statut)">{{ libelles[c.statut] }}</span>
+                    </div>
+
+                    <dl class="commande-ligne__infos">
+                      <div>
+                        <dt>Menu</dt>
+                        <dd>{{ c.menu_titre }} · {{ c.nombre_personne }} personnes</dd>
+                      </div>
+                      <div>
+                        <dt>Livraison</dt>
+                        <dd>
+                          {{ dateLongue(c.date_prestation) }} à {{ heureFr(c.heure_livraison) }},
+                          {{ c.ville_prestation }}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Total</dt>
+                        <dd class="commande-ligne__total">{{ c.prix_total | prix }}</dd>
+                      </div>
+                    </dl>
+
+                    <div class="commande-ligne__pied">
+                      @if (c.statut === 'terminee' && !c.avis_donne) {
+                        <p class="commande-ligne__invitation">Votre avis nous intéresse !</p>
+                      }
+                      <a
+                        class="btn btn--secondaire"
+                        [routerLink]="['commandes', c.commande_id]"
+                        [attr.aria-label]="'Voir le détail de la commande ' + c.numero_commande"
+                        >Voir le détail</a
+                      >
+                    </div>
+                  </article>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+    }
+  }
+</section>

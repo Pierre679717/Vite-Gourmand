@@ -71,6 +71,31 @@
     color: $blanc;
   }
 
+  // Statuts de commande (« Mes commandes ») : 4 couleurs
+  // À valider : or clair, texte or foncé (5,1:1)
+  &--statut-attente {
+    background: $or-clair;
+    color: $or-texte;
+  }
+
+  // En cours (acceptée → retour du matériel) : vert clair, comme le style par défaut
+  &--statut-en-cours {
+    background: $vert-clair;
+    color: $vert;
+  }
+
+  // Terminée : vert plein (10,4:1)
+  &--statut-terminee {
+    background: $vert;
+    color: $blanc;
+  }
+
+  // Annulée : rose et bordeaux (7,6:1)
+  &--statut-annulee {
+    background: $bordeaux-clair;
+    color: $bordeaux;
+  }
+
   // Beige : allergènes
   &--neutre {
     background: $fond;
