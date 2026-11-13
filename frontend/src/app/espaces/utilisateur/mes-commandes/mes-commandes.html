@@ -22,7 +22,9 @@
     @case ('erreur') {
       <div class="alerte alerte--erreur" role="alert">
         <p>Impossible d'afficher vos commandes. {{ e.message }}</p>
-        <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        </div>
       </div>
     }
 

@@ -137,9 +137,18 @@ describe('CommandeDetail', () => {
   });
 
   describe('annulation', () => {
+    it('en attente : lien « Modifier ma commande » vers le formulaire', async () => {
+      await ouvrir('14', commande());
+      const lien = [...page.querySelectorAll('a')].find((a) =>
+        a.textContent!.includes('Modifier ma commande'),
+      )!;
+      expect(lien.getAttribute('href')).toBe('/espace-utilisateur/commandes/14/modifier');
+    });
+
     it('pas de bouton si la commande est déjà acceptée', async () => {
       await ouvrir('14', commande({ statut: 'accepte', peut_modifier: false }));
       expect(bouton('Annuler la commande')).toBeUndefined();
+      expect(page.textContent).not.toContain('Modifier ma commande');
       expect(page.textContent).toContain('prise en charge');
     });
 

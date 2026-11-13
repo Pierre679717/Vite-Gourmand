@@ -18,6 +18,12 @@ export const UTILISATEUR_ROUTES: Routes = [
     loadComponent: () => import('./mes-commandes/commande-detail').then((m) => m.CommandeDetail),
   },
   {
+    // Même formulaire que la commande, pré-rempli, menu verrouillé (PUT)
+    path: 'commandes/:commandeId/modifier',
+    title: 'Modifier ma commande — Vite & Gourmand',
+    loadComponent: () => import('./commande/commande').then((m) => m.Commande),
+  },
+  {
     // Bouton « Commander ce menu » de la page détail (?personnes=N)
     path: 'commander/:menuId',
     title: 'Commander — Vite & Gourmand',

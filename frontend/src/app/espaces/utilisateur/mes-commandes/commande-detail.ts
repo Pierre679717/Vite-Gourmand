@@ -21,7 +21,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { messageErreur, messagesErreur } from '../../../core/http/message-erreur';
 import { AvisCommande, CommandeDetaillee } from '../../../core/models/commande';
@@ -155,6 +155,14 @@ export class CommandeDetail {
   protected readonly annulationEnCours = signal(false);
   protected readonly erreurAnnulation = signal<string | null>(null);
   protected readonly messageAnnulation = signal<string | null>(null);
+  /**
+   * Message transmis par le formulaire après une modification réussie
+   * (state de la navigation, lu seulement à l'arrivée : pas de nouveau
+   * message si l'on recharge la page).
+   */
+  protected readonly messageModification = signal<string | null>(
+    (inject(Router).currentNavigation()?.extras.state?.['message'] as string | undefined) ?? null,
+  );
 
   private readonly titreConfirmation = viewChild<ElementRef<HTMLElement>>('titreConfirmation');
   private readonly boutonAnnuler = viewChild<ElementRef<HTMLButtonElement>>('boutonAnnuler');

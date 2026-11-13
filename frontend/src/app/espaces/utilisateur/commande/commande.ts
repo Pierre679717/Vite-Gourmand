@@ -18,7 +18,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of, startWith, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { messageErreur, messagesErreur } from '../../../core/http/message-erreur';
-import { Devis } from '../../../core/models/commande';
+import { CommandeDetaillee, Devis } from '../../../core/models/commande';
 import { MenuInfos } from '../../../core/models/menu';
 import { Profil } from '../../../core/models/utilisateur';
 import { CommandeService } from '../../../core/services/commande.service';
@@ -54,9 +54,11 @@ import {
   personnesPourReduction,
   personnesValides,
   telephoneValide,
+  valeursDepuisCommande,
   valeursDepuisProfil,
   versDemandeDevis,
   versDonneesCommande,
+  versDonneesModification,
   villeValide,
 } from './commande-logique';
 
@@ -65,7 +67,15 @@ type EtatPage =
   | { statut: 'chargement' }
   | { statut: 'pret'; menu: MenuInfos; image: string | null; imageAlt: string }
   | { statut: 'introuvable' }
+  /** Modification demandée sur une commande déjà prise en charge */
+  | { statut: 'verrouillee'; commande: CommandeDetaillee }
   | { statut: 'erreur'; message: string };
+
+/** Ce que la page charge : un menu (nouvelle commande) ou une commande à modifier */
+interface Demande {
+  menuId: string;
+  commandeId: string | undefined;
+}
 
 /** Devis demandé au serveur en arrivant sur le récapitulatif */
 type EtatDevis =
@@ -81,6 +91,11 @@ type EtatEnvoi =
  * Formulaire de commande en 3 étapes + récapitulatif :
  * /espace-utilisateur/commander/:menuId?personnes=N
  *
+ * Le même formulaire sert à MODIFIER une commande « en attente » :
+ * /espace-utilisateur/commandes/:commandeId/modifier
+ * Il est alors pré-rempli avec la commande, le menu ne peut pas changer,
+ * et l'enregistrement se fait par PUT /api/commandes/:id (mêmes règles).
+ *
  * La logique (dates, validateurs, étapes, données envoyées) est dans
  * commande-logique.ts ; ce composant relie le formulaire, l'API et l'affichage.
  * Le prix affiché vient toujours du serveur (devis), jamais d'un calcul du front.
@@ -93,8 +108,14 @@ type EtatEnvoi =
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Commande {
-  /** :menuId de l'URL */
-  readonly menuId = input.required<string>();
+  /** :menuId de l'URL (nouvelle commande) */
+  readonly menuId = input('');
+  /** :commandeId de l'URL (modification d'une commande) */
+  readonly commandeId = input<string>();
+  /** Vrai si la page modifie une commande existante */
+  protected readonly modeModification = computed(() => !!this.commandeId());
+  /** La commande modifiée (numéro, id), ou null pour une nouvelle commande */
+  protected readonly commandeModifiee = signal<CommandeDetaillee | null>(null);
   /** ?personnes= envoyé par la page détail */
   readonly personnes = input<string>();
 
@@ -141,20 +162,18 @@ export class Commande {
    * Si le profil ne répond pas, on pré-remplit avec le token (nom, prénom, e-mail) :
    * le client complète le téléphone lui-même, la commande reste possible.
    */
+  private readonly demande = computed<Demande>(() => ({
+    menuId: this.menuId(),
+    commandeId: this.commandeId(),
+  }));
+
   protected readonly etat = toSignal(
-    toObservable(this.menuId).pipe(
-      switchMap((id): Observable<EtatPage> =>
-        forkJoin({
-          detail: this.menuService.detail(id),
-          profil: this.profilService.lire().pipe(catchError(() => of(null))),
-        }).pipe(
-          tap(({ detail, profil }) => this.preparerFormulaire(detail.menu, profil)),
-          map(({ detail }): EtatPage => ({
-            statut: 'pret',
-            menu: detail.menu,
-            image: detail.images[0]?.chemin ?? null,
-            imageAlt: detail.images[0]?.texte_alternatif ?? '',
-          })),
+    toObservable(this.demande).pipe(
+      switchMap(({ menuId, commandeId }): Observable<EtatPage> =>
+        (commandeId !== undefined
+          ? this.chargerModification(commandeId)
+          : this.chargerNouvelle(menuId)
+        ).pipe(
           catchError((erreur: { status?: number }) =>
             of<EtatPage>(
               erreur?.status === 404
@@ -168,6 +187,50 @@ export class Commande {
     ),
     { initialValue: { statut: 'chargement' } as EtatPage },
   );
+
+  /** Nouvelle commande : le menu et le profil, en parallèle */
+  private chargerNouvelle(menuId: string): Observable<EtatPage> {
+    return forkJoin({
+      detail: this.menuService.detail(menuId),
+      profil: this.profilService.lire().pipe(catchError(() => of(null))),
+    }).pipe(
+      tap(({ detail, profil }) => this.preparerFormulaire(detail.menu, profil, null)),
+      map(({ detail }): EtatPage => ({
+        statut: 'pret',
+        menu: detail.menu,
+        image: detail.images[0]?.chemin ?? null,
+        imageAlt: detail.images[0]?.texte_alternatif ?? '',
+      })),
+    );
+  }
+
+  /**
+   * Modification : la commande d'abord (404 si elle n'est pas au client),
+   * puis son menu (délai, minimum, photo). Une commande déjà prise en charge
+   * n'ouvre pas le formulaire.
+   */
+  private chargerModification(commandeId: string): Observable<EtatPage> {
+    if (!/^[1-9]\d{0,9}$/.test(commandeId)) {
+      return of<EtatPage>({ statut: 'introuvable' });
+    }
+    return this.commandeService.detail(Number(commandeId)).pipe(
+      switchMap((commande): Observable<EtatPage> => {
+        this.commandeModifiee.set(commande);
+        if (!commande.peut_modifier) {
+          return of<EtatPage>({ statut: 'verrouillee', commande });
+        }
+        return this.menuService.detail(String(commande.menu.menu_id)).pipe(
+          tap((detail) => this.preparerFormulaire(detail.menu, null, commande)),
+          map((detail): EtatPage => ({
+            statut: 'pret',
+            menu: detail.menu,
+            image: detail.images[0]?.chemin ?? null,
+            imageAlt: detail.images[0]?.texte_alternatif ?? '',
+          })),
+        );
+      }),
+    );
+  }
 
   protected readonly menu = computed(() => {
     const etat = this.etat();
@@ -222,8 +285,16 @@ export class Commande {
   // Préparation
   // =====================================================================
 
-  /** Règles liées au menu + pré-remplissage depuis le compte et l'URL */
-  private preparerFormulaire(menu: MenuInfos, profil: Profil | null): void {
+  /**
+   * Règles liées au menu + pré-remplissage :
+   * - nouvelle commande : depuis le compte et le ?personnes= de l'URL ;
+   * - modification : depuis la commande enregistrée.
+   */
+  private preparerFormulaire(
+    menu: MenuInfos,
+    profil: Profil | null,
+    commande: CommandeDetaillee | null,
+  ): void {
     const minimum = dateMinimumPrestation(aujourdhuiParis(), menu.delai_minimum_jours);
     this.dateMinimum.set(minimum);
 
@@ -248,12 +319,23 @@ export class Commande {
         };
 
     this.formulaire.reset();
-    contact.patchValue(depuisCompte.contact);
-    livraison.patchValue(depuisCompte.livraison);
-    groupeMenu.patchValue({
-      personnes: personnesInitiales(this.personnes(), menu.nombre_personne_min),
-    });
+    if (commande) {
+      this.formulaire.patchValue(valeursDepuisCommande(commande));
+    } else {
+      contact.patchValue(depuisCompte.contact);
+      livraison.patchValue(depuisCompte.livraison);
+      groupeMenu.patchValue({
+        personnes: personnesInitiales(this.personnes(), menu.nombre_personne_min),
+      });
+    }
     this.formulaire.updateValueAndValidity();
+    // En modification, tout est déjà rempli : le client peut aller directement
+    // au récapitulatif (les champs restent revalidés avant l'envoi).
+    if (commande && this.formulaire.valid) {
+      this.etape.set(1);
+      this.etapeAtteinte.set(ETAPE_RECAPITULATIF);
+      return;
+    }
 
     this.etape.set(1);
     this.etapeAtteinte.set(1);
@@ -354,6 +436,12 @@ export class Commande {
       return;
     }
 
+    const commande = this.commandeModifiee();
+    if (this.modeModification() && commande) {
+      this.enregistrerModification(commande);
+      return;
+    }
+
     const donnees = versDonneesCommande(menu.menu_id, this.formulaire.getRawValue());
     this.etatEnvoi.set({ statut: 'envoi' });
     this.commandeService.creer(donnees).subscribe({
@@ -369,6 +457,25 @@ export class Commande {
         });
       },
     });
+  }
+
+  /** PUT /api/commandes/:id, puis retour au détail de la commande avec un message */
+  private enregistrerModification(commande: CommandeDetaillee): void {
+    this.etatEnvoi.set({ statut: 'envoi' });
+    this.commandeService
+      .modifier(commande.commande_id, versDonneesModification(this.formulaire.getRawValue()))
+      .subscribe({
+        next: () =>
+          this.router.navigate(['/espace-utilisateur/commandes', commande.commande_id], {
+            state: { message: `Commande ${commande.numero_commande} modifiée.` },
+          }),
+        error: (erreur: unknown) => {
+          this.etatEnvoi.set({ statut: 'erreur', messages: messagesErreur(erreur) });
+          afterNextRender(() => this.alerteEnvoi()?.nativeElement.focus(), {
+            injector: this.injector,
+          });
+        },
+      });
   }
 
   // =====================================================================

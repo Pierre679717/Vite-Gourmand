@@ -14,6 +14,25 @@
     </section>
   }
 
+  @case ('verrouillee') {
+    <section class="conteneur page">
+      <div class="alerte alerte--erreur" role="alert">
+        <p>
+          La commande {{ e.commande.numero_commande }} a déjà été prise en charge par notre équipe :
+          elle ne peut plus être modifiée en ligne. Pour un changement, contactez-nous.
+        </p>
+        <div class="alerte__boutons">
+          <a
+            class="btn btn--primaire"
+            [routerLink]="['/espace-utilisateur/commandes', e.commande.commande_id]"
+            >Voir la commande</a
+          >
+          <a class="btn btn--secondaire" routerLink="/contact">Nous contacter</a>
+        </div>
+      </div>
+    </section>
+  }
+
   @case ('chargement') {
     <section class="conteneur commande" aria-busy="true">
       <p class="visuellement-masque" role="status">Préparation de votre commande…</p>
@@ -25,20 +44,37 @@
     @let m = e.menu;
 
     <div class="conteneur commande">
+      @let modifiee = commandeModifiee();
       <nav class="fil-ariane commande__fil" aria-label="Fil d'Ariane">
         <ol>
-          <li><a routerLink="/menus">Nos menus</a></li>
-          <li>
-            <a [routerLink]="['/menus', m.menu_id]">{{ m.titre }}</a>
-          </li>
-          <li aria-current="page">Commander</li>
+          @if (modifiee) {
+            <li><a routerLink="/espace-utilisateur">Mes commandes</a></li>
+            <li>
+              <a [routerLink]="['/espace-utilisateur/commandes', modifiee.commande_id]">{{
+                modifiee.numero_commande
+              }}</a>
+            </li>
+            <li aria-current="page">Modifier</li>
+          } @else {
+            <li><a routerLink="/menus">Nos menus</a></li>
+            <li>
+              <a [routerLink]="['/menus', m.menu_id]">{{ m.titre }}</a>
+            </li>
+            <li aria-current="page">Commander</li>
+          }
         </ol>
       </nav>
 
-      <p class="surtitre">Commande</p>
-      <h1 class="commande__titre">Commander le {{ m.titre }}</h1>
+      @if (modifiee) {
+        <p class="surtitre">Modification · {{ m.titre }}</p>
+        <h1 class="commande__titre">Modifier la commande {{ modifiee.numero_commande }}</h1>
+      } @else {
+        <p class="surtitre">Commande</p>
+        <h1 class="commande__titre">Commander le {{ m.titre }}</h1>
+      }
 
-      @if (m.quantite_restante <= 0) {
+      <!-- Une commande déjà passée garde son unité : le stock ne la bloque pas -->
+      @if (!modifiee && m.quantite_restante <= 0) {
         <div class="alerte alerte--erreur" role="alert">
           <p>Ce menu n'est plus disponible pour le moment.</p>
           <a class="btn btn--primaire" routerLink="/menus">Voir les autres menus</a>
@@ -91,8 +127,13 @@
                   <legend class="visuellement-masque">Vos coordonnées</legend>
                   <h2 #titreEtape class="commande__etape-titre" tabindex="-1">Vos coordonnées</h2>
                   <p class="champ__aide">
-                    Pré-remplies depuis votre compte. Vous pouvez les modifier, par exemple pour une
-                    commande passée pour un proche. Champs obligatoires :
+                    @if (modeModification()) {
+                      Les coordonnées enregistrées pour cette commande. Vous pouvez les modifier.
+                    } @else {
+                      Pré-remplies depuis votre compte. Vous pouvez les modifier, par exemple pour
+                      une commande passée pour un proche.
+                    }
+                    Champs obligatoires :
                     <span class="champ__obligatoire" aria-hidden="true">*</span>
                   </p>
 
@@ -315,8 +356,16 @@
                         {{ m.nombre_personne_min }} personnes
                       </p>
                     </div>
-                    <a class="lien-action" routerLink="/menus">Changer de menu</a>
+                    @if (!modeModification()) {
+                      <a class="lien-action" routerLink="/menus">Changer de menu</a>
+                    }
                   </div>
+                  @if (modeModification()) {
+                    <p class="champ__aide">
+                      Le menu d'une commande ne peut pas être changé. Pour un autre menu, annulez
+                      cette commande puis passez-en une nouvelle.
+                    </p>
+                  }
 
                   <div class="champ champ--personnes">
                     <label class="champ__label" for="personnes">
@@ -499,7 +548,13 @@
 
                   @if (erreursEnvoi(); as messages) {
                     <div #alerteEnvoi class="alerte alerte--erreur" role="alert" tabindex="-1">
-                      <p>La commande n'a pas pu être enregistrée :</p>
+                      <p>
+                        {{
+                          modifiee
+                            ? "Les modifications n'ont pas pu être enregistrées :"
+                            : "La commande n'a pas pu être enregistrée :"
+                        }}
+                      </p>
                       <ul class="alerte__liste">
                         @for (message of messages; track $index) {
                           <li>{{ message }}</li>
@@ -522,6 +577,13 @@
                 <button type="button" class="btn btn--secondaire" (click)="retour()">
                   <span aria-hidden="true">←</span> Retour
                 </button>
+              } @else if (modifiee) {
+                <a
+                  class="btn btn--secondaire"
+                  [routerLink]="['/espace-utilisateur/commandes', modifiee.commande_id]"
+                >
+                  <span aria-hidden="true">←</span> Revenir à la commande
+                </a>
               } @else {
                 <a class="btn btn--secondaire" [routerLink]="['/menus', m.menu_id]">
                   <span aria-hidden="true">←</span> Revenir au menu
@@ -540,6 +602,8 @@
                 >
                   @if (etatEnvoi().statut === 'envoi') {
                     Enregistrement…
+                  } @else if (modifiee) {
+                    Enregistrer les modifications
                   } @else {
                     Valider la commande
                   }
@@ -584,12 +648,17 @@
                 </div>
               </dl>
               <p class="rappel__note">
-                @if (prenomConnecte(); as prenom) {
-                  {{ prenom }}, vous
+                @if (modeModification()) {
+                  Tout est modifiable sauf le menu, tant que notre équipe n'a pas accepté la
+                  commande. Le prix est recalculé à l'enregistrement.
                 } @else {
-                  Vous
+                  @if (prenomConnecte(); as prenom) {
+                    {{ prenom }}, vous
+                  } @else {
+                    Vous
+                  }
+                  recevrez un e-mail de confirmation dès l'enregistrement.
                 }
-                recevrez un e-mail de confirmation dès l'enregistrement.
               </p>
             </div>
           </aside>

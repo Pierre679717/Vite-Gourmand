@@ -1,5 +1,10 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { DemandeDevis, DonneesCommande } from '../../../core/models/commande';
+import {
+  CommandeDetaillee,
+  DemandeDevis,
+  DonneesCommande,
+  DonneesModification,
+} from '../../../core/models/commande';
 import { Profil } from '../../../core/models/utilisateur';
 
 /**
@@ -343,6 +348,35 @@ export function versDonneesCommande(menuId: number, valeurs: ValeursFormulaire):
     contact_email: contact.email.trim().toLowerCase(),
     contact_telephone: nettoyerTelephone(contact.telephone.trim()),
   };
+}
+
+/**
+ * Modification d'une commande : le formulaire est pré-rempli avec la
+ * commande elle-même (et non avec le profil), telle qu'enregistrée.
+ */
+export function valeursDepuisCommande(commande: CommandeDetaillee): ValeursFormulaire {
+  return {
+    contact: {
+      nom: commande.contact_nom,
+      prenom: commande.contact_prenom,
+      email: commande.contact_email,
+      telephone: commande.contact_telephone,
+    },
+    livraison: {
+      adresse: commande.adresse_prestation,
+      ville: commande.ville_prestation,
+      date: commande.date_prestation,
+      heure: commande.heure_livraison.slice(0, 5),
+      pretMateriel: commande.pret_materiel,
+    },
+    menu: { personnes: commande.nombre_personne },
+  };
+}
+
+/** Corps de PUT /api/commandes/:id : comme une commande, mais sans le menu (non modifiable) */
+export function versDonneesModification(valeurs: ValeursFormulaire): DonneesModification {
+  const { menu_id: _menuNonModifiable, ...donnees } = versDonneesCommande(0, valeurs);
+  return donnees;
 }
 
 // ---------------------------------------------------------------------

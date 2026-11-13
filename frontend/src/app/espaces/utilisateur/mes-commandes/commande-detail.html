@@ -9,8 +9,10 @@
     <section class="conteneur page">
       <div class="alerte alerte--erreur" role="alert">
         <p>Impossible d'afficher cette commande. {{ e.message }}</p>
-        <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
-        <a class="btn btn--secondaire" routerLink="/espace-utilisateur">Mes commandes</a>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+          <a class="btn btn--secondaire" routerLink="/espace-utilisateur">Mes commandes</a>
+        </div>
       </div>
     </section>
   }
@@ -45,6 +47,9 @@
 
       <!-- Messages après une action : reçoivent le focus, annoncés par les lecteurs d'écran -->
       <div #zoneMessage tabindex="-1" class="detail-commande__message" role="status">
+        @if (messageModification(); as message) {
+          <p class="alerte alerte--succes">{{ message }} Le prix a été recalculé.</p>
+        }
         @if (messageAnnulation(); as message) {
           <p class="alerte alerte--succes">{{ message }} L'unité réservée est remise en vente.</p>
         }
@@ -271,10 +276,16 @@
             <section class="carte detail-commande__carte" aria-labelledby="titre-actions">
               <h2 id="titre-actions" class="detail-commande__sous-titre">Votre commande</h2>
               <p class="detail-commande__aide">
-                Tant que notre équipe ne l'a pas acceptée, vous pouvez encore l'annuler.
+                Tant que notre équipe ne l'a pas acceptée, vous pouvez encore la modifier (sauf le
+                menu) ou l'annuler.
               </p>
 
               @if (!confirmationOuverte()) {
+                <a
+                  class="btn btn--primaire btn--bloc"
+                  [routerLink]="['/espace-utilisateur/commandes', c.commande_id, 'modifier']"
+                  >Modifier ma commande</a
+                >
                 <button
                   #boutonAnnuler
                   type="button"
