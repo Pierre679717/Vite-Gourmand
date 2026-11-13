@@ -10,10 +10,7 @@ import {
   champsIdentiques,
   motDePasseFort,
 } from '../../core/validators/mot-de-passe.validators';
-
-/** Téléphone français : 10 chiffres commençant par 0, espaces ou points autorisés */
-const MOTIF_TELEPHONE = /^0[1-9](?:[ .]?\d{2}){4}$/;
-const MOTIF_CODE_POSTAL = /^\d{5}$/;
+import { champsProfil, versDonneesProfil } from '../../core/validators/profil.validators';
 
 /**
  * Création de compte client. Tous les champs sont obligatoires :
@@ -33,13 +30,8 @@ export class Inscription {
 
   protected readonly formulaire = inject(FormBuilder).nonNullable.group(
     {
-      prenom: ['', [Validators.required, Validators.maxLength(50)]],
-      nom: ['', [Validators.required, Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telephone: ['', [Validators.required, Validators.pattern(MOTIF_TELEPHONE)]],
-      adresse_postale: ['', [Validators.required, Validators.maxLength(255)]],
-      code_postal: ['', [Validators.required, Validators.pattern(MOTIF_CODE_POSTAL)]],
-      ville: ['', [Validators.required, Validators.maxLength(100)]],
+      // Les 7 champs du profil : mêmes règles que « Mes informations » et que le serveur
+      ...champsProfil(),
       mot_de_passe: ['', [Validators.required, motDePasseFort]],
       confirmation: ['', Validators.required],
     },
@@ -80,26 +72,15 @@ export class Inscription {
     this.envoiEnCours.set(true);
     this.erreur.set(null);
 
-    const valeurs = this.formulaire.getRawValue();
-    this.auth
-      .inscription({
-        prenom: valeurs.prenom.trim(),
-        nom: valeurs.nom.trim(),
-        email: valeurs.email.trim().toLowerCase(),
-        telephone: valeurs.telephone.replace(/[ .]/g, ''), // 06 12 34 56 78 -> 0612345678
-        adresse_postale: valeurs.adresse_postale.trim(),
-        code_postal: valeurs.code_postal,
-        ville: valeurs.ville.trim(),
-        mot_de_passe: valeurs.mot_de_passe,
-      })
-      .subscribe({
-        next: () => this.router.navigate(['/connexion'], { queryParams: { inscription: 'ok' } }),
-        error: (erreur: unknown) => {
-          this.erreur.set(messageErreur(erreur));
-          this.envoiEnCours.set(false);
-          // Remonte en haut du formulaire pour que le message soit vu
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        },
-      });
+    const { mot_de_passe, confirmation: _confirmation, ...profil } = this.formulaire.getRawValue();
+    this.auth.inscription({ ...versDonneesProfil(profil), mot_de_passe }).subscribe({
+      next: () => this.router.navigate(['/connexion'], { queryParams: { inscription: 'ok' } }),
+      error: (erreur: unknown) => {
+        this.erreur.set(messageErreur(erreur));
+        this.envoiEnCours.set(false);
+        // Remonte en haut du formulaire pour que le message soit vu
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+    });
   }
 }

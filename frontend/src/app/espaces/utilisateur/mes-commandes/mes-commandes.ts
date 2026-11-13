@@ -7,6 +7,7 @@ import { messageErreur } from '../../../core/http/message-erreur';
 import { ResumeCommande } from '../../../core/models/commande';
 import { CommandeService } from '../../../core/services/commande.service';
 import { PrixPipe } from '../../../shared/prix.pipe';
+import { EspaceNav } from '../espace-nav';
 import {
   LIBELLES_STATUT,
   classeBadge,
@@ -43,7 +44,7 @@ function grouper(liste: ResumeCommande[]): GroupeCommandes[] {
  */
 @Component({
   selector: 'app-mes-commandes',
-  imports: [RouterLink, PrixPipe],
+  imports: [RouterLink, PrixPipe, EspaceNav],
   templateUrl: './mes-commandes.html',
   styleUrl: './mes-commandes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
