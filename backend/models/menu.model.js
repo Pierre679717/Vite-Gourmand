@@ -154,13 +154,16 @@ class MenuModel {
      * `conn` permet de lire dans une transaction (SELECT ... FOR UPDATE).
      * Pour un simple devis, `verrouiller: false` : on lit sans bloquer
      * les autres clients, rien n'est enregistré.
+     * Pour modifier une commande existante, `actifSeulement: false` : si
+     * le menu a été retiré de la carte depuis, la commande déjà passée
+     * reste modifiable (date, adresse, personnes...).
      */
-    static async trouverPourCommande(id, conn = pool, { verrouiller = true } = {}) {
+    static async trouverPourCommande(id, conn = pool, { verrouiller = true, actifSeulement = true } = {}) {
         const [rows] = await conn.query(
             `SELECT menu_id, titre, nombre_personne_min, delai_minimum_jours,
                     prix_par_personne, quantite_restante
              FROM menu
-             WHERE menu_id = ? AND actif = 1
+             WHERE menu_id = ? ${actifSeulement ? 'AND actif = 1' : ''}
              ${verrouiller ? 'FOR UPDATE' : ''}`,
             [id]
         );

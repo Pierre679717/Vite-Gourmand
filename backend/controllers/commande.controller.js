@@ -12,10 +12,11 @@ const { CommandeModel, ErreurCommande } = require('../models/commande.model');
 const MenuModel = require('../models/menu.model');
 const { calculerPrixCommande, PERSONNES_EN_PLUS } = require('../utils/prix');
 const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance');
-const { validerCommande, validerDevis, aujourdhuiParis } = require('../utils/validationCommande');
-const { enregistrerStatCommande } = require('../models/statCommande.model');
+const { validerCommande, validerDevis, validerModification, aujourdhuiParis } = require('../utils/validationCommande');
+const { enregistrerStatCommande, mettreAJourStatCommande } = require('../models/statCommande.model');
 const { genererMailConfirmationCommande } = require('../email/templateCommande');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
+const { idValide, versResumeCommande, versCommandeClient } = require('../utils/commandeClient');
 
 /**
  * Envoie le mail de confirmation sans bloquer la réponse :
@@ -202,9 +203,132 @@ class CommandeController {
     static async mesCommandes(req, res) {
         try {
             const commandes = await CommandeModel.listerParClient(req.user.id);
-            res.json(commandes);
+            res.json(commandes.map(versResumeCommande));
         } catch (err) {
             console.error('Erreur mes commandes :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * GET /api/commandes/:id
+     * Détail d'une commande du client connecté, avec l'historique de
+     * ses statuts (frise du suivi) et son avis s'il en a donné un.
+     * La commande d'un autre client renvoie 404, comme une commande qui
+     * n'existe pas : on ne révèle pas qu'elle existe.
+     */
+    static async detail(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const ligne = await CommandeModel.trouverPourClient(commandeId, req.user.id);
+            if (!ligne) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const suivi = await CommandeModel.listerSuivi(commandeId);
+            res.json(versCommandeClient(ligne, suivi));
+        } catch (err) {
+            console.error('Erreur détail commande :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * PUT /api/commandes/:id
+     * Le client modifie sa commande tant qu'elle est « en attente ».
+     * Tout est modifiable sauf le menu. Mêmes étapes que la création :
+     * validation, distance AVANT la transaction, puis contrôles et prix
+     * recalculé dans la transaction (voir CommandeModel.modifierParClient).
+     */
+    static async modifier(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+
+            const aujourdhui = aujourdhuiParis();
+            const { donnees, erreurs } = validerModification(req.body, aujourdhui);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+
+            const livraison = await calculerDistanceLivraison(donnees.adressePrestation, donnees.villePrestation);
+            const donneesModifiees = { ...donnees, villePrestation: livraison.ville };
+
+            const { numeroCommande, menu, prix } = await CommandeModel.modifierParClient(
+                { commandeId, utilisateurId: req.user.id, donnees: donneesModifiees, aujourdhui },
+                (menuVerrouille) => calculerPrixCommande({
+                    prixParPersonne:   menuVerrouille.prix_par_personne,
+                    nombrePersonneMin: menuVerrouille.nombre_personne_min,
+                    nombrePersonne:    donnees.nombrePersonne,
+                    ville:             livraison.ville,
+                    distanceKm:        livraison.distance_km
+                })
+            );
+
+            // Non bloquant : la statistique suit la commande modifiée
+            mettreAJourStatCommande(commandeId, {
+                nombre_personne: donnees.nombrePersonne,
+                prix_total:      prix.prix_total,
+                reduction:       prix.reduction,
+                prix_livraison:  prix.prix_livraison,
+                ville:           livraison.ville,
+                date_prestation: donnees.datePrestation
+            });
+
+            res.json({
+                message: 'Commande modifiée.',
+                commande: {
+                    commande_id:        commandeId,
+                    numero_commande:    numeroCommande,
+                    menu:               menu.titre,
+                    nombre_personne:    donnees.nombrePersonne,
+                    date_prestation:    donnees.datePrestation,
+                    heure_livraison:    donnees.heureLivraison,
+                    adresse_prestation: donnees.adressePrestation,
+                    ville_prestation:   livraison.ville,
+                    pret_materiel:      donnees.pretMateriel,
+                    ...prix
+                }
+            });
+
+        } catch (err) {
+            if (err instanceof ErreurCommande || err instanceof ErreurDistance) {
+                return res.status(err.status).json({ error: err.message });
+            }
+            console.error('Erreur modification commande :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * POST /api/commandes/:id/annulation
+     * Le client annule sa commande tant qu'elle est « en attente ».
+     * POST et non DELETE : rien n'est supprimé, la commande passe au
+     * statut « annulee » (voir CommandeModel.annulerParClient).
+     */
+    static async annuler(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+
+            const numeroCommande = await CommandeModel.annulerParClient(commandeId, req.user.id);
+
+            // Non bloquant : les commandes annulées sont exclues du chiffre d'affaires
+            mettreAJourStatCommande(commandeId, { statut: 'annulee' });
+
+            res.json({ message: `Commande ${numeroCommande} annulée.`, numero_commande: numeroCommande, statut: 'annulee' });
+
+        } catch (err) {
+            if (err instanceof ErreurCommande) {
+                return res.status(err.status).json({ error: err.message });
+            }
+            console.error('Erreur annulation commande :', err);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }

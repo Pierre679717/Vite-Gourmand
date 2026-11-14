@@ -56,4 +56,37 @@ async function enregistrerStatCommande(donnees) {
     }
 }
 
-module.exports = { StatCommande, enregistrerStatCommande };
+/**
+ * Met à jour la statistique d'une commande après une modification
+ * (personnes, prix, ville, date) ou un changement de statut (annulee).
+ * Seuls les champs de la liste ci-dessous peuvent être changés.
+ * Même principe que l'enregistrement : true si c'est fait, false sinon,
+ * jamais d'exception (MySQL reste la référence).
+ */
+const CHAMPS_MODIFIABLES = [
+    'nombre_personne', 'prix_total', 'reduction', 'prix_livraison', 'ville', 'date_prestation', 'statut'
+];
+
+async function mettreAJourStatCommande(commandeId, modifications) {
+    if (mongoose.connection.readyState !== 1) {
+        return false;
+    }
+    const changements = {};
+    for (const champ of CHAMPS_MODIFIABLES) {
+        if (modifications[champ] !== undefined) changements[champ] = modifications[champ];
+    }
+    try {
+        // runValidators : les règles du schéma (min, type) s'appliquent aussi à la mise à jour
+        const resultat = await StatCommande.updateOne(
+            { commande_id: commandeId },
+            { $set: changements },
+            { runValidators: true }
+        );
+        return resultat.matchedCount === 1;
+    } catch (err) {
+        console.error('Statistique MongoDB non mise à jour :', err.message);
+        return false;
+    }
+}
+
+module.exports = { StatCommande, enregistrerStatCommande, mettreAJourStatCommande, CHAMPS_MODIFIABLES };

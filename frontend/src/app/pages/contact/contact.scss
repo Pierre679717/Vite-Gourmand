@@ -1,0 +1,88 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.contact__entete {
+  max-width: 48rem;
+  margin-bottom: $espace-8;
+
+  .titre-section {
+    margin-bottom: $espace-3;
+  }
+}
+
+.contact__intro {
+  margin: 0;
+  color: $texte-doux;
+}
+
+// Une colonne sur mobile ; sur ordinateur, les coordonnées à droite
+.contact__grille {
+  display: grid;
+  gap: $espace-6;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+  }
+}
+
+.contact__carte {
+  gap: $espace-4;
+  padding: $espace-6 $espace-4;
+
+  @include a-partir-de($point-tablette) {
+    padding: $espace-8;
+  }
+}
+
+.contact__message:focus {
+  outline: none;
+}
+
+.contact__liste {
+  margin: $espace-2 0 0;
+  padding-left: $espace-6;
+}
+
+.contact__rgpd a {
+  color: inherit;
+}
+
+.contact__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.contact__coordonnees {
+  gap: $espace-3;
+  padding: $espace-6;
+
+  address,
+  p {
+    margin: 0;
+    font-style: normal;
+  }
+
+  a {
+    color: $vert;
+    font-weight: 600;
+  }
+}
+
+.contact__sous-titre {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.contact__libelle {
+  display: block;
+  color: $texte-doux;
+  font-size: 0.875rem;
+}
+
+.contact__note {
+  padding-top: $espace-3;
+  border-top: 1px solid $bordure;
+  color: $texte-doux;
+  font-size: 0.875rem;
+}

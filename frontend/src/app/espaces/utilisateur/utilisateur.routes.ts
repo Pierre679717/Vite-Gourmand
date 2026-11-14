@@ -3,12 +3,31 @@ import { Routes } from '@angular/router';
 /**
  * Routes de l'espace utilisateur, chargées à la demande (lazy loading) :
  * ce code n'est téléchargé que lorsqu'on visite /espace-utilisateur.
- * Les sous-pages (commandes, profil...) s'ajouteront ici.
  */
 export const UTILISATEUR_ROUTES: Routes = [
   {
+    // Page d'accueil de l'espace : la liste « Mes commandes »
     path: '',
-    loadComponent: () => import('./tableau-de-bord').then((m) => m.TableauDeBordUtilisateur),
+    title: 'Mes commandes — Vite & Gourmand',
+    loadComponent: () => import('./mes-commandes/mes-commandes').then((m) => m.MesCommandes),
+  },
+  {
+    // Le titre précis (« Commande VG-2026-0014 — ... ») est posé par le composant
+    path: 'commandes/:id',
+    title: 'Ma commande — Vite & Gourmand',
+    loadComponent: () => import('./mes-commandes/commande-detail').then((m) => m.CommandeDetail),
+  },
+  {
+    path: 'informations',
+    title: 'Mes informations — Vite & Gourmand',
+    loadComponent: () =>
+      import('./mes-informations/mes-informations').then((m) => m.MesInformations),
+  },
+  {
+    // Même formulaire que la commande, pré-rempli, menu verrouillé (PUT)
+    path: 'commandes/:commandeId/modifier',
+    title: 'Modifier ma commande — Vite & Gourmand',
+    loadComponent: () => import('./commande/commande').then((m) => m.Commande),
   },
   {
     // Bouton « Commander ce menu » de la page détail (?personnes=N)

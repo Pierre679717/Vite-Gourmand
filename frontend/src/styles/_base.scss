@@ -207,6 +207,14 @@ textarea {
   }
 }
 
+// Boutons sous le texte d'une alerte (Réessayer, Nous contacter...)
+.alerte__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $espace-2;
+  margin-top: $espace-3;
+}
+
 // Utilisateurs qui ont demandé moins d'animations dans leur système
 @media (prefers-reduced-motion: reduce) {
   *,

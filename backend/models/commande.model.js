@@ -23,6 +23,20 @@ class ErreurCommande extends Error {
     }
 }
 
+/**
+ * Erreur 409 quand le client veut modifier ou annuler une commande
+ * qui n'est plus « en_attente ». Le message dépend du statut :
+ * une commande déjà annulée n'a pas été « prise en charge ».
+ */
+function erreurCommandeVerrouillee(statut, action) {
+    if (statut === 'annulee') {
+        return new ErreurCommande('Cette commande est déjà annulée.', 409);
+    }
+    return new ErreurCommande(
+        `Cette commande a déjà été prise en charge : elle ne peut plus être ${action} en ligne. Contactez-nous.`, 409
+    );
+}
+
 class CommandeModel {
 
     /**
@@ -105,16 +119,183 @@ class CommandeModel {
     }
 
     /**
-     * Récupérer les commandes d'un client
+     * Annulation par le client, tant que la commande est « en_attente ».
+     * Transaction de 3 écritures : statut de la commande, unité rendue
+     * au stock du menu, nouvelle ligne de suivi (employe_id NULL : c'est
+     * le client qui agit). La commande n'est pas supprimée : elle reste
+     * dans l'historique du client et dans les statistiques.
+     * mode_contact et motif restent NULL : ils sont réservés à
+     * l'annulation par un employé, qui doit d'abord contacter le client.
+     * Renvoie le numéro de la commande.
+     */
+    static async annulerParClient(commandeId, utilisateurId) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            const [rows] = await conn.query(
+                `SELECT numero_commande, statut, menu_id
+                 FROM commande
+                 WHERE commande_id = ? AND utilisateur_id = ?
+                 FOR UPDATE`,
+                [commandeId, utilisateurId]
+            );
+            if (rows.length === 0) throw new ErreurCommande('Commande introuvable.', 404);
+            const commande = rows[0];
+            if (commande.statut !== 'en_attente') {
+                throw erreurCommandeVerrouillee(commande.statut, 'annulée');
+            }
+
+            await conn.query(
+                'UPDATE commande SET statut = \'annulee\' WHERE commande_id = ?',
+                [commandeId]
+            );
+            await conn.query(
+                'UPDATE menu SET quantite_restante = quantite_restante + 1 WHERE menu_id = ?',
+                [commande.menu_id]
+            );
+            await conn.query(
+                'INSERT INTO suivi_commande (commande_id, statut) VALUES (?, \'annulee\')',
+                [commandeId]
+            );
+
+            await conn.commit();
+            return commande.numero_commande;
+
+        } catch (err) {
+            await conn.rollback();
+            throw err;
+        } finally {
+            conn.release();
+        }
+    }
+
+    /**
+     * Modifier une commande par le client, dans une transaction.
+     * Règles :
+     *  - la commande doit être à lui (sinon 404, comme une commande inexistante) ;
+     *  - son statut doit être « en_attente » (relu avec FOR UPDATE : si un
+     *    employé l'accepte au même moment, l'une des deux opérations attend
+     *    l'autre) ;
+     *  - le menu ne change pas : on relit celui de la commande ;
+     *  - mêmes contrôles qu'à la création (minimum de personnes, délai),
+     *    prix recalculé par `calculerPrix(menu)` ;
+     *  - le stock ne bouge pas : la commande garde son unité.
+     * Renvoie { numeroCommande, menu, prix }.
+     */
+    static async modifierParClient({ commandeId, utilisateurId, donnees, aujourdhui }, calculerPrix) {
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+
+            const [rows] = await conn.query(
+                `SELECT numero_commande, statut, menu_id
+                 FROM commande
+                 WHERE commande_id = ? AND utilisateur_id = ?
+                 FOR UPDATE`,
+                [commandeId, utilisateurId]
+            );
+            if (rows.length === 0) throw new ErreurCommande('Commande introuvable.', 404);
+            const commande = rows[0];
+            if (commande.statut !== 'en_attente') {
+                throw erreurCommandeVerrouillee(commande.statut, 'modifiée');
+            }
+
+            // Menu de la commande, même s'il a été retiré de la carte depuis
+            const menu = await MenuModel.trouverPourCommande(commande.menu_id, conn, { actifSeulement: false });
+            if (!menu) throw new ErreurCommande('Menu introuvable.', 404);
+            if (donnees.nombrePersonne < menu.nombre_personne_min) {
+                throw new ErreurCommande(`Minimum ${menu.nombre_personne_min} personnes pour ce menu.`);
+            }
+            const erreurDelai = verifierDelai(donnees.datePrestation, menu.delai_minimum_jours, aujourdhui);
+            if (erreurDelai) {
+                throw new ErreurCommande(erreurDelai);
+            }
+
+            const prix = calculerPrix(menu);
+
+            await conn.query(
+                `UPDATE commande
+                 SET date_prestation = ?, heure_livraison = ?, adresse_prestation = ?, ville_prestation = ?,
+                     distance_km = ?, nombre_personne = ?, prix_par_personne = ?, reduction = ?,
+                     prix_menu = ?, prix_livraison = ?, prix_total = ?, pret_materiel = ?,
+                     contact_nom = ?, contact_prenom = ?, contact_email = ?, contact_telephone = ?
+                 WHERE commande_id = ?`,
+                [donnees.datePrestation, donnees.heureLivraison, donnees.adressePrestation,
+                 donnees.villePrestation, prix.distance_km, donnees.nombrePersonne, prix.prix_par_personne,
+                 prix.reduction, prix.prix_menu, prix.prix_livraison, prix.prix_total,
+                 donnees.pretMateriel ? 1 : 0, donnees.contactNom, donnees.contactPrenom,
+                 donnees.contactEmail, donnees.contactTelephone, commandeId]
+            );
+
+            await conn.commit();
+            return { numeroCommande: commande.numero_commande, menu, prix };
+
+        } catch (err) {
+            await conn.rollback();
+            throw err;
+        } finally {
+            conn.release();
+        }
+    }
+
+    /**
+     * Récupérer les commandes d'un client (liste de « Mes commandes »).
+     * Colonnes choisies une par une : la liste n'a besoin que du résumé.
+     * avis_donne vaut 1 si le client a déjà laissé un avis (LEFT JOIN :
+     * les commandes sans avis restent dans la liste).
      */
     static async listerParClient(utilisateurId) {
         const [rows] = await pool.query(
-            `SELECT c.*, m.titre AS menu_titre
+            `SELECT c.commande_id, c.numero_commande, c.date_commande, c.date_prestation,
+                    c.heure_livraison, c.ville_prestation, c.nombre_personne, c.prix_total,
+                    c.statut, m.titre AS menu_titre,
+                    (a.avis_id IS NOT NULL) AS avis_donne
              FROM commande c
-             JOIN menu m ON m.menu_id = c.menu_id
+             JOIN menu m      ON m.menu_id = c.menu_id
+             LEFT JOIN avis a ON a.commande_id = c.commande_id
              WHERE c.utilisateur_id = ?
-             ORDER BY c.date_commande DESC`,
+             ORDER BY c.date_commande DESC, c.commande_id DESC`,
             [utilisateurId]
+        );
+        return rows;
+    }
+
+    /**
+     * Une commande, seulement si elle appartient à ce client.
+     * La condition « utilisateur_id = ? » est dans la requête elle-même :
+     * la commande d'un autre client est introuvable (null), exactement
+     * comme une commande qui n'existe pas.
+     */
+    static async trouverPourClient(commandeId, utilisateurId) {
+        const [rows] = await pool.query(
+            `SELECT c.commande_id, c.numero_commande, c.date_commande, c.date_prestation,
+                    c.heure_livraison, c.adresse_prestation, c.ville_prestation, c.distance_km,
+                    c.nombre_personne, c.prix_par_personne, c.reduction, c.prix_menu,
+                    c.prix_livraison, c.prix_total, c.statut, c.pret_materiel, c.materiel_restitue,
+                    c.contact_nom, c.contact_prenom, c.contact_email, c.contact_telephone,
+                    c.menu_id, m.titre AS menu_titre, m.nombre_personne_min, m.delai_minimum_jours,
+                    a.note AS avis_note, a.commentaire AS avis_commentaire, a.statut AS avis_statut
+             FROM commande c
+             JOIN menu m      ON m.menu_id = c.menu_id
+             LEFT JOIN avis a ON a.commande_id = c.commande_id
+             WHERE c.commande_id = ? AND c.utilisateur_id = ?`,
+            [commandeId, utilisateurId]
+        );
+        return rows[0] || null;
+    }
+
+    /**
+     * Historique des statuts d'une commande, du plus ancien au plus récent.
+     * suivi_id départage deux changements faits dans la même seconde.
+     */
+    static async listerSuivi(commandeId) {
+        const [rows] = await pool.query(
+            `SELECT statut, date_changement
+             FROM suivi_commande
+             WHERE commande_id = ?
+             ORDER BY date_changement, suivi_id`,
+            [commandeId]
         );
         return rows;
     }

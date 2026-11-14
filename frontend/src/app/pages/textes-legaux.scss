@@ -1,0 +1,51 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Mise en page commune des mentions légales et des CGV : texte lisible (70 caractères par ligne)
+.texte-legal {
+  max-width: 46rem;
+
+  h2 {
+    margin: $espace-8 0 $espace-3;
+    font-size: 1.375rem;
+    scroll-margin-top: $espace-6; // l'ancre #donnees-personnelles ne colle pas au bord
+  }
+
+  p,
+  ul {
+    margin: 0 0 $espace-3;
+  }
+
+  li + li {
+    margin-top: $espace-1;
+  }
+
+  a {
+    color: $vert;
+  }
+}
+
+.texte-legal__maj {
+  color: $texte-doux;
+  font-size: 0.875rem;
+}
+
+// Clause importante (prêt de matériel) mise en évidence
+.texte-legal__encadre {
+  margin: $espace-4 0;
+  padding: $espace-4;
+  border-left: 4px solid $bordeaux;
+  border-radius: 0 $rayon-petit $rayon-petit 0;
+  background: $bordeaux-clair;
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.texte-legal__avertissement {
+  padding: $espace-3 $espace-4;
+  border-radius: $rayon-petit;
+  background: $sable;
+  font-size: 0.875rem;
+}

@@ -76,6 +76,33 @@ class UtilisateurModel {
     }
 
     /**
+     * Vrai si l'e-mail appartient déjà à un AUTRE compte.
+     * Sert à la modification du profil : garder son propre e-mail
+     * n'est pas un doublon.
+     */
+    static async emailUtiliseParAutre(email, utilisateurId) {
+        const [rows] = await pool.query(
+            'SELECT utilisateur_id FROM utilisateur WHERE email = ? AND utilisateur_id <> ?',
+            [email, utilisateurId]
+        );
+        return rows.length > 0;
+    }
+
+    /**
+     * Mettre à jour les informations personnelles d'un compte.
+     * Ni le mot de passe, ni le rôle, ni l'état actif ne sont modifiables ici.
+     */
+    static async mettreAJourProfil(utilisateurId, { nom, prenom, email, telephone, adresse_postale, code_postal, ville }) {
+        await pool.query(
+            `UPDATE utilisateur
+             SET nom = ?, prenom = ?, email = ?, telephone = ?,
+                 adresse_postale = ?, code_postal = ?, ville = ?
+             WHERE utilisateur_id = ?`,
+            [nom, prenom, email, telephone, adresse_postale, code_postal, ville, utilisateurId]
+        );
+    }
+
+    /**
      * Récupérer tous les employés (actifs et désactivés)
      */
     static async listerEmployes() {

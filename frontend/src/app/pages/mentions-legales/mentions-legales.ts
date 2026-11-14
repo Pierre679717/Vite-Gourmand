@@ -1,17 +1,16 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 /**
- * Mentions légales
- * Page provisoire : le contenu sera développé dans un prochain bloc du planning.
+ * Mentions légales et données personnelles (RGPD).
+ * La section #donnees-personnelles sert aussi de politique de
+ * confidentialité (lien du pied de page).
  */
 @Component({
   selector: 'app-mentions-legales',
+  imports: [RouterLink],
+  templateUrl: './mentions-legales.html',
+  styleUrl: '../textes-legaux.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <section class="conteneur page">
-      <h1 class="titre-section">Mentions légales</h1>
-      <p>Contenu à rédiger (éditeur, hébergeur, données personnelles).</p>
-    </section>
-  `,
 })
 export class MentionsLegales {}

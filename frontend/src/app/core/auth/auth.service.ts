@@ -2,12 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, map, tap } from 'rxjs';
-import {
-  DonneesInscription,
-  ReponseConnexion,
-  Role,
-  Utilisateur,
-} from '../models/utilisateur';
+import { DonneesInscription, ReponseConnexion, Role, Utilisateur } from '../models/utilisateur';
 
 /** Clé du token dans le localStorage du navigateur */
 const CLE_TOKEN = 'vg_token';
@@ -66,12 +61,19 @@ export class AuthService {
     return this.http
       .post<ReponseConnexion>('/api/connexion', { email, mot_de_passe: motDePasse })
       .pipe(
-        tap((reponse) => {
-          localStorage.setItem(CLE_TOKEN, reponse.token);
-          this._token.set(reponse.token);
-        }),
+        tap((reponse) => this.remplacerToken(reponse.token)),
         map((reponse) => reponse.user),
       );
+  }
+
+  /**
+   * Enregistre un nouveau token (connexion, ou modification du profil :
+   * le serveur en renvoie un avec le nouveau nom, prénom et e-mail).
+   * Le signal change : le header affiche aussitôt le nouveau prénom.
+   */
+  remplacerToken(token: string): void {
+    localStorage.setItem(CLE_TOKEN, token);
+    this._token.set(token);
   }
 
   inscription(donnees: DonneesInscription): Observable<{ message: string; id: number }> {

@@ -1,0 +1,135 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Styles communs aux pages de l'espace client (en-tête, groupes, squelettes)
+.espace__entete {
+  margin-bottom: $espace-6;
+
+  .titre-section {
+    margin-bottom: $espace-2;
+  }
+}
+
+.espace__bonjour {
+  margin: 0;
+  color: $texte-doux;
+}
+
+.espace__groupe + .espace__groupe {
+  margin-top: $espace-12;
+}
+
+.espace__sous-titre {
+  margin: 0 0 $espace-4;
+  font-size: 1.375rem;
+}
+
+.espace__compte {
+  color: $texte-doux;
+  font-weight: 400;
+}
+
+.espace__squelette {
+  height: 9rem;
+  margin-bottom: $espace-4;
+  border-radius: $rayon;
+  background: linear-gradient(90deg, $sable 25%, $fond 50%, $sable 75%);
+  background-size: 200% 100%;
+  animation: chargement 1.4s ease-in-out infinite;
+}
+
+@keyframes chargement {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.espace__vide {
+  max-width: 36rem;
+  padding: $espace-8;
+  text-align: center;
+  align-items: center;
+
+  h2 {
+    margin: 0;
+    font-size: 1.375rem;
+  }
+
+  p {
+    margin: 0;
+    color: $texte-doux;
+  }
+}
+
+// ---- Liste ----------------------------------------------------------
+.liste-commandes {
+  display: grid;
+  gap: $espace-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.commande-ligne {
+  gap: $espace-4;
+  height: 100%;
+  padding: $espace-6;
+}
+
+.commande-ligne__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $espace-2;
+}
+
+.commande-ligne__numero {
+  margin: 0;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.commande-ligne__infos {
+  display: grid;
+  gap: $espace-2;
+  margin: 0;
+
+  div {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: $espace-3;
+  }
+
+  dt {
+    color: $texte-doux;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.commande-ligne__total {
+  font-weight: 700;
+}
+
+.commande-ligne__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $espace-3;
+  margin-top: auto;
+}
+
+.commande-ligne__invitation {
+  margin: 0 auto 0 0;
+  color: $or-texte;
+  font-weight: 600;
+}

@@ -11,6 +11,9 @@
      `donnees` ne contient QUE les champs attendus, nettoyés : un champ
      en trop (prix_total, distance_km...) est simplement ignoré.
    - validerDevis(corps) : les champs utiles au calcul du prix.
+   - validerModification(corps, aujourdhui) : PUT /api/commandes/:id,
+     mêmes règles que la commande SAUF le menu, qui ne se modifie pas :
+     menu_id est ignoré, le serveur garde celui de la commande en base.
    - verifierDelai(date, delaiJours, aujourdhui) : délai du menu.
 
    Les dates sont des chaînes AAAA-MM-JJ, comparées dans le fuseau de
@@ -72,14 +75,19 @@ function texte(valeur, longueurMax) {
     return propre.length > 0 && propre.length <= longueurMax ? propre : null;
 }
 
-/** Champs communs au devis et à la commande */
-function validerBase(corps, erreurs) {
+/**
+ * Champs communs au devis et à la commande.
+ * avecMenu = false pour une modification : le menu n'est pas lu.
+ */
+function validerBase(corps, erreurs, { avecMenu = true } = {}) {
     const donnees = {};
 
-    if (Number.isInteger(corps.menu_id) && corps.menu_id > 0) {
-        donnees.menuId = corps.menu_id;
-    } else {
-        erreurs.push('Menu invalide.');
+    if (avecMenu) {
+        if (Number.isInteger(corps.menu_id) && corps.menu_id > 0) {
+            donnees.menuId = corps.menu_id;
+        } else {
+            erreurs.push('Menu invalide.');
+        }
     }
 
     if (Number.isInteger(corps.nombre_personne) && corps.nombre_personne >= 1 && corps.nombre_personne <= PERSONNES_MAX) {
@@ -113,10 +121,10 @@ function validerDevis(corps = {}) {
 }
 
 /** Tous les champs de la commande */
-function validerCommande(corps = {}, aujourdhui = aujourdhuiParis()) {
+function validerCommande(corps = {}, aujourdhui = aujourdhuiParis(), { avecMenu = true } = {}) {
     corps = corps || {};
     const erreurs = [];
-    const donnees = validerBase(corps, erreurs);
+    const donnees = validerBase(corps, erreurs, { avecMenu });
 
     // --- Livraison ---
     if (estDateValide(corps.date_prestation)) {
@@ -160,8 +168,17 @@ function validerCommande(corps = {}, aujourdhui = aujourdhuiParis()) {
     return { donnees, erreurs };
 }
 
+/**
+ * Modification par le client : tout sauf le menu.
+ * Un menu_id envoyé (même différent) est simplement ignoré.
+ */
+function validerModification(corps = {}, aujourdhui = aujourdhuiParis()) {
+    return validerCommande(corps, aujourdhui, { avecMenu: false });
+}
+
 module.exports = {
     validerCommande,
+    validerModification,
     validerDevis,
     verifierDelai,
     dateMinimumPrestation,

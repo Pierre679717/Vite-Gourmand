@@ -1,4 +1,5 @@
 import { FormControl } from '@angular/forms';
+import { CommandeDetaillee } from '../../../core/models/commande';
 import { Profil } from '../../../core/models/utilisateur';
 import {
   ValeursFormulaire,
@@ -24,9 +25,11 @@ import {
   personnesValides,
   reductionApplicable,
   telephoneValide,
+  valeursDepuisCommande,
   valeursDepuisProfil,
   versDemandeDevis,
   versDonneesCommande,
+  versDonneesModification,
   villeValide,
 } from './commande-logique';
 
@@ -304,5 +307,59 @@ describe('récapitulatif', () => {
     expect(actionErreurDevis(0)).toBe('reessayer');
     expect(actionErreurDevis(409)).toBe('changer-menu');
     expect(actionErreurDevis(404)).toBe('changer-menu');
+  });
+});
+
+describe('modification d’une commande', () => {
+  const COMMANDE = {
+    commande_id: 14,
+    numero_commande: 'VG-2026-0014',
+    menu: {
+      menu_id: 2,
+      titre: 'Menu Traditionnel',
+      nombre_personne_min: 6,
+      delai_minimum_jours: 7,
+    },
+    nombre_personne: 11,
+    date_prestation: '2026-12-05',
+    heure_livraison: '12:30',
+    adresse_prestation: "7 cours de l'Intendance",
+    ville_prestation: 'Bordeaux',
+    pret_materiel: true,
+    contact_nom: 'Laurent',
+    contact_prenom: 'Camille',
+    contact_email: 'utilisateur@vite-gourmand.fr',
+    contact_telephone: '0698765432',
+  } as CommandeDetaillee;
+
+  it('pré-remplit le formulaire avec la commande enregistrée', () => {
+    expect(valeursDepuisCommande(COMMANDE)).toEqual({
+      contact: {
+        nom: 'Laurent',
+        prenom: 'Camille',
+        email: 'utilisateur@vite-gourmand.fr',
+        telephone: '0698765432',
+      },
+      livraison: {
+        adresse: "7 cours de l'Intendance",
+        ville: 'Bordeaux',
+        date: '2026-12-05',
+        heure: '12:30',
+        pretMateriel: true,
+      },
+      menu: { personnes: 11 },
+    });
+  });
+
+  it('envoie les mêmes champs qu’une commande, sans menu ni prix', () => {
+    const valeurs = valeursDepuisCommande(COMMANDE);
+    valeurs.menu.personnes = 12;
+    valeurs.contact.telephone = '06 98 76 54 32';
+    const donnees = versDonneesModification(valeurs);
+
+    expect('menu_id' in donnees).toBe(false);
+    expect('prix_total' in donnees).toBe(false);
+    expect(donnees.nombre_personne).toBe(12);
+    expect(donnees.contact_telephone).toBe('0698765432');
   });
 });

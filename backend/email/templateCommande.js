@@ -14,6 +14,7 @@
  */
 
 const { SITE } = require('./templates');
+const { echapperHtml } = require('../utils/echapperHtml');
 
 // Couleurs de la charte (maquettes haute fidélité)
 const C = {
@@ -33,16 +34,6 @@ const POLICE = 'Arial,Helvetica,sans-serif';
 const MESSAGE_MATERIEL =
   'Vous avez demandé le prêt de matériel. Il est à restituer sous 10 jours ouvrés après la prestation ; '
   + 'à défaut, 600 € de frais seront facturés (conditions générales de vente).';
-
-/** Échappe les 5 caractères spéciaux du HTML (y compris les guillemets, pour les attributs) */
-function echapperHtml(valeur = '') {
-  return String(valeur)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 /** 392.19 -> « 392,19 € » (espaces insécables remplacés par des espaces simples pour les clients mail) */
 function formaterEuros(montant) {
