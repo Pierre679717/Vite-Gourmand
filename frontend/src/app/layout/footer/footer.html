@@ -45,8 +45,12 @@
           <li><a routerLink="/contact">Contact</a></li>
           <li><a routerLink="/mentions-legales">Mentions légales</a></li>
           <li><a routerLink="/cgv">Conditions générales de vente</a></li>
-          <!-- Page dédiée à venir avec les pages légales : pour l'instant, vers les mentions légales -->
-          <li><a routerLink="/mentions-legales">Politique de confidentialité</a></li>
+          <!-- La politique de confidentialité est la section « Données personnelles » des mentions légales -->
+          <li>
+            <a routerLink="/mentions-legales" fragment="donnees-personnelles"
+              >Politique de confidentialité</a
+            >
+          </li>
         </ul>
       </section>
     </div>
