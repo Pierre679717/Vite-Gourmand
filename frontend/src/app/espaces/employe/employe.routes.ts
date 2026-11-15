@@ -59,4 +59,10 @@ export const EMPLOYE_ROUTES: Routes = [
     title: 'Modifier un plat — Espace employé — Vite & Gourmand',
     loadComponent: () => import('./catalogue/plat-formulaire').then((m) => m.PlatFormulaire),
   },
+  // ---- Catalogue : horaires ----
+  {
+    path: 'horaires',
+    title: 'Horaires — Espace employé — Vite & Gourmand',
+    loadComponent: () => import('./catalogue/horaires-gestion').then((m) => m.HorairesGestion),
+  },
 ];
