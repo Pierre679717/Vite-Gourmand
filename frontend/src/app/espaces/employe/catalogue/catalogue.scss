@@ -1,0 +1,203 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Styles communs aux pages du catalogue (menus, plats, horaires)
+
+.catalogue__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $espace-4;
+  margin-bottom: $espace-6;
+
+  p {
+    margin: 0;
+    color: $texte-doux;
+  }
+}
+
+// Message après une action : reçoit le focus (lecteurs d'écran)
+.catalogue__message {
+  &:focus {
+    outline: none;
+  }
+
+  .alerte {
+    margin-bottom: $espace-6;
+  }
+}
+
+.catalogue__liste {
+  display: grid;
+  gap: $espace-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.element {
+  display: grid;
+  gap: $espace-3;
+  height: 100%;
+  padding: $espace-6;
+
+  &--retire {
+    background: $fond;
+  }
+}
+
+.element__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $espace-2;
+}
+
+.element__titre {
+  margin: 0;
+  font-size: 1.1875rem;
+}
+
+.element__infos {
+  display: grid;
+  gap: $espace-1;
+  margin: 0;
+
+  div {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: $espace-2;
+  }
+
+  dt {
+    color: $texte-doux;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.element__texte {
+  margin: 0;
+  color: $texte-doux;
+  font-size: 0.9375rem;
+}
+
+.element__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $espace-3;
+  margin-top: auto;
+  padding-top: $espace-2;
+}
+
+// Confirmation de suppression : encadré bordeaux dans la carte
+.confirmation {
+  display: grid;
+  gap: $espace-3;
+  padding: $espace-4;
+  border: 1px solid $bordeaux;
+  border-radius: $rayon-moyen;
+  background: $bordeaux-clair;
+
+  p {
+    margin: 0;
+  }
+
+  &__titre {
+    margin: 0;
+    color: $bordeaux;
+    font-size: 1rem;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__boutons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $espace-2;
+  }
+}
+
+.catalogue__groupe + .catalogue__groupe {
+  margin-top: $espace-12;
+}
+
+.catalogue__sous-titre {
+  margin: 0 0 $espace-4;
+  font-size: 1.375rem;
+}
+
+// ---- Formulaires (menu, plat) -----------------------------------------
+.formulaire-catalogue {
+  display: grid;
+  gap: $espace-8;
+  max-width: 56rem;
+  padding: $espace-6;
+
+  @include a-partir-de($point-tablette) {
+    padding: $espace-8;
+  }
+}
+
+.formulaire-catalogue__ligne {
+  display: grid;
+  gap: $espace-4;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.formulaire-catalogue__ligne--4 {
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+// Cases à cocher (plats d'un menu, allergènes) en colonnes
+.cases {
+  display: grid;
+  gap: $espace-2 $espace-6;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  input:focus-visible {
+    outline: 3px solid $bordeaux;
+    outline-offset: 2px;
+  }
+}
+
+.cases__groupe {
+  margin: 0 0 $espace-6;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: $espace-2;
+    padding: 0;
+    font-weight: 700;
+  }
+}
+
+.formulaire-catalogue__bas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $espace-4;
+}
