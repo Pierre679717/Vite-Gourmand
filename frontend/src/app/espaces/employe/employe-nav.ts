@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 /**
- * Onglets de l'espace employé : « Commandes » et « Avis clients ».
- * Même composant visuel que les onglets de l'espace client.
- * « Commandes » reste actif sur le détail d'une commande (/commandes/13).
+ * Onglets de l'espace employé : commandes, avis, puis le catalogue
+ * (menus, plats, horaires). Même style que les onglets de l'espace client.
+ * Un onglet reste actif sur ses sous-pages (/commandes/13, /menus/nouveau).
  */
 @Component({
   selector: 'app-employe-nav',
@@ -26,15 +26,38 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         ariaCurrentWhenActive="page"
         >Avis clients</a
       >
+      <a
+        class="espace-nav__lien"
+        routerLink="/espace-employe/menus"
+        routerLinkActive="espace-nav__lien--actif"
+        ariaCurrentWhenActive="page"
+        >Menus</a
+      >
+      <a
+        class="espace-nav__lien"
+        routerLink="/espace-employe/plats"
+        routerLinkActive="espace-nav__lien--actif"
+        ariaCurrentWhenActive="page"
+        >Plats</a
+      >
+      <a
+        class="espace-nav__lien"
+        routerLink="/espace-employe/horaires"
+        routerLinkActive="espace-nav__lien--actif"
+        ariaCurrentWhenActive="page"
+        >Horaires</a
+      >
     </nav>
   `,
   styles: `
     @use 'variables' as *;
     @use 'mixins' as *;
 
+    // flex-wrap : 5 onglets passent sur deux lignes sur mobile (390 px)
     .espace-nav {
       display: flex;
-      gap: $espace-6;
+      flex-wrap: wrap;
+      column-gap: $espace-6;
       margin-bottom: $espace-8;
       border-bottom: 1px solid $bordure;
     }

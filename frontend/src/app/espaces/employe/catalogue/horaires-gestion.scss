@@ -1,0 +1,57 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.horaires {
+  gap: $espace-6;
+  max-width: 48rem;
+}
+
+.horaires__semaine {
+  display: grid;
+  gap: $espace-4;
+}
+
+// Un jour : nom, « Fermé », puis les deux heures (sur une ligne à partir de la tablette)
+.horaires__jour {
+  display: grid;
+  gap: $espace-3;
+  align-items: end;
+  margin: 0;
+  padding: 0 0 $espace-4;
+  border: 0;
+  border-bottom: 1px solid $bordure;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: 7rem 6rem 1fr 1fr;
+  }
+}
+
+.horaires__nom {
+  float: left; // une <legend> ne se place dans la grille qu'en flottant
+  padding: 0;
+  font-weight: 700;
+
+  @include a-partir-de($point-tablette) {
+    padding-bottom: $espace-3;
+  }
+}
+
+.horaires__ferme {
+  @include a-partir-de($point-tablette) {
+    padding-bottom: $espace-3;
+  }
+}
+
+.horaires__texte {
+  margin: 0;
+  color: $texte-doux;
+
+  @include a-partir-de($point-tablette) {
+    grid-column: span 2;
+    padding-bottom: $espace-3;
+  }
+}
+
+.horaires__erreur {
+  grid-column: 1 / -1;
+}

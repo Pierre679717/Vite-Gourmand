@@ -171,19 +171,6 @@ class MenuModel {
     }
 
     /**
-     * Créer un nouveau menu (sans plats ni images : ils s'ajoutent ensuite)
-     */
-    static async creer({ titre, description, nombrePersonneMin, delaiMinimumJours, prixParPersonne, conditions, quantiteRestante, themeId, regimeId }) {
-        const [result] = await pool.query(
-            `INSERT INTO menu
-             (titre, description, nombre_personne_min, delai_minimum_jours, prix_par_personne, conditions, quantite_restante, theme_id, regime_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [titre, description, nombrePersonneMin, delaiMinimumJours, prixParPersonne, conditions, quantiteRestante, themeId, regimeId]
-        );
-        return result.insertId;
-    }
-
-    /**
      * Compter les menus actifs
      */
     static async compterActifs() {

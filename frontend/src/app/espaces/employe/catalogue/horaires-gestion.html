@@ -1,0 +1,96 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace employé</p>
+    <h1 class="titre-section">Horaires d'ouverture</h1>
+    <p class="espace__bonjour">
+      Affichés dans le pied de page de toutes les pages. Cochez « Fermé » pour un jour de fermeture.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <div #zoneMessage tabindex="-1" class="catalogue__message" role="status">
+    @if (message(); as m) {
+      <p class="alerte alerte--succes">{{ m }}</p>
+    }
+    @if (erreursServeur().length > 0) {
+      <div class="alerte alerte--erreur">
+        <ul>
+          @for (m of erreursServeur(); track m) {
+            <li>{{ m }}</li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Chargement des horaires…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher les horaires. {{ e.message }}</p>
+      </div>
+    }
+    @case ('pret') {
+      <form
+        class="carte formulaire-catalogue horaires"
+        [formGroup]="formulaire"
+        (ngSubmit)="enregistrer()"
+        novalidate
+      >
+        <div formArrayName="jours" class="horaires__semaine">
+          @for (groupe of jours.controls; track $index; let i = $index) {
+            @let jour = lignes()[i].jour;
+            <fieldset class="horaires__jour" [formGroupName]="i">
+              <legend class="horaires__nom">{{ libelleJour(jour) }}</legend>
+              <label class="champ-case horaires__ferme">
+                <input type="checkbox" formControlName="ferme" />
+                <span>Fermé</span>
+              </label>
+              @if (!lignes()[i].ferme) {
+                <div class="champ">
+                  <label class="champ__label" [for]="'ouverture-' + jour">Ouverture</label>
+                  <input
+                    class="champ__saisie"
+                    type="time"
+                    [id]="'ouverture-' + jour"
+                    formControlName="ouverture"
+                    [attr.aria-invalid]="!!erreurDuJour(i)"
+                    [attr.aria-describedby]="erreurDuJour(i) ? 'erreur-' + jour : null"
+                  />
+                </div>
+                <div class="champ">
+                  <label class="champ__label" [for]="'fermeture-' + jour">Fermeture</label>
+                  <input
+                    class="champ__saisie"
+                    type="time"
+                    [id]="'fermeture-' + jour"
+                    formControlName="fermeture"
+                    [attr.aria-invalid]="!!erreurDuJour(i)"
+                    [attr.aria-describedby]="erreurDuJour(i) ? 'erreur-' + jour : null"
+                  />
+                </div>
+              } @else {
+                <p class="horaires__texte">Fermé ce jour-là</p>
+              }
+              @if (erreurDuJour(i); as m) {
+                <p class="champ__erreur horaires__erreur" [id]="'erreur-' + jour">{{ m }}</p>
+              }
+            </fieldset>
+          }
+        </div>
+
+        <div class="formulaire-catalogue__bas">
+          <button type="submit" class="btn btn--primaire" [disabled]="envoi()">
+            {{ envoi() ? 'Enregistrement…' : 'Enregistrer les horaires' }}
+          </button>
+        </div>
+      </form>
+    }
+  }
+</section>

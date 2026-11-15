@@ -1,0 +1,152 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace employé</p>
+    <h1 class="titre-section">Menus</h1>
+    <p class="espace__bonjour">
+      Créez, modifiez ou retirez un menu de la carte. Un menu déjà commandé reste en base pour
+      l'historique des commandes.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <div class="catalogue__barre">
+    <p>Les menus retirés de la carte n'apparaissent plus dans le catalogue des clients.</p>
+    <a class="btn btn--primaire" routerLink="/espace-employe/menus/nouveau">Nouveau menu</a>
+  </div>
+
+  <div #zoneMessage tabindex="-1" class="catalogue__message" role="status">
+    @if (message(); as m) {
+      <p class="alerte alerte--succes">{{ m }}</p>
+    }
+    @if (erreur(); as m) {
+      <p class="alerte alerte--erreur">{{ m }}</p>
+    }
+  </div>
+
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Chargement des menus…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher les menus. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        </div>
+      </div>
+    }
+    @case ('succes') {
+      <ul class="catalogue__liste">
+        @for (m of e.menus; track m.menu_id) {
+          <li>
+            <article
+              class="carte element"
+              [class.element--retire]="!estSurLaCarte(m)"
+              [attr.aria-labelledby]="'menu-' + m.menu_id"
+            >
+              <header class="element__entete">
+                <h2 class="element__titre" [id]="'menu-' + m.menu_id">{{ m.titre }}</h2>
+                @if (estSurLaCarte(m)) {
+                  <span class="badge badge--statut-en-cours">Sur la carte</span>
+                } @else {
+                  <span class="badge badge--neutre">Retiré de la carte</span>
+                }
+              </header>
+
+              <dl class="element__infos">
+                <div>
+                  <dt>Thème</dt>
+                  <dd>{{ m.theme }} · {{ m.regime }}</dd>
+                </div>
+                <div>
+                  <dt>Prix</dt>
+                  <dd>
+                    {{ m.prix_minimum | prix }} pour {{ m.nombre_personne_min }} pers. ({{
+                      m.prix_par_personne | prix
+                    }}
+                    / pers.)
+                  </dd>
+                </div>
+                <div>
+                  <dt>Stock</dt>
+                  <dd>{{ m.quantite_restante }}</dd>
+                </div>
+                <div>
+                  <dt>Composition</dt>
+                  <dd>{{ m.nombre_plats }} plat{{ m.nombre_plats > 1 ? 's' : '' }}</dd>
+                </div>
+                <div>
+                  <dt>Commandes</dt>
+                  <dd>{{ texteCommandes(m.nombre_commandes) }}</dd>
+                </div>
+              </dl>
+
+              @if (aConfirmer() === m.menu_id) {
+                <div class="confirmation" (keydown.escape)="annulerSuppression(m)">
+                  <h3 #titreConfirmation class="confirmation__titre" tabindex="-1">
+                    Supprimer « {{ m.titre }} » ?
+                  </h3>
+                  <p>La suppression est définitive. Ce menu n'a jamais été commandé.</p>
+                  <div class="confirmation__boutons">
+                    <button
+                      type="button"
+                      class="btn btn--accent"
+                      [disabled]="enCours() !== null"
+                      (click)="supprimer(m)"
+                    >
+                      {{ enCours() === m.menu_id ? 'Suppression…' : 'Confirmer la suppression' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--secondaire"
+                      (click)="annulerSuppression(m)"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="element__actions">
+                  <a
+                    class="btn btn--primaire"
+                    [routerLink]="['/espace-employe/menus', m.menu_id]"
+                    [attr.aria-label]="'Modifier ' + m.titre"
+                    >Modifier</a
+                  >
+                  <button
+                    type="button"
+                    class="btn btn--secondaire"
+                    [disabled]="enCours() !== null"
+                    [attr.aria-label]="
+                      (estSurLaCarte(m) ? 'Retirer de la carte ' : 'Remettre sur la carte ') +
+                      m.titre
+                    "
+                    (click)="changerCarte(m)"
+                  >
+                    {{ estSurLaCarte(m) ? 'Retirer de la carte' : 'Remettre sur la carte' }}
+                  </button>
+                  @if (peutSupprimer(m)) {
+                    <button
+                      type="button"
+                      class="lien-action"
+                      [id]="'supprimer-menu-' + m.menu_id"
+                      [disabled]="enCours() !== null"
+                      [attr.aria-label]="'Supprimer ' + m.titre"
+                      (click)="demanderSuppression(m)"
+                    >
+                      Supprimer…
+                    </button>
+                  }
+                </div>
+              }
+            </article>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

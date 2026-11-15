@@ -1,0 +1,294 @@
+@let e = etat();
+@switch (e.statut) {
+  @case ('introuvable') {
+    <app-page-introuvable />
+  }
+  @case ('erreur') {
+    <section class="conteneur page">
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'ouvrir le formulaire. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <a class="btn btn--secondaire" routerLink="/espace-employe/menus">Retour aux menus</a>
+        </div>
+      </div>
+    </section>
+  }
+  @case ('chargement') {
+    <section class="conteneur page" aria-busy="true">
+      <p class="visuellement-masque" role="status">Chargement du formulaire…</p>
+      <div class="espace__squelette" aria-hidden="true"></div>
+    </section>
+  }
+  @case ('pret') {
+    <section class="conteneur page espace">
+      <app-employe-nav />
+      <nav class="fil-ariane" aria-label="Fil d'Ariane">
+        <ol>
+          <li><a routerLink="/espace-employe/menus">Menus</a></li>
+          <li aria-current="page">{{ creation() ? 'Nouveau menu' : e.menu?.titre }}</li>
+        </ol>
+      </nav>
+      <header class="espace__entete">
+        <p class="surtitre">Espace employé</p>
+        <h1 class="titre-section">
+          {{ creation() ? 'Nouveau menu' : 'Modifier « ' + e.menu?.titre + ' »' }}
+        </h1>
+        @if (e.menu && e.menu.nombre_commandes > 0) {
+          <p class="espace__bonjour">
+            Ce menu a été commandé {{ e.menu.nombre_commandes }} fois : les commandes déjà passées
+            gardent leur prix et leur composition.
+          </p>
+        }
+      </header>
+
+      <form
+        class="carte formulaire-catalogue"
+        [formGroup]="formulaire"
+        (ngSubmit)="enregistrer()"
+        novalidate
+      >
+        <p class="formulaire-page__intro">
+          Les champs marqués d'un <span class="champ__obligatoire" aria-hidden="true">*</span>
+          <span class="visuellement-masque">astérisque</span> sont obligatoires.
+        </p>
+
+        <!-- ===== Présentation ===== -->
+        <fieldset class="formulaire__groupe">
+          <legend class="formulaire__legende">Présentation</legend>
+          <div class="champ">
+            <label class="champ__label" for="titre"
+              >Titre <span class="champ__obligatoire" aria-hidden="true">*</span></label
+            >
+            <input
+              id="titre"
+              class="champ__saisie"
+              formControlName="titre"
+              maxlength="100"
+              [attr.aria-invalid]="!!erreur('titre')"
+              [attr.aria-describedby]="erreur('titre') ? 'titre-erreur' : null"
+            />
+            @if (erreur('titre'); as m) {
+              <p id="titre-erreur" class="champ__erreur">{{ m }}</p>
+            }
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="description"
+              >Description <span class="champ__obligatoire" aria-hidden="true">*</span></label
+            >
+            <textarea
+              id="description"
+              class="champ__saisie"
+              formControlName="description"
+              rows="4"
+              maxlength="2000"
+              [attr.aria-invalid]="!!erreur('description')"
+              [attr.aria-describedby]="erreur('description') ? 'description-erreur' : null"
+            ></textarea>
+            @if (erreur('description'); as m) {
+              <p id="description-erreur" class="champ__erreur">{{ m }}</p>
+            }
+          </div>
+          <div class="formulaire-catalogue__ligne">
+            <div class="champ">
+              <label class="champ__label" for="theme"
+                >Thème <span class="champ__obligatoire" aria-hidden="true">*</span></label
+              >
+              <select
+                id="theme"
+                class="champ__saisie"
+                formControlName="theme_id"
+                [attr.aria-invalid]="!!erreur('theme_id')"
+                [attr.aria-describedby]="erreur('theme_id') ? 'theme-erreur' : null"
+              >
+                <option [ngValue]="null" disabled>Choisir un thème</option>
+                @for (t of e.options.themes; track t.theme_id) {
+                  <option [ngValue]="t.theme_id">{{ t.libelle }}</option>
+                }
+              </select>
+              @if (erreur('theme_id'); as m) {
+                <p id="theme-erreur" class="champ__erreur">{{ m }}</p>
+              }
+            </div>
+            <div class="champ">
+              <label class="champ__label" for="regime"
+                >Régime <span class="champ__obligatoire" aria-hidden="true">*</span></label
+              >
+              <select
+                id="regime"
+                class="champ__saisie"
+                formControlName="regime_id"
+                [attr.aria-invalid]="!!erreur('regime_id')"
+                [attr.aria-describedby]="erreur('regime_id') ? 'regime-erreur' : null"
+              >
+                <option [ngValue]="null" disabled>Choisir un régime</option>
+                @for (r of e.options.regimes; track r.regime_id) {
+                  <option [ngValue]="r.regime_id">{{ r.libelle }}</option>
+                }
+              </select>
+              @if (erreur('regime_id'); as m) {
+                <p id="regime-erreur" class="champ__erreur">{{ m }}</p>
+              }
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- ===== Conditions, prix et stock ===== -->
+        <fieldset class="formulaire__groupe">
+          <legend class="formulaire__legende">Conditions, prix et stock</legend>
+          <div class="formulaire-catalogue__ligne formulaire-catalogue__ligne--4">
+            <div class="champ">
+              <label class="champ__label" for="personnes"
+                >Personnes minimum
+                <span class="champ__obligatoire" aria-hidden="true">*</span></label
+              >
+              <input
+                id="personnes"
+                class="champ__saisie"
+                type="number"
+                min="1"
+                max="500"
+                formControlName="nombre_personne_min"
+                [attr.aria-invalid]="!!erreur('nombre_personne_min')"
+                [attr.aria-describedby]="erreur('nombre_personne_min') ? 'personnes-erreur' : null"
+              />
+              @if (erreur('nombre_personne_min'); as m) {
+                <p id="personnes-erreur" class="champ__erreur">{{ m }}</p>
+              }
+            </div>
+            <div class="champ">
+              <label class="champ__label" for="prix"
+                >Prix / personne (€)
+                <span class="champ__obligatoire" aria-hidden="true">*</span></label
+              >
+              <input
+                id="prix"
+                class="champ__saisie"
+                inputmode="decimal"
+                formControlName="prix_par_personne"
+                [attr.aria-invalid]="!!erreur('prix_par_personne')"
+                [attr.aria-describedby]="erreur('prix_par_personne') ? 'prix-erreur' : null"
+              />
+              @if (erreur('prix_par_personne'); as m) {
+                <p id="prix-erreur" class="champ__erreur">{{ m }}</p>
+              }
+            </div>
+            <div class="champ">
+              <label class="champ__label" for="delai"
+                >Délai (jours) <span class="champ__obligatoire" aria-hidden="true">*</span></label
+              >
+              <input
+                id="delai"
+                class="champ__saisie"
+                type="number"
+                min="0"
+                max="365"
+                formControlName="delai_minimum_jours"
+                [attr.aria-invalid]="!!erreur('delai_minimum_jours')"
+                [attr.aria-describedby]="
+                  erreur('delai_minimum_jours') ? 'delai-erreur delai-aide' : 'delai-aide'
+                "
+              />
+              <p id="delai-aide" class="champ__aide">Entre la commande et la prestation</p>
+              @if (erreur('delai_minimum_jours'); as m) {
+                <p id="delai-erreur" class="champ__erreur">{{ m }}</p>
+              }
+            </div>
+            <div class="champ">
+              <label class="champ__label" for="stock"
+                >Stock <span class="champ__obligatoire" aria-hidden="true">*</span></label
+              >
+              <input
+                id="stock"
+                class="champ__saisie"
+                type="number"
+                min="0"
+                max="10000"
+                formControlName="quantite_restante"
+                [attr.aria-invalid]="!!erreur('quantite_restante')"
+                [attr.aria-describedby]="
+                  erreur('quantite_restante') ? 'stock-erreur stock-aide' : 'stock-aide'
+                "
+              />
+              <p id="stock-aide" class="champ__aide">Commandes encore possibles</p>
+              @if (erreur('quantite_restante'); as m) {
+                <p id="stock-erreur" class="champ__erreur">{{ m }}</p>
+              }
+            </div>
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="conditions"
+              >Conditions affichées au client
+              <span class="champ__obligatoire" aria-hidden="true">*</span></label
+            >
+            <textarea
+              id="conditions"
+              class="champ__saisie"
+              formControlName="conditions"
+              rows="4"
+              maxlength="2000"
+              [attr.aria-invalid]="!!erreur('conditions')"
+              [attr.aria-describedby]="erreur('conditions') ? 'conditions-erreur' : null"
+            ></textarea>
+            @if (erreur('conditions'); as m) {
+              <p id="conditions-erreur" class="champ__erreur">{{ m }}</p>
+            }
+          </div>
+        </fieldset>
+
+        <!-- ===== Composition ===== -->
+        <fieldset class="formulaire__groupe" aria-describedby="plats-compte">
+          <legend class="formulaire__legende">
+            Composition <span class="champ__obligatoire" aria-hidden="true">*</span>
+          </legend>
+          <p id="plats-compte" class="champ__aide">
+            {{ platsChoisis().length }} plat{{ platsChoisis().length > 1 ? 's' : '' }} choisi{{
+              platsChoisis().length > 1 ? 's' : ''
+            }}. Les plats et leurs allergènes se gèrent dans l'onglet « Plats ».
+          </p>
+          @for (g of groupes(); track g.categorie) {
+            @if (g.elements.length > 0) {
+              <fieldset class="cases__groupe">
+                <legend>{{ g.libelle }}</legend>
+                <ul class="cases">
+                  @for (p of g.elements; track p.plat_id) {
+                    <li>
+                      <label class="champ-case">
+                        <input
+                          type="checkbox"
+                          [checked]="platsChoisis().includes(p.plat_id)"
+                          [attr.aria-invalid]="!!erreur('plats')"
+                          (change)="basculerPlat(p.plat_id)"
+                        />
+                        <span>{{ p.titre }}</span>
+                      </label>
+                    </li>
+                  }
+                </ul>
+              </fieldset>
+            }
+          }
+          @if (erreur('plats'); as m) {
+            <p class="champ__erreur">{{ m }}</p>
+          }
+        </fieldset>
+
+        @if (erreursServeur().length > 0) {
+          <div id="erreurs-serveur" class="alerte alerte--erreur" role="alert" tabindex="-1">
+            <ul>
+              @for (m of erreursServeur(); track m) {
+                <li>{{ m }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="formulaire-catalogue__bas">
+          <button type="submit" class="btn btn--primaire" [disabled]="envoi()">
+            {{ envoi() ? 'Enregistrement…' : creation() ? 'Créer le menu' : 'Enregistrer' }}
+          </button>
+          <a class="btn btn--secondaire" routerLink="/espace-employe/menus">Annuler</a>
+        </div>
+      </form>
+    </section>
+  }
+}
