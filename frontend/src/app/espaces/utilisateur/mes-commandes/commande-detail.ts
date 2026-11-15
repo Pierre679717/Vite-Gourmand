@@ -28,6 +28,7 @@ import { AvisCommande, CommandeDetaillee } from '../../../core/models/commande';
 import { AvisService } from '../../../core/services/avis.service';
 import { CommandeService } from '../../../core/services/commande.service';
 import { PageIntrouvable } from '../../../pages/page-introuvable/page-introuvable';
+import { FriseSuivi } from '../../../shared/frise-suivi/frise-suivi';
 import { PrixPipe } from '../../../shared/prix.pipe';
 import { montantAvantReduction } from '../commande/commande-logique';
 import {
@@ -38,7 +39,6 @@ import {
   NOTES,
   classeBadge,
   dateHeureFr,
-  dateHeureIso,
   dateLongue,
   erreurCommentaire,
   etapesFrise,
@@ -68,7 +68,7 @@ function commentaireValide(controle: AbstractControl): ValidationErrors | null {
  */
 @Component({
   selector: 'app-commande-detail',
-  imports: [RouterLink, PrixPipe, PageIntrouvable, ReactiveFormsModule],
+  imports: [RouterLink, PrixPipe, PageIntrouvable, ReactiveFormsModule, FriseSuivi],
   templateUrl: './commande-detail.html',
   styleUrl: './commande-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,7 +89,6 @@ export class CommandeDetail {
   protected readonly commentaireMax = COMMENTAIRE_MAX;
   protected readonly classeBadge = classeBadge;
   protected readonly dateHeureFr = dateHeureFr;
-  protected readonly dateHeureIso = dateHeureIso;
   protected readonly dateLongue = dateLongue;
   protected readonly heureFr = heureFr;
   protected readonly telephoneFr = telephoneFr;

@@ -207,4 +207,6 @@ ${blocMateriel}
   return { subject, text, html };
 }
 
-module.exports = { genererMailConfirmationCommande, echapperHtml, formaterEuros, formaterDate, formaterHeure };
+module.exports = {
+  genererMailConfirmationCommande, echapperHtml, formaterEuros, formaterDate, formaterHeure, C, POLICE
+};

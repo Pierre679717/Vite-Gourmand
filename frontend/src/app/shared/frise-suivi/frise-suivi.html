@@ -1,0 +1,22 @@
+<ol class="frise">
+  @for (etape of etapes(); track $index) {
+    <li [class]="'frise__etape frise__etape--' + etape.etat">
+      <span class="frise__point" aria-hidden="true"></span>
+      <div class="frise__texte">
+        <span class="frise__libelle">
+          {{ etape.libelle }}
+          @if (etape.etat === 'actuelle') {
+            <span class="visuellement-masque">(étape actuelle)</span>
+          } @else if (etape.etat === 'a-venir') {
+            <span class="visuellement-masque">(à venir)</span>
+          }
+        </span>
+        @if (etape.date) {
+          <time class="frise__date" [attr.datetime]="dateHeureIso(etape.date)">{{
+            dateHeureFr(etape.date)
+          }}</time>
+        }
+      </div>
+    </li>
+  }
+</ol>

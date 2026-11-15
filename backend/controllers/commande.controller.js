@@ -15,8 +15,13 @@ const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance
 const { validerCommande, validerDevis, validerModification, aujourdhuiParis } = require('../utils/validationCommande');
 const { enregistrerStatCommande, mettreAJourStatCommande } = require('../models/statCommande.model');
 const { genererMailConfirmationCommande } = require('../email/templateCommande');
+const { genererMailStatut } = require('../email/templateStatut');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
 const { idValide, versResumeCommande, versCommandeClient } = require('../utils/commandeClient');
+const { STATUTS } = require('../utils/statutsCommande');
+const {
+    validerFiltresCommandes, clauseFiltres, versResumeEmploye, versCommandeEmploye
+} = require('../utils/commandeEmploye');
 
 /**
  * Envoie le mail de confirmation sans bloquer la réponse :
@@ -32,17 +37,67 @@ async function envoyerMailConfirmation(commande, destinataire) {
     }
 }
 
-// Statuts qu'un employé peut appliquer ('en_attente' est l'état de départ)
-const STATUTS_EMPLOYE = [
-    'accepte',
-    'en_preparation',
-    'en_cours_livraison',
-    'livre',
-    'attente_retour_materiel',
-    'terminee',
-    'annulee'
-];
+/**
+ * Mail au client après un changement de statut (retour de matériel,
+ * commande terminée). Même principe que la confirmation : non bloquant,
+ * le statut est déjà enregistré ; un échec est seulement noté dans la console.
+ * Renvoie true si un mail est parti (utile aux tests).
+ */
+async function envoyerMailStatut(commandeId, resultat) {
+    const mail = genererMailStatut(resultat.statut, {
+        commande_id:     commandeId,
+        numero_commande: resultat.numeroCommande,
+        contact_prenom:  resultat.contactPrenom
+    });
+    if (!mail) return false; // pas de mail pour ce statut
+    try {
+        await transporter.sendMail({ from: EXPEDITEUR, to: resultat.contactEmail, ...mail });
+        return true;
+    } catch (err) {
+        console.error(`Mail « ${resultat.statut} » non envoyé (${resultat.numeroCommande}) :`, err.message);
+        return false;
+    }
+}
+
+// Statuts qu'un employé peut demander ('en_attente' est l'état de départ).
+// Le parcours lui-même est vérifié dans le modèle (utils/statutsCommande.js).
+const STATUTS_EMPLOYE = STATUTS.filter((statut) => statut !== 'en_attente');
 const MODES_CONTACT = ['gsm', 'mail'];
+const MOTIF_MIN = 5;
+const MOTIF_MAX = 1000;
+
+/**
+ * Vérifie le corps de PUT /api/employe/commandes/:id.
+ * Renvoie { donnees, erreurs }. mode_contact et motif ne sont lus que
+ * pour une annulation : le sujet impose d'avoir contacté le client.
+ */
+function validerChangementStatut(corps) {
+    corps = corps || {};
+    const erreurs = [];
+    const donnees = { modeContact: null, motif: null };
+
+    if (STATUTS_EMPLOYE.includes(corps.statut)) {
+        donnees.statut = corps.statut;
+    } else {
+        erreurs.push('Statut invalide.');
+    }
+
+    if (corps.statut === 'annulee') {
+        if (MODES_CONTACT.includes(corps.mode_contact)) {
+            donnees.modeContact = corps.mode_contact;
+        } else {
+            erreurs.push('Indiquez comment le client a été contacté (gsm ou mail).');
+        }
+        const motif = typeof corps.motif === 'string' ? corps.motif.trim() : '';
+        if (motif.length >= MOTIF_MIN && motif.length <= MOTIF_MAX) {
+            donnees.motif = motif;
+        } else {
+            erreurs.push(`Le motif d'annulation est requis (${MOTIF_MIN} à ${MOTIF_MAX} caractères).`);
+        }
+    }
+
+    return { donnees, erreurs };
+}
 
 class CommandeController {
 
@@ -335,12 +390,18 @@ class CommandeController {
 
     /**
      * GET /api/employe/commandes ou /api/admin/commandes
-     * Récupérer toutes les commandes
+     * Filtres facultatifs : ?statut=livre&client=martin
+     * (client = nom, prénom, e-mail ou numéro de commande).
+     * 400 si un filtre est invalide.
      */
     static async toutesCommandes(req, res) {
         try {
-            const commandes = await CommandeModel.listerToutes();
-            res.json(commandes);
+            const { filtres, erreurs } = validerFiltresCommandes(req.query);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+            const lignes = await CommandeModel.listerPourEmploye(clauseFiltres(filtres));
+            res.json(lignes.map(versResumeEmploye));
         } catch (err) {
             console.error('Erreur toutes commandes :', err);
             res.status(500).json({ error: 'Erreur serveur.' });
@@ -348,30 +409,65 @@ class CommandeController {
     }
 
     /**
+     * GET /api/employe/commandes/:id
+     * Détail d'une commande, quel que soit le client : suivi, avis,
+     * coordonnées du client et statuts suivants possibles.
+     */
+    static async detailEmploye(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const ligne = await CommandeModel.trouverPourEmploye(commandeId);
+            if (!ligne) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const suivi = await CommandeModel.listerSuivi(commandeId);
+            res.json(versCommandeEmploye(ligne, suivi));
+        } catch (err) {
+            console.error('Erreur détail commande (employé) :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
      * PUT /api/employe/commandes/:id
-     * Modifier le statut d'une commande.
+     * Faire avancer une commande d'une étape, ou l'annuler.
      * Pour une annulation, le sujet impose de contacter le client
      * avant : on exige le mode de contact (gsm / mail) et le motif.
+     * Corps : { statut, mode_contact?, motif? } -> 200 { message, numero_commande, statut }
+     * 400 corps invalide, 404 commande inconnue, 409 étape non permise.
      */
     static async mettreAJourStatut(req, res) {
         try {
-            const { statut, mode_contact, motif } = req.body;
-
-            if (!STATUTS_EMPLOYE.includes(statut)) {
-                return res.status(400).json({ error: 'Statut invalide.' });
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
             }
-            if (statut === 'annulee' && (!MODES_CONTACT.includes(mode_contact) || !motif)) {
-                return res.status(400).json({ error: 'Pour annuler, indiquez le mode de contact (gsm ou mail) et le motif.' });
+            const { donnees, erreurs } = validerChangementStatut(req.body);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
             }
 
-            await CommandeModel.changerStatut({
-                commandeId:  req.params.id,
-                statut,
+            const resultat = await CommandeModel.changerStatut({
+                commandeId,
+                statut:      donnees.statut,
                 employeId:   req.user.id,
-                modeContact: statut === 'annulee' ? mode_contact : null,
-                motif:       statut === 'annulee' ? motif : null
+                modeContact: donnees.modeContact,
+                motif:       donnees.motif
             });
-            res.json({ message: 'Statut mis à jour.' });
+
+            // Non bloquant : MySQL fait foi, MongoDB sert aux statistiques
+            mettreAJourStatCommande(commandeId, { statut: resultat.statut });
+            // Sans await : la réponse n'attend pas le serveur de mail
+            envoyerMailStatut(commandeId, resultat);
+
+            res.json({
+                message: `Commande ${resultat.numeroCommande} : statut mis à jour.`,
+                numero_commande: resultat.numeroCommande,
+                statut: resultat.statut
+            });
         } catch (err) {
             if (err instanceof ErreurCommande) {
                 return res.status(err.status).json({ error: err.message });
@@ -383,3 +479,5 @@ class CommandeController {
 }
 
 module.exports = CommandeController;
+module.exports.validerChangementStatut = validerChangementStatut;
+module.exports.envoyerMailStatut = envoyerMailStatut;

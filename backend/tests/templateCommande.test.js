@@ -106,7 +106,7 @@ describe('genererMailConfirmationCommande', () => {
 
     test('lien vers l\'espace client', () => {
         const { html, text } = genererMailConfirmationCommande(commande());
-        assert.match(html, /href="https:\/\/[^"]+\/espace-utilisateur"/);
-        assert.match(text, /Suivre ma commande : https:\/\/\S+\/espace-utilisateur/);
+        assert.match(html, /href="https?:\/\/[^"]+\/espace-utilisateur"/);
+        assert.match(text, /Suivre ma commande : https?:\/\/\S+\/espace-utilisateur/);
     });
 });

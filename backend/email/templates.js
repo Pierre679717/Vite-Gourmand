@@ -24,7 +24,11 @@ const C = {
   trait: '#E3E6E0',
 };
 
-const SITE = 'https://vite-gourmand-production.up.railway.app';
+// Adresse du site dans les liens des mails (boutons « Voir ma commande »,
+// « Donner mon avis », « Nous contacter »…). Elle dépend de l'environnement :
+// en local http://localhost:4200, en production l'adresse publique.
+// C'est FRONTEND_URL, déjà utilisée pour CORS : à régler dans .env et chez l'hébergeur.
+const SITE = (process.env.FRONTEND_URL || 'http://localhost:4200').replace(/\/+$/, '');
 
 // --- Contenu propre à chaque rôle ---
 const ROLES = {

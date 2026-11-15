@@ -1,0 +1,125 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace employé</p>
+    <h1 class="titre-section">Avis clients</h1>
+    <p class="espace__bonjour">
+      Seuls les avis validés apparaissent sur la page d'accueil. Une décision peut être changée plus
+      tard.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <fieldset class="filtres-avis">
+    <legend class="visuellement-masque">Afficher les avis</legend>
+    @for (f of filtres; track f.valeur) {
+      <input
+        type="radio"
+        class="visuellement-masque"
+        name="filtre-avis"
+        [id]="'filtre-' + f.valeur"
+        [formControl]="filtre"
+        [value]="f.valeur"
+      />
+      <label class="filtres-avis__pastille" [for]="'filtre-' + f.valeur">{{ f.libelle }}</label>
+    }
+  </fieldset>
+
+  <!-- Résultat d'une décision : reçoit le focus, annoncé par les lecteurs d'écran -->
+  <div #zoneMessage tabindex="-1" class="moderation__message" role="status">
+    @if (message(); as m) {
+      <p class="alerte alerte--succes">{{ m }}</p>
+    }
+    @if (erreur(); as m) {
+      <p class="alerte alerte--erreur">{{ m }}</p>
+    }
+  </div>
+
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Chargement des avis…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher les avis. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        </div>
+      </div>
+    }
+
+    @case ('succes') {
+      @if (e.avis.length === 0) {
+        <div class="carte espace__vide">
+          <p>{{ texteAucunAvis(filtreActuel()) }}</p>
+        </div>
+      } @else {
+        <ul class="liste-avis">
+          @for (a of e.avis; track a.avis_id) {
+            <li>
+              <article class="carte avis-moderation" [attr.aria-labelledby]="'avis-' + a.avis_id">
+                <header class="avis-moderation__entete">
+                  <h2 [id]="'avis-' + a.avis_id" class="avis-moderation__auteur">
+                    {{ a.prenom }} {{ a.nom }}
+                  </h2>
+                  <span [class]="classeBadgeAvis(a.statut)">{{ libellesAvis[a.statut] }}</span>
+                </header>
+
+                <p class="avis-moderation__note">
+                  <span class="etoiles" aria-hidden="true">
+                    @for (n of notes; track n) {
+                      <span [class.etoile--active]="n <= a.note">★</span>
+                    }
+                  </span>
+                  <span>{{ a.note }}/5 · {{ libellesNote[a.note] }}</span>
+                </p>
+
+                <blockquote class="avis-moderation__texte">{{ a.commentaire }}</blockquote>
+
+                <p class="avis-moderation__contexte">
+                  {{ a.menu }} ·
+                  <a [routerLink]="['/espace-employe/commandes', a.commande_id]">{{
+                    a.numero_commande
+                  }}</a>
+                  · déposé le
+                  <time [attr.datetime]="dateHeureIso(a.date_creation)">{{
+                    dateHeureFr(a.date_creation)
+                  }}</time>
+                </p>
+
+                <div class="avis-moderation__boutons">
+                  @if (a.statut !== 'valide') {
+                    <button
+                      type="button"
+                      class="btn btn--primaire"
+                      [disabled]="enCours() !== null"
+                      [attr.aria-label]="'Valider l’avis de ' + a.prenom + ' ' + a.nom"
+                      (click)="decider(a, 'valide')"
+                    >
+                      {{ enCours() === a.avis_id ? 'Enregistrement…' : 'Valider' }}
+                    </button>
+                  }
+                  @if (a.statut !== 'refuse') {
+                    <button
+                      type="button"
+                      class="btn btn--secondaire"
+                      [disabled]="enCours() !== null"
+                      [attr.aria-label]="'Refuser l’avis de ' + a.prenom + ' ' + a.nom"
+                      (click)="decider(a, 'refuse')"
+                    >
+                      Refuser
+                    </button>
+                  }
+                </div>
+              </article>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

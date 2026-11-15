@@ -14,6 +14,7 @@ const crypto = require('crypto');
 const { pool } = require('../config/db.mysql');
 const MenuModel = require('./menu.model');
 const { verifierDelai } = require('../utils/validationCommande');
+const { verifierTransition } = require('../utils/statutsCommande');
 
 // Erreur "métier" : le contrôleur la transforme en réponse 4xx
 class ErreurCommande extends Error {
@@ -301,26 +302,66 @@ class CommandeModel {
     }
 
     /**
-     * Récupérer toutes les commandes (employé / admin)
+     * Liste des commandes pour l'employé ou l'administrateur, filtrée.
+     * `clause` vient de clauseFiltres() (utils/commandeEmploye.js) :
+     * un WHERE fait uniquement de « ? » et la liste des valeurs.
+     * Tri : date de prestation la plus lointaine en haut, puis l'heure.
+     * Pour retrouver « les commandes à effectuer », l'employé filtre par statut.
      */
-    static async listerToutes() {
+    static async listerPourEmploye(clause = { where: '', valeurs: [] }) {
         const [rows] = await pool.query(
-            `SELECT c.*, m.titre AS menu_titre,
-                    u.nom AS client_nom, u.prenom AS client_prenom,
-                    u.email AS client_email, u.telephone AS client_telephone
+            `SELECT c.commande_id, c.numero_commande, c.date_commande, c.date_prestation,
+                    c.heure_livraison, c.ville_prestation, c.nombre_personne, c.prix_total,
+                    c.statut, c.pret_materiel, m.titre AS menu_titre,
+                    u.nom AS client_nom, u.prenom AS client_prenom, u.email AS client_email
              FROM commande c
              JOIN menu m        ON m.menu_id = c.menu_id
              JOIN utilisateur u ON u.utilisateur_id = c.utilisateur_id
-             ORDER BY c.date_commande DESC`
+             ${clause.where}
+             ORDER BY c.date_prestation DESC, c.heure_livraison DESC, c.commande_id DESC`,
+            clause.valeurs
         );
         return rows;
     }
 
     /**
+     * Une commande pour l'employé (quel que soit le client), avec le
+     * compte du client, le mode de contact et le motif d'annulation.
+     */
+    static async trouverPourEmploye(commandeId) {
+        const [rows] = await pool.query(
+            `SELECT c.commande_id, c.numero_commande, c.date_commande, c.date_prestation,
+                    c.heure_livraison, c.adresse_prestation, c.ville_prestation, c.distance_km,
+                    c.nombre_personne, c.prix_par_personne, c.reduction, c.prix_menu,
+                    c.prix_livraison, c.prix_total, c.statut, c.pret_materiel, c.materiel_restitue,
+                    c.mode_contact, c.motif,
+                    c.contact_nom, c.contact_prenom, c.contact_email, c.contact_telephone,
+                    c.menu_id, m.titre AS menu_titre, m.nombre_personne_min, m.delai_minimum_jours,
+                    c.utilisateur_id, u.nom AS client_nom, u.prenom AS client_prenom,
+                    u.email AS client_email, u.telephone AS client_telephone,
+                    a.note AS avis_note, a.commentaire AS avis_commentaire, a.statut AS avis_statut
+             FROM commande c
+             JOIN menu m        ON m.menu_id = c.menu_id
+             JOIN utilisateur u ON u.utilisateur_id = c.utilisateur_id
+             LEFT JOIN avis a   ON a.commande_id = c.commande_id
+             WHERE c.commande_id = ?`,
+            [commandeId]
+        );
+        return rows[0] || null;
+    }
+
+    /**
      * Changer le statut d'une commande (employé / admin), en transaction :
      * mise à jour de la commande + nouvelle ligne de suivi.
-     * En cas d'annulation, on enregistre le mode de contact et le motif,
-     * et on rend l'unité au stock du menu.
+     * - La commande est relue avec FOR UPDATE : deux employés (ou un
+     *   employé et le client) ne peuvent pas la changer en même temps.
+     * - Le changement doit respecter le parcours (utils/statutsCommande.js),
+     *   sinon 409 : ordre des étapes, pas de retour en arrière, passage
+     *   obligatoire par le retour de matériel si du matériel a été prêté.
+     * - Annulation : mode de contact + motif enregistrés, unité rendue au stock.
+     * - attente_retour_materiel -> terminee : le matériel est restitué
+     *   (materiel_restitue = 1).
+     * Renvoie ce qu'il faut pour les mails et les statistiques.
      */
     static async changerStatut({ commandeId, statut, employeId, modeContact = null, motif = null }) {
         const conn = await pool.getConnection();
@@ -328,15 +369,17 @@ class CommandeModel {
             await conn.beginTransaction();
 
             const [rows] = await conn.query(
-                'SELECT statut, menu_id FROM commande WHERE commande_id = ? FOR UPDATE',
+                `SELECT numero_commande, statut, menu_id, pret_materiel,
+                        contact_prenom, contact_email
+                 FROM commande WHERE commande_id = ? FOR UPDATE`,
                 [commandeId]
             );
             if (rows.length === 0) throw new ErreurCommande('Commande introuvable.', 404);
 
             const ancien = rows[0];
-            if (ancien.statut === 'annulee' || ancien.statut === 'terminee') {
-                throw new ErreurCommande('Cette commande est clôturée : son statut ne peut plus changer.', 409);
-            }
+            const pretMateriel = Boolean(ancien.pret_materiel);
+            const erreur = verifierTransition(ancien.statut, statut, pretMateriel);
+            if (erreur) throw new ErreurCommande(erreur, 409);
 
             if (statut === 'annulee') {
                 await conn.query(
@@ -346,6 +389,12 @@ class CommandeModel {
                 await conn.query(
                     'UPDATE menu SET quantite_restante = quantite_restante + 1 WHERE menu_id = ?',
                     [ancien.menu_id]
+                );
+            } else if (ancien.statut === 'attente_retour_materiel') {
+                // Seule étape après le retour de matériel : terminee (vérifié ci-dessus)
+                await conn.query(
+                    'UPDATE commande SET statut = ?, materiel_restitue = 1 WHERE commande_id = ?',
+                    [statut, commandeId]
                 );
             } else {
                 await conn.query(
@@ -360,6 +409,14 @@ class CommandeModel {
             );
 
             await conn.commit();
+            return {
+                numeroCommande: ancien.numero_commande,
+                ancienStatut:   ancien.statut,
+                statut,
+                pretMateriel,
+                contactPrenom:  ancien.contact_prenom,
+                contactEmail:   ancien.contact_email
+            };
         } catch (err) {
             await conn.rollback();
             throw err;

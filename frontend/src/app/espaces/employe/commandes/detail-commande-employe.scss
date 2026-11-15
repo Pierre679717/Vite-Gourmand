@@ -1,0 +1,75 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ---- Actions de l'employé ------------------------------------------------
+.actions__etape {
+  display: grid;
+  gap: $espace-2;
+}
+
+// Ce que l'action déclenche en plus (mail au client)
+.actions__effet {
+  margin: 0;
+  color: $texte-doux;
+  font-size: 0.875rem;
+}
+
+// Formulaire d'annulation : encadré bordeaux, comme la confirmation côté client
+.annulation {
+  display: grid;
+  gap: $espace-4;
+  padding: $espace-4;
+  border: 1px solid $bordeaux;
+  border-radius: $rayon-moyen;
+  background: $bordeaux-clair;
+
+  h3 {
+    margin: 0;
+    font-size: 1.0625rem;
+    color: $bordeaux;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .champ__saisie {
+    background: $blanc;
+  }
+}
+
+.annulation__modes {
+  display: grid;
+  gap: $espace-2;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: $espace-2;
+    padding: 0;
+  }
+
+  // Bouton radio : contour bordeaux visible au clavier
+  input:focus-visible {
+    outline: 3px solid $bordeaux;
+    outline-offset: 2px;
+  }
+}
+
+.annulation__boutons {
+  display: grid;
+  gap: $espace-2;
+}
+
+.carte-annulation {
+  border-left: 4px solid $bordeaux;
+}
+
+.lien-action {
+  justify-self: start;
+}
