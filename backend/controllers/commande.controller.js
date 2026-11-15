@@ -19,6 +19,9 @@ const { genererMailStatut } = require('../email/templateStatut');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
 const { idValide, versResumeCommande, versCommandeClient } = require('../utils/commandeClient');
 const { STATUTS } = require('../utils/statutsCommande');
+const {
+    validerFiltresCommandes, clauseFiltres, versResumeEmploye, versCommandeEmploye
+} = require('../utils/commandeEmploye');
 
 /**
  * Envoie le mail de confirmation sans bloquer la réponse :
@@ -387,14 +390,43 @@ class CommandeController {
 
     /**
      * GET /api/employe/commandes ou /api/admin/commandes
-     * Récupérer toutes les commandes
+     * Filtres facultatifs : ?statut=livre&client=martin
+     * (client = nom, prénom, e-mail ou numéro de commande).
+     * 400 si un filtre est invalide.
      */
     static async toutesCommandes(req, res) {
         try {
-            const commandes = await CommandeModel.listerToutes();
-            res.json(commandes);
+            const { filtres, erreurs } = validerFiltresCommandes(req.query);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+            const lignes = await CommandeModel.listerPourEmploye(clauseFiltres(filtres));
+            res.json(lignes.map(versResumeEmploye));
         } catch (err) {
             console.error('Erreur toutes commandes :', err);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * GET /api/employe/commandes/:id
+     * Détail d'une commande, quel que soit le client : suivi, avis,
+     * coordonnées du client et statuts suivants possibles.
+     */
+    static async detailEmploye(req, res) {
+        try {
+            const commandeId = idValide(req.params.id);
+            if (commandeId === null) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const ligne = await CommandeModel.trouverPourEmploye(commandeId);
+            if (!ligne) {
+                return res.status(404).json({ error: 'Commande introuvable.' });
+            }
+            const suivi = await CommandeModel.listerSuivi(commandeId);
+            res.json(versCommandeEmploye(ligne, suivi));
+        } catch (err) {
+            console.error('Erreur détail commande (employé) :', err);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }
