@@ -22,4 +22,9 @@ export const EMPLOYE_ROUTES: Routes = [
     loadComponent: () =>
       import('./commandes/detail-commande-employe').then((m) => m.DetailCommandeEmploye),
   },
+  {
+    path: 'avis',
+    title: 'Avis clients — Espace employé — Vite & Gourmand',
+    loadComponent: () => import('./avis/moderation-avis').then((m) => m.ModerationAvis),
+  },
 ];
