@@ -1,0 +1,131 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace employé</p>
+    <h1 class="titre-section">Commandes</h1>
+    <p class="espace__bonjour">
+      Retrouvez les commandes à traiter par statut, ou celles d'un client en particulier.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <!-- Filtres : la liste se met à jour pendant la saisie (pas de bouton à valider) -->
+  <form
+    class="carte filtres-commandes"
+    [formGroup]="formulaire"
+    role="search"
+    aria-label="Filtrer les commandes"
+  >
+    <div class="champ">
+      <label class="champ__label" for="filtre-statut">Statut</label>
+      <select id="filtre-statut" class="champ__saisie" formControlName="statut">
+        <option value="">Tous les statuts</option>
+        @for (statut of statuts; track statut) {
+          <option [value]="statut">{{ libelles[statut] }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="champ filtres-commandes__recherche">
+      <label class="champ__label" for="filtre-client">Client</label>
+      <input
+        id="filtre-client"
+        class="champ__saisie"
+        type="search"
+        formControlName="client"
+        maxlength="100"
+        autocomplete="off"
+        aria-describedby="filtre-client-aide"
+      />
+      <p id="filtre-client-aide" class="champ__aide">Nom, prénom, e-mail ou numéro de commande</p>
+    </div>
+
+    @if (filtresActifs()) {
+      <button
+        type="button"
+        class="btn btn--secondaire filtres-commandes__effacer"
+        (click)="effacerFiltres()"
+      >
+        Effacer les filtres
+      </button>
+    }
+  </form>
+
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Chargement des commandes…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher les commandes. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        </div>
+      </div>
+    }
+
+    @case ('succes') {
+      <!-- Annoncé par les lecteurs d'écran à chaque nouvelle recherche -->
+      <p class="filtres-commandes__resultat" role="status" [attr.aria-busy]="e.actualisation">
+        {{ texteResultats(e.commandes.length, e.filtree) }}
+      </p>
+
+      @if (e.commandes.length > 0) {
+        <ul class="liste-commandes" [class.liste-commandes--actualisation]="e.actualisation">
+          @for (c of e.commandes; track c.commande_id) {
+            <li>
+              <article class="carte commande-ligne">
+                <div class="commande-ligne__entete">
+                  <h2 class="commande-ligne__numero">{{ c.numero_commande }}</h2>
+                  <span [class]="classeBadge(c.statut)">{{ libelles[c.statut] }}</span>
+                </div>
+
+                <dl class="commande-ligne__infos">
+                  <div>
+                    <dt>Client</dt>
+                    <dd>
+                      {{ c.client.prenom }} {{ c.client.nom }}
+                      <span class="commande-ligne__email">{{ c.client.email }}</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Menu</dt>
+                    <dd>{{ c.menu_titre }} · {{ c.nombre_personne }} personnes</dd>
+                  </div>
+                  <div>
+                    <dt>Livraison</dt>
+                    <dd>
+                      {{ dateLongue(c.date_prestation) }} à {{ heureFr(c.heure_livraison) }},
+                      {{ c.ville_prestation }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Total</dt>
+                    <dd class="commande-ligne__total">{{ c.prix_total | prix }}</dd>
+                  </div>
+                </dl>
+
+                <div class="commande-ligne__pied">
+                  @if (c.pret_materiel) {
+                    <span class="badge badge--neutre commande-ligne__materiel">Matériel prêté</span>
+                  }
+                  <a
+                    class="btn btn--primaire"
+                    [routerLink]="['/espace-employe/commandes', c.commande_id]"
+                    [attr.aria-label]="'Gérer la commande ' + c.numero_commande"
+                    >Gérer</a
+                  >
+                </div>
+              </article>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

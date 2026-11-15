@@ -6,6 +6,7 @@ import {
   etapesPossibles,
   filtresDepuisUrl,
   libelleAction,
+  messageSucces,
   memesFiltres,
   peutAnnuler,
   statutAvisDepuisFiltre,
@@ -81,6 +82,15 @@ describe("boutons d'action", () => {
     expect(effetAction('attente_retour_materiel')).toMatch(/10 jours ouvrés.*600 €/);
     expect(effetAction('terminee')).toMatch(/avis/);
     expect(effetAction('accepte')).toBeNull();
+  });
+
+  it('message de réussite, avec le mail quand il y en a un', () => {
+    expect(messageSucces('VG-2026-0013', 'accepte')).toBe(
+      'Commande VG-2026-0013 : statut « Acceptée ».',
+    );
+    expect(messageSucces('VG-2026-0013', 'attente_retour_materiel')).toMatch(/e-mail.*10 jours/);
+    expect(messageSucces('VG-2026-0013', 'terminee')).toMatch(/donner son avis/);
+    expect(messageSucces('VG-2026-0014', 'annulee')).toMatch(/annulée.*remise en vente/);
   });
 
   it("sépare les étapes de l'annulation", () => {

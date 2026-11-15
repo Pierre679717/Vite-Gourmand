@@ -117,6 +117,22 @@ export function effetAction(suivant: StatutCommande): string | null {
   }
 }
 
+/** Message affiché après un changement réussi (le mail part en arrière-plan) */
+export function messageSucces(numero: string, statut: StatutCommande): string {
+  if (statut === 'annulee') {
+    return `Commande ${numero} annulée. L’unité réservée est remise en vente.`;
+  }
+  const base = `Commande ${numero} : statut « ${LIBELLES_STATUT[statut]} ».`;
+  switch (statut) {
+    case 'attente_retour_materiel':
+      return `${base} Un e-mail part vers le client : matériel à restituer sous 10 jours ouvrés.`;
+    case 'terminee':
+      return `${base} Un e-mail invite le client à donner son avis.`;
+    default:
+      return base;
+  }
+}
+
 /** Boutons « avancer » (l'annulation a son propre formulaire) */
 export function etapesPossibles(statutsSuivants: readonly StatutCommande[]): StatutCommande[] {
   return statutsSuivants.filter((statut) => statut !== 'annulee');

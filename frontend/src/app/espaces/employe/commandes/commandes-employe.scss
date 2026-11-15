@@ -1,0 +1,45 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Filtres : empilés sur mobile, sur une ligne sur ordinateur
+.filtres-commandes {
+  display: grid;
+  gap: $espace-4;
+  margin-bottom: $espace-4;
+  padding: $espace-6;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: 16rem minmax(0, 1fr) auto;
+    align-items: start;
+  }
+}
+
+// Le bouton s'aligne sur les champs (sous le libellé)
+.filtres-commandes__effacer {
+  @include a-partir-de($point-tablette) {
+    margin-top: 1.75rem;
+  }
+}
+
+.filtres-commandes__resultat {
+  margin: 0 0 $espace-4;
+  color: $texte-doux;
+  font-weight: 600;
+}
+
+// Pendant une nouvelle recherche, l'ancienne liste reste visible mais estompée
+.liste-commandes--actualisation {
+  opacity: 0.6;
+  transition: opacity $transition;
+}
+
+.commande-ligne__email {
+  display: block;
+  color: $texte-doux;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.commande-ligne__materiel {
+  margin-right: auto;
+}
