@@ -23,4 +23,12 @@ router.put('/menus/:id',         employeRequired, CatalogueController.modifierMe
 router.put('/menus/:id/carte',   employeRequired, CatalogueController.changerCarte);
 router.delete('/menus/:id',      employeRequired, CatalogueController.supprimerMenu);
 
+// Catalogue : plats et allergènes
+router.get('/allergenes',        employeRequired, CatalogueController.listerAllergenes);
+router.get('/plats',             employeRequired, CatalogueController.listerPlats);
+router.get('/plats/:id',         employeRequired, CatalogueController.detailPlat);
+router.post('/plats',            employeRequired, CatalogueController.creerPlat);
+router.put('/plats/:id',         employeRequired, CatalogueController.modifierPlat);
+router.delete('/plats/:id',      employeRequired, CatalogueController.supprimerPlat);
+
 module.exports = router;

@@ -10,7 +10,7 @@
 
 const { CatalogueModel, ErreurCatalogue } = require('../models/catalogue.model');
 const { idValide } = require('../utils/commandeClient');
-const { validerMenu } = require('../utils/validationCatalogue');
+const { validerMenu, validerPlat } = require('../utils/validationCatalogue');
 
 /** Réponse commune aux erreurs : prévue (404/409/400) ou 500 sans détail */
 function repondreErreur(res, err, contexte) {
@@ -119,6 +119,77 @@ class CatalogueController {
             res.json({ message: `Menu « ${titre} » supprimé.` });
         } catch (err) {
             repondreErreur(res, err, 'suppression du menu');
+        }
+    }
+    // -----------------------------------------------------------------
+    // Plats et allergènes
+    // -----------------------------------------------------------------
+
+    /** GET /api/employe/allergenes */
+    static async listerAllergenes(req, res) {
+        try {
+            res.json(await CatalogueModel.listerAllergenes());
+        } catch (err) {
+            repondreErreur(res, err, 'liste des allergènes');
+        }
+    }
+
+    /** GET /api/employe/plats : plats + allergènes + menus qui les utilisent */
+    static async listerPlats(req, res) {
+        try {
+            res.json(await CatalogueModel.listerPlats());
+        } catch (err) {
+            repondreErreur(res, err, 'liste des plats');
+        }
+    }
+
+    /** GET /api/employe/plats/:id : le plat à modifier */
+    static async detailPlat(req, res) {
+        try {
+            const platId = idValide(req.params.id);
+            const plat = platId === null ? null : await CatalogueModel.trouverPlat(platId);
+            if (!plat) return res.status(404).json({ error: 'Plat introuvable.' });
+            res.json(plat);
+        } catch (err) {
+            repondreErreur(res, err, 'détail du plat');
+        }
+    }
+
+    /** POST /api/employe/plats → 201 { message, plat_id } */
+    static async creerPlat(req, res) {
+        try {
+            const { donnees, erreurs } = validerPlat(req.body);
+            if (erreurs.length > 0) return repondreInvalide(res, erreurs);
+            const platId = await CatalogueModel.creerPlat(donnees);
+            res.status(201).json({ message: `Plat « ${donnees.titre} » créé.`, plat_id: platId });
+        } catch (err) {
+            repondreErreur(res, err, 'création du plat');
+        }
+    }
+
+    /** PUT /api/employe/plats/:id → 200 { message } */
+    static async modifierPlat(req, res) {
+        try {
+            const platId = idValide(req.params.id);
+            if (platId === null) return res.status(404).json({ error: 'Plat introuvable.' });
+            const { donnees, erreurs } = validerPlat(req.body);
+            if (erreurs.length > 0) return repondreInvalide(res, erreurs);
+            await CatalogueModel.modifierPlat(platId, donnees);
+            res.json({ message: `Plat « ${donnees.titre} » enregistré.` });
+        } catch (err) {
+            repondreErreur(res, err, 'modification du plat');
+        }
+    }
+
+    /** DELETE /api/employe/plats/:id : seulement s'il n'est dans aucun menu (sinon 409) */
+    static async supprimerPlat(req, res) {
+        try {
+            const platId = idValide(req.params.id);
+            if (platId === null) return res.status(404).json({ error: 'Plat introuvable.' });
+            const titre = await CatalogueModel.supprimerPlat(platId);
+            res.json({ message: `Plat « ${titre} » supprimé.` });
+        } catch (err) {
+            repondreErreur(res, err, 'suppression du plat');
         }
     }
 }

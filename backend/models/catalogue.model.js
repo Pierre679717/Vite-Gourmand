@@ -66,6 +66,18 @@ async function enregistrerPlats(conn, menuId, plats) {
     await conn.query('INSERT INTO menu_plat (menu_id, plat_id) VALUES ?', [plats.map((p) => [menuId, p])]);
 }
 
+/** Remplace les allergènes d'un plat (liste vide = aucun allergène) */
+async function enregistrerAllergenes(conn, platId, allergenes) {
+    await conn.query('DELETE FROM plat_allergene WHERE plat_id = ?', [platId]);
+    if (allergenes.length > 0) {
+        // Un allergène inconnu fait échouer l'INSERT (clé étrangère) → 400, ROLLBACK
+        await conn.query(
+            'INSERT INTO plat_allergene (plat_id, allergene_id) VALUES ?',
+            [allergenes.map((a) => [platId, a])]
+        );
+    }
+}
+
 /** Colonnes d'un menu dans l'ordre de l'INSERT et de l'UPDATE */
 const valeursMenu = (d) => [
     d.titre, d.description, d.conditions, d.nombre_personne_min, d.delai_minimum_jours,
@@ -187,6 +199,106 @@ class CatalogueModel {
             await conn.query('DELETE FROM menu WHERE menu_id = ?', [menuId]);
             return menus[0].titre;
         }, 'Un menu');
+    }
+    // -----------------------------------------------------------------
+    // Plats et allergènes
+    // -----------------------------------------------------------------
+
+    /** Les 14 allergènes à déclaration obligatoire (cases du formulaire) */
+    static async listerAllergenes() {
+        const [rows] = await pool.query('SELECT allergene_id, libelle FROM allergene ORDER BY libelle');
+        return rows;
+    }
+
+    /**
+     * Tous les plats, avec leurs allergènes et les menus qui les utilisent
+     * (un plat présent dans un menu ne peut pas être supprimé).
+     * Trois requêtes simples, assemblées ici, plutôt qu'une jointure
+     * qui répéterait chaque plat autant de fois qu'il a d'allergènes.
+     */
+    static async listerPlats() {
+        const [plats] = await pool.query(
+            `SELECT plat_id, titre, categorie FROM plat
+             ORDER BY FIELD(categorie, 'entree', 'plat', 'dessert'), titre`
+        );
+        const [allergenes] = await pool.query(
+            `SELECT pa.plat_id, a.allergene_id, a.libelle
+             FROM plat_allergene pa JOIN allergene a ON a.allergene_id = pa.allergene_id
+             ORDER BY a.libelle`
+        );
+        const [menus] = await pool.query(
+            `SELECT mp.plat_id, m.menu_id, m.titre
+             FROM menu_plat mp JOIN menu m ON m.menu_id = mp.menu_id
+             ORDER BY m.titre`
+        );
+        return plats.map((p) => ({
+            ...p,
+            allergenes: allergenes.filter((a) => a.plat_id === p.plat_id)
+                .map(({ allergene_id, libelle }) => ({ allergene_id, libelle })),
+            menus: menus.filter((m) => m.plat_id === p.plat_id)
+                .map(({ menu_id, titre }) => ({ menu_id, titre }))
+        }));
+    }
+
+    /** Un plat tel que le formulaire l'édite (identifiants des allergènes), ou null */
+    static async trouverPlat(platId) {
+        const [plats] = await pool.query('SELECT plat_id, titre, categorie FROM plat WHERE plat_id = ?', [platId]);
+        if (plats.length === 0) return null;
+        const [allergenes] = await pool.query(
+            'SELECT allergene_id FROM plat_allergene WHERE plat_id = ? ORDER BY allergene_id',
+            [platId]
+        );
+        return { ...plats[0], allergenes: allergenes.map((a) => a.allergene_id) };
+    }
+
+    /** Nouveau plat + ses allergènes, en une transaction. Renvoie son identifiant */
+    static async creerPlat(donnees) {
+        return enTransaction(async (conn) => {
+            const [resultat] = await conn.query(
+                'INSERT INTO plat (titre, categorie) VALUES (?, ?)',
+                [donnees.titre, donnees.categorie]
+            );
+            await enregistrerAllergenes(conn, resultat.insertId, donnees.allergenes);
+            return resultat.insertId;
+        }, 'Un plat');
+    }
+
+    /** Modifie un plat et remplace ses allergènes */
+    static async modifierPlat(platId, donnees) {
+        return enTransaction(async (conn) => {
+            const [plats] = await conn.query('SELECT plat_id FROM plat WHERE plat_id = ? FOR UPDATE', [platId]);
+            if (plats.length === 0) throw new ErreurCatalogue('Plat introuvable.', 404);
+            await conn.query(
+                'UPDATE plat SET titre = ?, categorie = ? WHERE plat_id = ?',
+                [donnees.titre, donnees.categorie, platId]
+            );
+            await enregistrerAllergenes(conn, platId, donnees.allergenes);
+        }, 'Un plat');
+    }
+
+    /**
+     * Supprime un plat qui n'est dans aucun menu (ses allergènes partent
+     * avec lui : ON DELETE CASCADE). Sinon 409 avec les menus concernés :
+     * un menu affiché ne doit pas perdre un plat sans que l'employé le voie.
+     */
+    static async supprimerPlat(platId) {
+        return enTransaction(async (conn) => {
+            const [plats] = await conn.query('SELECT titre FROM plat WHERE plat_id = ? FOR UPDATE', [platId]);
+            if (plats.length === 0) throw new ErreurCatalogue('Plat introuvable.', 404);
+            const [menus] = await conn.query(
+                `SELECT m.titre FROM menu_plat mp JOIN menu m ON m.menu_id = mp.menu_id
+                 WHERE mp.plat_id = ? ORDER BY m.titre`,
+                [platId]
+            );
+            if (menus.length > 0) {
+                throw new ErreurCatalogue(
+                    `« ${plats[0].titre} » est dans ${menus.length > 1 ? 'les menus' : 'le menu'} `
+                    + `${menus.map((m) => `« ${m.titre} »`).join(', ')} : retirez-le d'abord de `
+                    + `${menus.length > 1 ? 'ces menus' : 'ce menu'}.`, 409);
+            }
+            await conn.query('DELETE FROM plat WHERE plat_id = ?', [platId]);
+            return plats[0].titre;
+        }, 'Un plat');
     }
 }
 
