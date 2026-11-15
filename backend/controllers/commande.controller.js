@@ -15,6 +15,7 @@ const { calculerDistanceLivraison, ErreurDistance } = require('../utils/distance
 const { validerCommande, validerDevis, validerModification, aujourdhuiParis } = require('../utils/validationCommande');
 const { enregistrerStatCommande, mettreAJourStatCommande } = require('../models/statCommande.model');
 const { genererMailConfirmationCommande } = require('../email/templateCommande');
+const { genererMailStatut } = require('../email/templateStatut');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
 const { idValide, versResumeCommande, versCommandeClient } = require('../utils/commandeClient');
 const { STATUTS } = require('../utils/statutsCommande');
@@ -30,6 +31,28 @@ async function envoyerMailConfirmation(commande, destinataire) {
         await transporter.sendMail({ from: EXPEDITEUR, to: destinataire, ...mail });
     } catch (err) {
         console.error(`Mail de confirmation non envoyé (${commande.numero_commande}) :`, err.message);
+    }
+}
+
+/**
+ * Mail au client après un changement de statut (retour de matériel,
+ * commande terminée). Même principe que la confirmation : non bloquant,
+ * le statut est déjà enregistré ; un échec est seulement noté dans la console.
+ * Renvoie true si un mail est parti (utile aux tests).
+ */
+async function envoyerMailStatut(commandeId, resultat) {
+    const mail = genererMailStatut(resultat.statut, {
+        commande_id:     commandeId,
+        numero_commande: resultat.numeroCommande,
+        contact_prenom:  resultat.contactPrenom
+    });
+    if (!mail) return false; // pas de mail pour ce statut
+    try {
+        await transporter.sendMail({ from: EXPEDITEUR, to: resultat.contactEmail, ...mail });
+        return true;
+    } catch (err) {
+        console.error(`Mail « ${resultat.statut} » non envoyé (${resultat.numeroCommande}) :`, err.message);
+        return false;
     }
 }
 
@@ -405,6 +428,8 @@ class CommandeController {
 
             // Non bloquant : MySQL fait foi, MongoDB sert aux statistiques
             mettreAJourStatCommande(commandeId, { statut: resultat.statut });
+            // Sans await : la réponse n'attend pas le serveur de mail
+            envoyerMailStatut(commandeId, resultat);
 
             res.json({
                 message: `Commande ${resultat.numeroCommande} : statut mis à jour.`,
@@ -423,3 +448,4 @@ class CommandeController {
 
 module.exports = CommandeController;
 module.exports.validerChangementStatut = validerChangementStatut;
+module.exports.envoyerMailStatut = envoyerMailStatut;
