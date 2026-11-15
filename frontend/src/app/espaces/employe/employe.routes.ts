@@ -43,4 +43,20 @@ export const EMPLOYE_ROUTES: Routes = [
     title: 'Modifier un menu — Espace employé — Vite & Gourmand',
     loadComponent: () => import('./catalogue/menu-formulaire').then((m) => m.MenuFormulaire),
   },
+  // ---- Catalogue : plats et allergènes ----
+  {
+    path: 'plats',
+    title: 'Plats — Espace employé — Vite & Gourmand',
+    loadComponent: () => import('./catalogue/plats-gestion').then((m) => m.PlatsGestion),
+  },
+  {
+    path: 'plats/nouveau',
+    title: 'Nouveau plat — Espace employé — Vite & Gourmand',
+    loadComponent: () => import('./catalogue/plat-formulaire').then((m) => m.PlatFormulaire),
+  },
+  {
+    path: 'plats/:id',
+    title: 'Modifier un plat — Espace employé — Vite & Gourmand',
+    loadComponent: () => import('./catalogue/plat-formulaire').then((m) => m.PlatFormulaire),
+  },
 ];
