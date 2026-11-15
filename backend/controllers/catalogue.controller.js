@@ -10,7 +10,7 @@
 
 const { CatalogueModel, ErreurCatalogue } = require('../models/catalogue.model');
 const { idValide } = require('../utils/commandeClient');
-const { validerMenu, validerPlat } = require('../utils/validationCatalogue');
+const { validerMenu, validerPlat, validerHoraires } = require('../utils/validationCatalogue');
 
 /** Réponse commune aux erreurs : prévue (404/409/400) ou 500 sans détail */
 function repondreErreur(res, err, contexte) {
@@ -190,6 +190,24 @@ class CatalogueController {
             res.json({ message: `Plat « ${titre} » supprimé.` });
         } catch (err) {
             repondreErreur(res, err, 'suppression du plat');
+        }
+    }
+    // -----------------------------------------------------------------
+    // Horaires (lecture publique : GET /api/horaires)
+    // -----------------------------------------------------------------
+
+    /**
+     * PUT /api/employe/horaires  { horaires: [7 jours] }
+     * → 200 { message, horaires } (la semaine enregistrée, lundi → dimanche)
+     */
+    static async modifierHoraires(req, res) {
+        try {
+            const { donnees, erreurs } = validerHoraires(req.body);
+            if (erreurs.length > 0) return repondreInvalide(res, erreurs);
+            await CatalogueModel.modifierHoraires(donnees);
+            res.json({ message: 'Horaires enregistrés : le pied de page est à jour.', horaires: donnees });
+        } catch (err) {
+            repondreErreur(res, err, 'modification des horaires');
         }
     }
 }

@@ -300,6 +300,25 @@ class CatalogueModel {
             return plats[0].titre;
         }, 'Un plat');
     }
+    // -----------------------------------------------------------------
+    // Horaires
+    // -----------------------------------------------------------------
+
+    /**
+     * Remplace les horaires des 7 jours (déjà validés, dans l'ordre de la
+     * semaine). Une transaction : la semaine affichée dans le pied de page
+     * n'est jamais à moitié modifiée.
+     */
+    static async modifierHoraires(horaires) {
+        return enTransaction(async (conn) => {
+            for (const h of horaires) {
+                await conn.query(
+                    'UPDATE horaire SET heure_ouverture = ?, heure_fermeture = ? WHERE jour = ?',
+                    [h.heure_ouverture, h.heure_fermeture, h.jour]
+                );
+            }
+        }, 'Un horaire');
+    }
 }
 
 module.exports = { CatalogueModel, ErreurCatalogue, enTransaction };

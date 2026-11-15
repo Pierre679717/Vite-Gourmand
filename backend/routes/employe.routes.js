@@ -31,4 +31,7 @@ router.post('/plats',            employeRequired, CatalogueController.creerPlat)
 router.put('/plats/:id',         employeRequired, CatalogueController.modifierPlat);
 router.delete('/plats/:id',      employeRequired, CatalogueController.supprimerPlat);
 
+// Horaires d'ouverture (la lecture reste publique : GET /api/horaires)
+router.put('/horaires',          employeRequired, CatalogueController.modifierHoraires);
+
 module.exports = router;
