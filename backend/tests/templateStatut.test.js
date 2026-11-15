@@ -41,8 +41,8 @@ describe('genererMailStatut', () => {
     test('terminée : invitation à donner son avis, lien vers le suivi de la commande', () => {
         const mail = genererMailStatut('terminee', commande());
         assert.equal(mail.subject, 'Commande VG-2026-0013 terminée — donnez votre avis');
-        assert.match(mail.text, /Donner mon avis : https:\/\/\S+\/espace-utilisateur\/commandes\/13$/m);
-        assert.match(mail.html, /href="https:\/\/[^"]+\/espace-utilisateur\/commandes\/13"/);
+        assert.match(mail.text, /Donner mon avis : https?:\/\/\S+\/espace-utilisateur\/commandes\/13$/m);
+        assert.match(mail.html, /href="https?:\/\/[^"]+\/espace-utilisateur\/commandes\/13"/);
         assert.doesNotMatch(mail.text, /600 €/);
     });
 
@@ -88,5 +88,31 @@ describe('envoyerMailStatut', () => {
         transporter.sendMail = async () => { throw new Error('Invalid login: 535'); };
         assert.equal(await envoyerMailStatut(13, resultat('terminee')), false);
         assert.equal(console.error.mock.callCount(), 1);
+    });
+});
+
+describe('adresse du site dans les liens (FRONTEND_URL)', () => {
+
+    /** Recharge email/templates.js avec une valeur de FRONTEND_URL */
+    function siteAvec(valeur) {
+        const avant = process.env.FRONTEND_URL;
+        if (valeur === undefined) delete process.env.FRONTEND_URL;
+        else process.env.FRONTEND_URL = valeur;
+        delete require.cache[require.resolve('../email/templates')];
+        const { SITE } = require('../email/templates');
+        // Remise en état pour les autres tests
+        if (avant === undefined) delete process.env.FRONTEND_URL;
+        else process.env.FRONTEND_URL = avant;
+        delete require.cache[require.resolve('../email/templates')];
+        require('../email/templates');
+        return SITE;
+    }
+
+    test('en local par défaut : le serveur Angular', () => {
+        assert.equal(siteAvec(undefined), 'http://localhost:4200');
+    });
+
+    test('en production : l\'adresse publique, sans barre finale', () => {
+        assert.equal(siteAvec('https://vite-gourmand.exemple.fr/'), 'https://vite-gourmand.exemple.fr');
     });
 });
