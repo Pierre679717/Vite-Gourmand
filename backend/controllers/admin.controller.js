@@ -15,6 +15,7 @@ const { getStatModel } = require('../config/db.mongo');
 const { validerCompteEmploye } = require('../utils/validationEmploye');
 const { genererMailCompteEmploye } = require('../email/templateCompteEmploye');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
+const { idValide } = require('../utils/commandeClient');
 
 const MESSAGE_EMAIL_PRIS = 'Cet e-mail est déjà utilisé par un autre compte.';
 
@@ -120,6 +121,56 @@ class AdminController {
                 return res.status(409).json({ error: MESSAGE_EMAIL_PRIS });
             }
             console.error('Erreur création employé :', err.message);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * PUT /api/admin/employes/:id/actif  { actif: true | false }
+     * Rendre un compte employé inutilisable (départ de l'entreprise),
+     * ou le réactiver. Rien n'est supprimé : les commandes que l'employé
+     * a fait avancer gardent leur historique (suivi_commande).
+     * - jamais sur son propre compte (403) ;
+     * - jamais sur un administrateur ni sur un client (403) ;
+     * - l'effet est immédiat : le middleware relit le compte à chaque
+     *   requête (voir middleware/auth.middleware.js).
+     */
+    static async changerActifEmploye(req, res) {
+        try {
+            const id = idValide(req.params.id);
+            if (id === null) {
+                return res.status(404).json({ error: 'Employé introuvable.' });
+            }
+            const actif = req.body ? req.body.actif : undefined;
+            if (typeof actif !== 'boolean') {
+                return res.status(400).json({ error: 'Indiquez actif : true ou false.' });
+            }
+            if (id === req.user.id) {
+                return res.status(403).json({ error: 'Vous ne pouvez pas désactiver votre propre compte.' });
+            }
+
+            const compte = await UtilisateurModel.trouverParId(id);
+            if (!compte) {
+                return res.status(404).json({ error: 'Employé introuvable.' });
+            }
+            if (compte.role !== 'employe') {
+                return res.status(403).json({ error: 'Seuls les comptes employés peuvent être désactivés ou réactivés.' });
+            }
+
+            await UtilisateurModel.changerActifEmploye(id, actif);
+
+            const nomComplet = `${compte.prenom} ${compte.nom}`;
+            res.json({
+                message: actif
+                    ? `Le compte de ${nomComplet} est réactivé : il peut de nouveau se connecter.`
+                    : `Le compte de ${nomComplet} est désactivé : il ne peut plus se connecter.`,
+                employe: {
+                    utilisateur_id: compte.utilisateur_id, nom: compte.nom, prenom: compte.prenom,
+                    email: compte.email, actif: actif ? 1 : 0
+                }
+            });
+        } catch (err) {
+            console.error('Erreur activation employé :', err.message);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }

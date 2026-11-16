@@ -119,6 +119,23 @@ class UtilisateurModel {
     }
 
     /**
+     * Activer ou désactiver un compte EMPLOYÉ.
+     * La condition sur le rôle est dans la requête elle-même : même appelée
+     * par erreur avec l'id d'un administrateur ou d'un client, elle ne
+     * modifie rien. Renvoie le nombre de comptes trouvés (0 ou 1).
+     */
+    static async changerActifEmploye(utilisateurId, actif) {
+        const [result] = await pool.query(
+            `UPDATE utilisateur u
+             JOIN role r ON r.role_id = u.role_id
+             SET u.actif = ?
+             WHERE u.utilisateur_id = ? AND r.libelle = 'employe'`,
+            [actif ? 1 : 0, utilisateurId]
+        );
+        return result.affectedRows;
+    }
+
+    /**
      * Compter les comptes clients (rôle utilisateur)
      */
     static async compterClients() {

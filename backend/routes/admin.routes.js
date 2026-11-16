@@ -11,5 +11,6 @@ router.get('/stats',      adminRequired, AdminController.statistiques);
 router.get('/commandes',  adminRequired, CommandeController.toutesCommandes);
 router.get('/employes',   adminRequired, AdminController.listerEmployes);
 router.post('/employes',  adminRequired, AdminController.creerEmploye);
+router.put('/employes/:id/actif', adminRequired, AdminController.changerActifEmploye);
 
 module.exports = router;
