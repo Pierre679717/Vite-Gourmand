@@ -49,7 +49,10 @@ export function texteNombreEmployes(employes: readonly Pick<Employe, 'actif'>[])
   return `${base}, dont ${desactives} désactivé${desactives > 1 ? 's' : ''}.`;
 }
 
-/** Texte de l'encadré de confirmation, selon l'action demandée */
+/**
+ * Texte de l'encadré de confirmation, selon l'action demandée.
+ * Tournures neutres (« ce compte ») : le texte convient à tout le monde.
+ */
 export function texteConfirmation(employe: Employe): {
   titre: string;
   texte: string;
@@ -60,13 +63,13 @@ export function texteConfirmation(employe: Employe): {
     ? {
         titre: `Désactiver le compte de ${nom} ?`,
         texte:
-          'Il ne pourra plus se connecter et perdra aussitôt l’accès à l’espace employé. ' +
-          'Rien n’est supprimé : les commandes qu’il a traitées gardent leur historique.',
+          'Ce compte ne permettra plus de se connecter, et l’accès à l’espace employé est coupé ' +
+          'aussitôt. Rien n’est supprimé : les commandes traitées avec ce compte gardent leur historique.',
         bouton: 'Confirmer la désactivation',
       }
     : {
         titre: `Réactiver le compte de ${nom} ?`,
-        texte: 'Il pourra de nouveau se connecter avec son mot de passe actuel.',
+        texte: 'Ce compte permettra de nouveau de se connecter, avec le même mot de passe.',
         bouton: 'Confirmer la réactivation',
       };
 }

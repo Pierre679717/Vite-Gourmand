@@ -69,6 +69,10 @@ describe('admin-logique : comptes employés', () => {
   it('confirmation adaptée à l’action', () => {
     expect(texteConfirmation(THOMAS).titre).toBe('Désactiver le compte de Thomas Girard ?');
     expect(texteConfirmation(THOMAS).texte).toMatch(/Rien n’est supprimé/);
+    // Tournure neutre : ni « il » ni « elle »
+    for (const e of [THOMAS, { ...THOMAS, actif: 0 }]) {
+      expect(texteConfirmation(e).texte).not.toMatch(/\b(il|elle)\b/i);
+    }
     expect(texteConfirmation({ ...THOMAS, actif: 0 }).bouton).toBe('Confirmer la réactivation');
   });
 });
