@@ -103,7 +103,9 @@ class UtilisateurModel {
     }
 
     /**
-     * Récupérer tous les employés (actifs et désactivés)
+     * Récupérer tous les employés (actifs et désactivés).
+     * Les comptes actifs d'abord, puis par nom : un ancien employé
+     * désactivé ne gêne pas la lecture de la liste.
      */
     static async listerEmployes() {
         const [rows] = await pool.query(
@@ -111,7 +113,7 @@ class UtilisateurModel {
              FROM utilisateur u
              JOIN role r ON r.role_id = u.role_id
              WHERE r.libelle = 'employe'
-             ORDER BY u.nom, u.prenom`
+             ORDER BY u.actif DESC, u.nom, u.prenom`
         );
         return rows;
     }

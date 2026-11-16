@@ -1,5 +1,9 @@
 /* ================================================================
    CONTROLLERS/ADMIN.CONTROLLER.JS
+   Espace administrateur : comptes employés et statistiques
+   ================================================================
+   Toutes ces routes passent par adminRequired (routes/admin.routes.js).
+   L'administrateur a aussi accès à toutes les routes /api/employe.
    ================================================================ */
 
 const bcrypt = require('bcrypt');
@@ -8,7 +12,28 @@ const { CommandeModel } = require('../models/commande.model');
 const MenuModel        = require('../models/menu.model');
 const { pool }         = require('../config/db.mysql');
 const { getStatModel } = require('../config/db.mongo');
-const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
+const { validerCompteEmploye } = require('../utils/validationEmploye');
+const { genererMailCompteEmploye } = require('../email/templateCompteEmploye');
+const { transporter, EXPEDITEUR } = require('../email/mailer');
+
+const MESSAGE_EMAIL_PRIS = 'Cet e-mail est déjà utilisé par un autre compte.';
+
+/**
+ * Envoie le mail « votre compte a été créé » (sans le mot de passe).
+ * Appelée SANS await : le compte est créé même si le serveur de mail
+ * refuse l'envoi (panne, limite Mailtrap) ; l'erreur est notée en console.
+ * Renvoie true si le mail est parti, false sinon (utile aux tests).
+ */
+async function envoyerMailCompteEmploye(employe) {
+    try {
+        const mail = genererMailCompteEmploye({ prenom: employe.prenom, email: employe.email });
+        await transporter.sendMail({ from: EXPEDITEUR, to: employe.email, ...mail });
+        return true;
+    } catch (err) {
+        console.error(`Mail « compte employé » non envoyé (${employe.email}) :`, err.message);
+        return false;
+    }
+}
 
 class AdminController {
 
@@ -45,36 +70,60 @@ class AdminController {
         }
     }
 
+    /**
+     * GET /api/admin/employes
+     * Tous les comptes employés, actifs et désactivés (jamais le mot de passe).
+     */
     static async listerEmployes(req, res) {
         try {
             const employes = await UtilisateurModel.listerEmployes();
             res.json(employes);
         } catch (err) {
+            console.error('Erreur liste employés :', err.message);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }
 
+    /**
+     * POST /api/admin/employes  { nom, prenom, email, mot_de_passe }
+     * - mêmes règles que l'inscription (utils/validationEmploye.js) ;
+     * - le rôle est écrit en dur : 'employe'. Il n'est jamais lu dans la
+     *   requête : aucune route ne permet de créer un administrateur ;
+     * - 409 si l'e-mail (identifiant de connexion) existe déjà ;
+     * - mail sans le mot de passe, envoyé sans bloquer la réponse.
+     */
     static async creerEmploye(req, res) {
         try {
-            const { nom, prenom, email, mot_de_passe } = req.body;
-            if (!nom || !prenom || !email || !mot_de_passe) {
-                return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
+            const { donnees, motDePasse, erreurs } = validerCompteEmploye(req.body);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
             }
-            if (!motDePasseValide(mot_de_passe)) {
-                return res.status(400).json({ error: MESSAGE_MOT_DE_PASSE });
+
+            if (await UtilisateurModel.emailExiste(donnees.email)) {
+                return res.status(409).json({ error: MESSAGE_EMAIL_PRIS });
             }
-            if (await UtilisateurModel.emailExiste(email)) {
-                return res.status(409).json({ error: 'Cet e-mail est déjà utilisé.' });
-            }
-            const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
-            // Téléphone et adresse restent NULL : seuls l'identité, l'e-mail
-            // et le mot de passe sont demandés pour un compte employé.
-            const id = await UtilisateurModel.creer({ nom, prenom, email, motDePasseHash, role: 'employe' });
-            res.status(201).json({ message: 'Employé créé !', id });
+
+            const motDePasseHash = await bcrypt.hash(motDePasse, 10);
+            // Téléphone et adresse restent NULL : ils ne sont pas demandés pour un employé
+            const id = await UtilisateurModel.creer({ ...donnees, motDePasseHash, role: 'employe' });
+
+            const employe = { utilisateur_id: id, ...donnees, actif: 1 };
+            envoyerMailCompteEmploye(employe); // sans await : non bloquant
+
+            res.status(201).json({
+                message: `Compte de ${donnees.prenom} ${donnees.nom} créé. Un mail lui a été envoyé, sans le mot de passe.`,
+                employe
+            });
         } catch (err) {
+            // Deux créations simultanées avec le même e-mail : la contrainte UNIQUE refuse la seconde
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ error: MESSAGE_EMAIL_PRIS });
+            }
+            console.error('Erreur création employé :', err.message);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }
 }
 
 module.exports = AdminController;
+module.exports.envoyerMailCompteEmploye = envoyerMailCompteEmploye;

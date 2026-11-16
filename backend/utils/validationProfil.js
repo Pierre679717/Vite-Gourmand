@@ -59,4 +59,5 @@ function validerProfil(corps = {}) {
     return { donnees, erreurs };
 }
 
-module.exports = { validerProfil };
+// texte et REGEX_EMAIL sont aussi utilisés par utils/validationEmploye.js
+module.exports = { validerProfil, texte, REGEX_EMAIL };
