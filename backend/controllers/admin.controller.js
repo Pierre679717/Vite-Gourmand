@@ -8,10 +8,8 @@
 
 const bcrypt = require('bcrypt');
 const UtilisateurModel = require('../models/utilisateur.model');
-const { CommandeModel } = require('../models/commande.model');
-const MenuModel        = require('../models/menu.model');
-const { pool }         = require('../config/db.mysql');
-const { getStatModel } = require('../config/db.mongo');
+const { statistiquesParMenu } = require('../models/statCommande.model');
+const { validerFiltresStats, totaliser } = require('../utils/filtresStats');
 const { validerCompteEmploye } = require('../utils/validationEmploye');
 const { genererMailCompteEmploye } = require('../email/templateCompteEmploye');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
@@ -38,35 +36,29 @@ async function envoyerMailCompteEmploye(employe) {
 
 class AdminController {
 
+    /**
+     * GET /api/admin/statistiques?menu_id=&debut=AAAA-MM-JJ&fin=AAAA-MM-JJ
+     * Lu dans MongoDB (collection commandes_stats), comme l'exige le sujet :
+     * nombre de commandes par menu (graphique) et chiffre d'affaires par
+     * menu, commandes annulées exclues. Filtres facultatifs.
+     */
     static async statistiques(req, res) {
         try {
-            const totalClients   = await UtilisateurModel.compterClients();
-            const statsCommandes = await CommandeModel.statistiques();
-            const totalMenus     = await MenuModel.compterActifs();
-            // Moyenne calculée sur les avis validés seulement (ceux affichés au public)
-            const [moyenneAvis]  = await pool.query(
-                "SELECT AVG(note) AS moyenne FROM avis WHERE statut = 'valide'"
-            );
-
-            let mongoStats = null;
-            const StatModel = getStatModel();
-            if (StatModel) {
-                mongoStats = {
-                    visites:   await StatModel.countDocuments({ type: 'visite' }),
-                    commandes: await StatModel.countDocuments({ type: 'commande' })
-                };
+            const { filtres, erreur } = validerFiltresStats(req.query);
+            if (erreur) {
+                return res.status(400).json({ error: erreur });
             }
-
+            const lignes = await statistiquesParMenu(filtres);
+            if (lignes === null) {
+                return res.status(503).json({ error: 'Statistiques indisponibles : la base MongoDB n\'est pas connectée.' });
+            }
             res.json({
-                utilisateurs:    totalClients,
-                commandes:       statsCommandes.total,
-                chiffre_affaires: statsCommandes.chiffreAffaires,
-                menus_actifs:    totalMenus,
-                note_moyenne:    moyenneAvis[0].moyenne ? parseFloat(moyenneAvis[0].moyenne).toFixed(1) : 'N/A',
-                mongodb_stats:   mongoStats
+                filtres: { menu_id: filtres.menuId, debut: filtres.debut, fin: filtres.fin },
+                menus: lignes,
+                totaux: totaliser(lignes)
             });
         } catch (err) {
-            console.error('Erreur stats :', err);
+            console.error('Erreur statistiques MongoDB :', err.message);
             res.status(500).json({ error: 'Erreur serveur.' });
         }
     }
