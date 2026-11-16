@@ -1,0 +1,276 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace administrateur</p>
+    <h1 class="titre-section">Employés</h1>
+    <p class="espace__bonjour">
+      Créez les comptes de l'équipe et désactivez ceux des personnes qui quittent l'entreprise.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <div #zoneMessage tabindex="-1" class="catalogue__message" role="status">
+    @if (message(); as m) {
+      <p class="alerte alerte--succes">{{ m }}</p>
+    }
+    @if (erreur(); as m) {
+      <p class="alerte alerte--erreur">{{ m }}</p>
+    }
+  </div>
+
+  <div class="admin-employes">
+    <!-- ======================= Création d'un compte ======================= -->
+    <section aria-labelledby="titre-creation">
+      <h2 id="titre-creation" class="espace__sous-titre">Créer un compte employé</h2>
+      <form
+        class="carte formulaire-catalogue formulaire-employe"
+        [formGroup]="formulaire"
+        (ngSubmit)="creer()"
+        novalidate
+      >
+        <p class="champ__aide">
+          Les champs marqués <span class="champ__obligatoire" aria-hidden="true">*</span
+          ><span class="visuellement-masque">d'un astérisque</span> sont obligatoires. Le compte
+          créé est toujours un compte employé.
+        </p>
+
+        <div class="formulaire-catalogue__ligne">
+          <div class="champ">
+            <label class="champ__label" for="prenom"
+              >Prénom <span class="champ__obligatoire" aria-hidden="true">*</span></label
+            >
+            <input
+              id="prenom"
+              class="champ__saisie"
+              formControlName="prenom"
+              autocomplete="off"
+              maxlength="50"
+              [attr.aria-invalid]="!!erreurChamp('prenom')"
+              [attr.aria-describedby]="erreurChamp('prenom') ? 'prenom-erreur' : null"
+            />
+            @if (erreurChamp('prenom'); as m) {
+              <p id="prenom-erreur" class="champ__erreur">{{ m }}</p>
+            }
+          </div>
+          <div class="champ">
+            <label class="champ__label" for="nom"
+              >Nom <span class="champ__obligatoire" aria-hidden="true">*</span></label
+            >
+            <input
+              id="nom"
+              class="champ__saisie"
+              formControlName="nom"
+              autocomplete="off"
+              maxlength="50"
+              [attr.aria-invalid]="!!erreurChamp('nom')"
+              [attr.aria-describedby]="erreurChamp('nom') ? 'nom-erreur' : null"
+            />
+            @if (erreurChamp('nom'); as m) {
+              <p id="nom-erreur" class="champ__erreur">{{ m }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="champ">
+          <label class="champ__label" for="email"
+            >Adresse e-mail (identifiant de connexion)
+            <span class="champ__obligatoire" aria-hidden="true">*</span></label
+          >
+          <input
+            id="email"
+            class="champ__saisie"
+            type="email"
+            formControlName="email"
+            autocomplete="off"
+            maxlength="100"
+            [attr.aria-invalid]="!!erreurChamp('email')"
+            [attr.aria-describedby]="
+              erreurChamp('email') ? 'email-aide email-erreur' : 'email-aide'
+            "
+          />
+          <p id="email-aide" class="champ__aide">
+            L'employé recevra à cette adresse un mail lui annonçant la création de son compte.
+          </p>
+          @if (erreurChamp('email'); as m) {
+            <p id="email-erreur" class="champ__erreur">{{ m }}</p>
+          }
+        </div>
+
+        <div class="champ">
+          <label class="champ__label" for="mot_de_passe"
+            >Mot de passe <span class="champ__obligatoire" aria-hidden="true">*</span></label
+          >
+          <div class="champ__groupe">
+            <input
+              id="mot_de_passe"
+              class="champ__saisie"
+              [type]="motDePasseVisible() ? 'text' : 'password'"
+              formControlName="mot_de_passe"
+              autocomplete="new-password"
+              [attr.maxlength]="longueurMax"
+              [attr.aria-invalid]="!!erreurChamp('mot_de_passe')"
+              [attr.aria-describedby]="
+                erreurChamp('mot_de_passe')
+                  ? 'mot-de-passe-aide criteres-mot-de-passe mot-de-passe-erreur'
+                  : 'mot-de-passe-aide criteres-mot-de-passe'
+              "
+            />
+            <button
+              class="btn btn--secondaire champ__bouton"
+              type="button"
+              [attr.aria-pressed]="motDePasseVisible()"
+              (click)="motDePasseVisible.set(!motDePasseVisible())"
+            >
+              {{ motDePasseVisible() ? 'Masquer' : 'Afficher' }}
+            </button>
+          </div>
+          <p id="mot-de-passe-aide" class="champ__aide">
+            Notez-le avant de valider : il n'apparaît pas dans le mail, l'employé devra vous le
+            demander.
+          </p>
+          <!-- Liste mise à jour à chaque frappe ; lue par les lecteurs d'écran -->
+          <ul
+            id="criteres-mot-de-passe"
+            class="criteres"
+            [class.criteres--neutre]="!motDePasseSaisi()"
+            aria-live="polite"
+          >
+            @for (critere of criteres(); track critere.libelle) {
+              <li class="criteres__item" [class.criteres__item--ok]="critere.respecte">
+                <span aria-hidden="true">{{ critere.respecte ? '✓' : '✗' }}</span>
+                {{ critere.libelle }}
+                <span class="visuellement-masque">
+                  {{ critere.respecte ? '(respecté)' : '(manquant)' }}
+                </span>
+              </li>
+            }
+          </ul>
+          @if (erreurChamp('mot_de_passe'); as m) {
+            <p id="mot-de-passe-erreur" class="champ__erreur">{{ m }}</p>
+          }
+        </div>
+
+        @if (erreursServeur().length > 0) {
+          <div id="erreurs-serveur" class="alerte alerte--erreur" role="alert" tabindex="-1">
+            <ul>
+              @for (m of erreursServeur(); track m) {
+                <li>{{ m }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="formulaire-catalogue__bas">
+          <button type="submit" class="btn btn--primaire" [disabled]="envoi()">
+            {{ envoi() ? 'Création…' : 'Créer le compte' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ======================= Liste des comptes ======================= -->
+    <section aria-labelledby="titre-comptes">
+      <h2 id="titre-comptes" class="espace__sous-titre">Comptes employés</h2>
+
+      @let e = etat();
+      @switch (e.statut) {
+        @case ('chargement') {
+          <div aria-busy="true">
+            <p class="visuellement-masque" role="status">Chargement des comptes…</p>
+            <div class="espace__squelette" aria-hidden="true"></div>
+          </div>
+        }
+        @case ('erreur') {
+          <div class="alerte alerte--erreur" role="alert">
+            <p>Impossible d'afficher les comptes. {{ e.message }}</p>
+            <div class="alerte__boutons">
+              <button type="button" class="btn btn--primaire" (click)="reessayer()">
+                Réessayer
+              </button>
+            </div>
+          </div>
+        }
+        @case ('succes') {
+          <p class="admin-employes__compte">{{ texteNombreEmployes(e.employes) }}</p>
+          <ul class="catalogue__liste admin-employes__liste">
+            @for (emp of e.employes; track emp.utilisateur_id) {
+              <li>
+                <article
+                  class="carte element"
+                  [class.element--retire]="!estActif(emp)"
+                  [attr.aria-labelledby]="'employe-' + emp.utilisateur_id"
+                >
+                  <header class="element__entete">
+                    <h3 class="element__titre" [id]="'employe-' + emp.utilisateur_id">
+                      {{ nomComplet(emp) }}
+                    </h3>
+                    @if (estActif(emp)) {
+                      <span class="badge badge--statut-en-cours">Actif</span>
+                    } @else {
+                      <span class="badge badge--statut-annulee">Désactivé</span>
+                    }
+                  </header>
+
+                  <dl class="element__infos">
+                    <div>
+                      <dt>Identifiant</dt>
+                      <dd class="admin-employes__email">
+                        <a [href]="'mailto:' + emp.email">{{ emp.email }}</a>
+                      </dd>
+                    </div>
+                  </dl>
+
+                  @if (aConfirmer() === emp.utilisateur_id) {
+                    @let c = texteConfirmation(emp);
+                    <div class="confirmation" (keydown.escape)="annulerChangement(emp)">
+                      <h4 #titreConfirmation class="confirmation__titre" tabindex="-1">
+                        {{ c.titre }}
+                      </h4>
+                      <p>{{ c.texte }}</p>
+                      <div class="confirmation__boutons">
+                        <button
+                          type="button"
+                          [class]="estActif(emp) ? 'btn btn--accent' : 'btn btn--primaire'"
+                          [disabled]="enCours() !== null"
+                          (click)="confirmerChangement(emp)"
+                        >
+                          {{ enCours() === emp.utilisateur_id ? 'Enregistrement…' : c.bouton }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn--secondaire"
+                          (click)="annulerChangement(emp)"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="element__actions">
+                      <button
+                        type="button"
+                        [id]="'activation-' + emp.utilisateur_id"
+                        class="btn btn--secondaire"
+                        [disabled]="enCours() !== null"
+                        [attr.aria-label]="
+                          (estActif(emp) ? 'Désactiver le compte de ' : 'Réactiver le compte de ') +
+                          nomComplet(emp)
+                        "
+                        (click)="demanderChangement(emp)"
+                      >
+                        {{ estActif(emp) ? 'Désactiver…' : 'Réactiver…' }}
+                      </button>
+                    </div>
+                  }
+                </article>
+              </li>
+            } @empty {
+              <li class="espace__vide">
+                <p>Aucun compte employé. Créez le premier avec le formulaire.</p>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  </div>
+</section>

@@ -1,17 +1,42 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 
 /**
  * Onglets de l'espace employé : commandes, avis, puis le catalogue
  * (menus, plats, horaires). Même style que les onglets de l'espace client.
  * Un onglet reste actif sur ses sous-pages (/commandes/13, /menus/nouveau).
+ *
+ * L'administrateur fait tout ce que fait un employé (exigence du sujet) :
+ * il voit ces mêmes onglets, précédés de ses deux onglets à lui
+ * (Statistiques, Employés). Une seule barre, les pages employé ne sont
+ * pas recopiées : elles sont réutilisées telles quelles.
  */
 @Component({
   selector: 'app-employe-nav',
   imports: [RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <nav class="espace-nav" aria-label="Espace employé">
+    <nav
+      class="espace-nav"
+      [attr.aria-label]="estAdmin() ? 'Espace administrateur' : 'Espace employé'"
+    >
+      @if (estAdmin()) {
+        <a
+          class="espace-nav__lien"
+          routerLink="/espace-admin/statistiques"
+          routerLinkActive="espace-nav__lien--actif"
+          ariaCurrentWhenActive="page"
+          >Statistiques</a
+        >
+        <a
+          class="espace-nav__lien"
+          routerLink="/espace-admin/employes"
+          routerLinkActive="espace-nav__lien--actif"
+          ariaCurrentWhenActive="page"
+          >Employés</a
+        >
+      }
       <a
         class="espace-nav__lien"
         routerLink="/espace-employe/commandes"
@@ -53,7 +78,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     @use 'variables' as *;
     @use 'mixins' as *;
 
-    // flex-wrap : 5 onglets passent sur deux lignes sur mobile (390 px)
+    // flex-wrap : les onglets (5, ou 7 pour l'admin) passent sur plusieurs lignes sur mobile
     .espace-nav {
       display: flex;
       flex-wrap: wrap;
@@ -83,4 +108,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     }
   `,
 })
-export class EmployeNav {}
+export class EmployeNav {
+  private readonly auth = inject(AuthService);
+  protected readonly estAdmin = computed(() => this.auth.utilisateur()?.role === 'administrateur');
+}

@@ -14,6 +14,7 @@
    ================================================================ */
 
 const mongoose = require('mongoose');
+const { construirePipeline } = require('../utils/filtresStats');
 
 const statCommandeSchema = new mongoose.Schema(
     {
@@ -89,4 +90,20 @@ async function mettreAJourStatCommande(commandeId, modifications) {
     }
 }
 
-module.exports = { StatCommande, enregistrerStatCommande, mettreAJourStatCommande, CHAMPS_MODIFIABLES };
+/**
+ * Nombre de commandes et chiffre d'affaires par menu (espace administrateur).
+ * La requête d'agrégation est fabriquée par utils/filtresStats.js.
+ * Renvoie null si MongoDB n'est pas connecté : le contrôleur répond 503.
+ * Ici, une erreur est remontée (contrairement à l'enregistrement) :
+ * l'administrateur doit savoir que les chiffres n'ont pas pu être lus.
+ */
+async function statistiquesParMenu(filtres) {
+    if (mongoose.connection.readyState !== 1) {
+        return null;
+    }
+    return StatCommande.aggregate(construirePipeline(filtres));
+}
+
+module.exports = {
+    StatCommande, enregistrerStatCommande, mettreAJourStatCommande, statistiquesParMenu, CHAMPS_MODIFIABLES
+};

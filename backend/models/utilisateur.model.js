@@ -103,7 +103,9 @@ class UtilisateurModel {
     }
 
     /**
-     * Récupérer tous les employés (actifs et désactivés)
+     * Récupérer tous les employés (actifs et désactivés).
+     * Les comptes actifs d'abord, puis par nom : un ancien employé
+     * désactivé ne gêne pas la lecture de la liste.
      */
     static async listerEmployes() {
         const [rows] = await pool.query(
@@ -111,9 +113,26 @@ class UtilisateurModel {
              FROM utilisateur u
              JOIN role r ON r.role_id = u.role_id
              WHERE r.libelle = 'employe'
-             ORDER BY u.nom, u.prenom`
+             ORDER BY u.actif DESC, u.nom, u.prenom`
         );
         return rows;
+    }
+
+    /**
+     * Activer ou désactiver un compte EMPLOYÉ.
+     * La condition sur le rôle est dans la requête elle-même : même appelée
+     * par erreur avec l'id d'un administrateur ou d'un client, elle ne
+     * modifie rien. Renvoie le nombre de comptes trouvés (0 ou 1).
+     */
+    static async changerActifEmploye(utilisateurId, actif) {
+        const [result] = await pool.query(
+            `UPDATE utilisateur u
+             JOIN role r ON r.role_id = u.role_id
+             SET u.actif = ?
+             WHERE u.utilisateur_id = ? AND r.libelle = 'employe'`,
+            [actif ? 1 : 0, utilisateurId]
+        );
+        return result.affectedRows;
     }
 
     /**
