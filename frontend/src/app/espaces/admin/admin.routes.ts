@@ -7,8 +7,15 @@ import { Routes } from '@angular/router';
  * les pages de l'espace employé (/espace-employe/...), qui lui sont ouvertes.
  */
 export const ADMIN_ROUTES: Routes = [
-  // /espace-admin mène à la gestion des employés (lien « Mon espace » du header)
-  { path: '', pathMatch: 'full', redirectTo: 'employes' },
+  // /espace-admin mène aux statistiques (lien « Mon espace » du header)
+  { path: '', pathMatch: 'full', redirectTo: 'statistiques' },
+  {
+    // Filtres dans l'URL : /espace-admin/statistiques?menu_id=2&debut=2026-10-01&fin=2026-10-31
+    path: 'statistiques',
+    title: 'Statistiques — Espace administrateur — Vite & Gourmand',
+    loadComponent: () =>
+      import('./statistiques/statistiques-admin').then((m) => m.StatistiquesAdmin),
+  },
   {
     path: 'employes',
     title: 'Employés — Espace administrateur — Vite & Gourmand',

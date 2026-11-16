@@ -9,7 +9,7 @@ import { AuthService } from '../../core/auth/auth.service';
  *
  * L'administrateur fait tout ce que fait un employé (exigence du sujet) :
  * il voit ces mêmes onglets, précédés de ses deux onglets à lui
- * (Employés ; Statistiques au commit suivant). Une seule barre, les pages employé ne sont
+ * (Statistiques, Employés). Une seule barre, les pages employé ne sont
  * pas recopiées : elles sont réutilisées telles quelles.
  */
 @Component({
@@ -22,6 +22,13 @@ import { AuthService } from '../../core/auth/auth.service';
       [attr.aria-label]="estAdmin() ? 'Espace administrateur' : 'Espace employé'"
     >
       @if (estAdmin()) {
+        <a
+          class="espace-nav__lien"
+          routerLink="/espace-admin/statistiques"
+          routerLinkActive="espace-nav__lien--actif"
+          ariaCurrentWhenActive="page"
+          >Statistiques</a
+        >
         <a
           class="espace-nav__lien"
           routerLink="/espace-admin/employes"

@@ -25,13 +25,13 @@ describe('EmployeNav', () => {
     });
   });
 
-  it('administrateur : son onglet Employés, puis tout l’espace employé', () => {
+  it('administrateur : ses 2 onglets, puis tout l’espace employé', () => {
     localStorage.setItem(
       'vg_token',
       fauxToken({ ...HELENE_EMPLOYEE, id: 1, role: 'administrateur' }),
     );
     expect(onglets()).toEqual({
-      libelle: 'Employés · Commandes · Avis clients · Menus · Plats · Horaires',
+      libelle: 'Statistiques · Employés · Commandes · Avis clients · Menus · Plats · Horaires',
       nav: 'Espace administrateur',
     });
   });

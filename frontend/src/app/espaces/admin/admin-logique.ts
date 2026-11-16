@@ -206,3 +206,21 @@ export function partDuTotal(valeur: number, total: number): string {
   if (total <= 0) return '—';
   return `${Math.round((valeur / total) * 100)} %`;
 }
+
+/**
+ * Coupe un titre de menu en lignes d'au plus `max` caractères, aux espaces,
+ * pour l'axe du graphique (Chart.js accepte un tableau de lignes).
+ * Un mot plus long que `max` reste entier sur sa ligne.
+ */
+export function couperLibelle(texte: string, max: number): string[] {
+  const lignes: string[] = [];
+  for (const mot of texte.trim().split(/\s+/)) {
+    const derniere = lignes.at(-1);
+    if (derniere !== undefined && `${derniere} ${mot}`.length <= max) {
+      lignes[lignes.length - 1] = `${derniere} ${mot}`;
+    } else {
+      lignes.push(mot);
+    }
+  }
+  return lignes;
+}

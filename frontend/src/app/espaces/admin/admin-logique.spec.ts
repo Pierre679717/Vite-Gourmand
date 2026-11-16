@@ -1,6 +1,7 @@
 import { FormControl, FormGroup } from '@angular/forms';
 import { StatMenu } from '../../core/models/admin';
 import {
+  couperLibelle,
   dateFr,
   dateValide,
   descriptionGraphique,
@@ -156,5 +157,14 @@ describe('admin-logique : statistiques', () => {
   it('part du chiffre d’affaires', () => {
     expect(partDuTotal(1500, 2700)).toBe('56 %');
     expect(partDuTotal(0, 0)).toBe('—');
+  });
+
+  it('titres longs coupés en lignes pour l’axe du graphique', () => {
+    expect(couperLibelle('Menu Végétarien du Marché', 18)).toEqual([
+      'Menu Végétarien du',
+      'Marché',
+    ]);
+    expect(couperLibelle('Brunch', 18)).toEqual(['Brunch']);
+    expect(couperLibelle('Anticonstitutionnellement', 10)).toEqual(['Anticonstitutionnellement']);
   });
 });

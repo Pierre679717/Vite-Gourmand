@@ -56,18 +56,16 @@ describe('EmployesAdmin', () => {
     page = fixture.nativeElement;
     fixture.detectChanges();
     await fixture.whenStable();
-    http
-      .expectOne('/api/admin/employes')
-      .flush([
-        employe(),
-        employe({
-          utilisateur_id: 6,
-          prenom: 'Julie',
-          nom: 'Petit',
-          email: 'julie@vg.fr',
-          actif: 0,
-        }),
-      ]);
+    http.expectOne('/api/admin/employes').flush([
+      employe(),
+      employe({
+        utilisateur_id: 6,
+        prenom: 'Julie',
+        nom: 'Petit',
+        email: 'julie@vg.fr',
+        actif: 0,
+      }),
+    ]);
     await rendre();
   });
 
