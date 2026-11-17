@@ -10,6 +10,7 @@ verifierConfigJwt();
 
 const express = require('express');
 const cors    = require('cors');
+const { enTetesSecurite, optionsCors, enProduction } = require('./config/securite');
 const path    = require('path');
 const fs      = require('fs');
 
@@ -45,15 +46,22 @@ const indexFile    = path.join(frontendPath, 'index.html');
 /* ================================================================
    MIDDLEWARES GLOBAUX
    ================================================================ */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// En production (Railway), les requêtes passent par UN proxy : Express lit
+// alors la vraie IP du visiteur dans X-Forwarded-For (limitation des tentatives)
+if (enProduction()) {
+    app.set('trust proxy', 1);
+}
 
-// Configuration CORS — autorise le front à envoyer le header Authorization
-app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// En-têtes de sécurité (CSP, anti-iframe, no-referrer, HSTS...) : config/securite.js
+// Placé en premier : ils s'appliquent aussi aux fichiers du site et aux erreurs.
+app.use(enTetesSecurite());
+
+// Taille des corps JSON limitée (100 ko, valeur explicite) : pas de requête géante
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+
+// CORS : en production, seule l'adresse FRONTEND_URL est acceptée (jamais « * »)
+app.use(cors(optionsCors()));
 
 // Fichiers du build (JS, CSS, images, polices).
 // Leurs noms contiennent une empreinte (main-M5JGVSHK.js) qui change à chaque
