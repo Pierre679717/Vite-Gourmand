@@ -5,3 +5,9 @@
 .zone-message:focus {
   outline: none;
 }
+
+// Erreurs du serveur sur le mot de passe (une par ligne)
+.liste-erreurs {
+  margin: 0;
+  padding-left: 1.25rem;
+}

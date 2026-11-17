@@ -22,6 +22,8 @@ export class Connexion {
   /** Paramètres d'URL, reçus grâce à withComponentInputBinding() */
   readonly retour = input<string>();
   readonly inscription = input<string>();
+  /** ?motDePasse=modifie : retour de la page « Nouveau mot de passe » */
+  readonly motDePasse = input<string>();
 
   protected readonly formulaire = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
