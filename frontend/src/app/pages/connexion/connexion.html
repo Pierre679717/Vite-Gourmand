@@ -7,6 +7,11 @@
         Votre compte a bien été créé. Vous pouvez maintenant vous connecter.
       </p>
     }
+    @if (motDePasse() === 'modifie') {
+      <p class="alerte alerte--succes" role="status">
+        Votre mot de passe a été modifié. Connectez-vous avec votre nouveau mot de passe.
+      </p>
+    }
     @if (erreur(); as message) {
       <p class="alerte alerte--erreur" role="alert">{{ message }}</p>
     }

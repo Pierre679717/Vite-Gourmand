@@ -60,6 +60,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/mot-de-passe-oublie/mot-de-passe-oublie').then((m) => m.MotDePasseOublie),
   },
+  {
+    // Lien reçu par e-mail (?token=...). Pas de visiteurGuard : le lien doit
+    // fonctionner même si un autre compte est connecté dans ce navigateur.
+    path: 'nouveau-mot-de-passe',
+    title: 'Nouveau mot de passe — Vite & Gourmand',
+    loadComponent: () =>
+      import('./pages/nouveau-mot-de-passe/nouveau-mot-de-passe').then((m) => m.NouveauMotDePasse),
+  },
 
   // Espaces réservés : le guard vérifie le rôle avant même de télécharger le code
   {
