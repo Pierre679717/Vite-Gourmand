@@ -200,11 +200,15 @@
       <!-- Erreur ou aucun avis : un message sobre plutôt qu'une section vide -->
       <p class="message-doux">Les avis de nos clients seront bientôt affichés ici.</p>
     } @else {
-      <ul class="defilement">
+      <!-- tabindex="0" : sur mobile, la liste défile à l'horizontale ; sans élément
+           focusable à l'intérieur, il faut pouvoir la prendre au clavier (flèches) -->
+      <ul class="defilement" tabindex="0" aria-labelledby="titre-avis">
         @for (unAvis of listeAvis; track unAvis.avis_id) {
           <li>
             <figure class="carte avis">
-              <p class="etoiles" [attr.aria-label]="'Note : ' + unAvis.note + ' sur 5'">
+              <!-- aria-label est interdit sur un <p> : la note est donnée en texte masqué -->
+              <p class="etoiles">
+                <span class="visuellement-masque">Note : {{ unAvis.note }} sur 5</span>
                 @for (pleine of etoiles(unAvis.note); track $index) {
                   <span aria-hidden="true">{{ pleine ? '★' : '☆' }}</span>
                 }

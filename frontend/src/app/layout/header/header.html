@@ -1,7 +1,10 @@
 <header class="entete">
   <div class="conteneur entete__barre">
-    <a class="entete__logo" routerLink="/" aria-label="Vite et Gourmand, retour à l'accueil">
-      Vite <span class="entete__esperluette" aria-hidden="true">&amp;</span> Gourmand
+    <!-- Nom accessible = texte visible + précision masquée (WCAG 2.5.3 : commande vocale) -->
+    <a class="entete__logo" routerLink="/">
+      Vite <span class="entete__esperluette">&amp;</span> Gourmand<span class="visuellement-masque"
+        >, retour à l'accueil</span
+      >
     </a>
 
     <!-- Bouton burger : visible uniquement sur mobile -->

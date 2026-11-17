@@ -337,6 +337,11 @@
 
   &__lignes {
     margin: $espace-4 0 0;
+
+    // 2e liste, après le message sur la réduction
+    &--suite {
+      margin-top: 0;
+    }
   }
 
   &__ligne {
