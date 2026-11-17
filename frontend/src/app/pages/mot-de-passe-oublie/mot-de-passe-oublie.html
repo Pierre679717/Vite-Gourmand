@@ -2,12 +2,26 @@
   <div class="formulaire-page">
     <h1 class="titre-section">Mot de passe oublié</h1>
 
-    @if (demandeEnvoyee()) {
-      <p class="alerte alerte--succes" role="status">
-        La réinitialisation par e-mail sera bientôt disponible. En attendant, contactez-nous et nous
-        vous aiderons à retrouver l'accès à votre compte.
-      </p>
-      <a class="btn btn--primaire" routerLink="/contact">Nous contacter</a>
+    <!-- Zone qui reçoit le focus après l'envoi : le message est lu tout de suite -->
+    <div #zoneMessage tabindex="-1" class="zone-message">
+      @if (etat().statut === 'envoye') {
+        <p class="alerte alerte--succes" role="status">{{ message() }}</p>
+        <p>
+          Pensez à regarder dans vos courriers indésirables. Sans nouvelles d'ici quelques minutes,
+          vérifiez l'adresse saisie et faites une nouvelle demande.
+        </p>
+      } @else if (etat().statut === 'erreur') {
+        <p class="alerte alerte--erreur" role="alert">{{ message() }}</p>
+      }
+    </div>
+
+    @if (etat().statut === 'envoye') {
+      <div class="alerte__boutons">
+        <a class="btn btn--primaire" routerLink="/connexion">Retour à la connexion</a>
+        <button class="btn btn--secondaire" type="button" (click)="recommencer()">
+          Faire une nouvelle demande
+        </button>
+      </div>
     } @else {
       <p>
         Saisissez l'adresse e-mail de votre compte : vous recevrez un lien pour choisir un nouveau
@@ -18,21 +32,38 @@
         <div class="champ">
           <label class="champ__label" for="email">Adresse e-mail</label>
           <input
+            #champEmail
             id="email"
             class="champ__saisie"
             type="email"
             formControlName="email"
             autocomplete="email"
+            aria-describedby="email-erreur"
+            [attr.aria-invalid]="
+              formulaire.controls.email.touched && formulaire.controls.email.invalid
+            "
           />
           @if (formulaire.controls.email.touched && formulaire.controls.email.invalid) {
-            <p class="champ__erreur">Saisissez une adresse e-mail valide.</p>
+            <p id="email-erreur" class="champ__erreur">
+              @if (formulaire.controls.email.hasError('required')) {
+                L'adresse e-mail est obligatoire.
+              } @else {
+                L'adresse e-mail n'est pas valide (exemple : nom&#64;domaine.fr).
+              }
+            </p>
           }
         </div>
 
-        <button class="btn btn--primaire btn--bloc" type="submit">Envoyer le lien</button>
+        <button
+          class="btn btn--primaire btn--bloc"
+          type="submit"
+          [disabled]="etat().statut === 'envoi'"
+        >
+          {{ etat().statut === 'envoi' ? 'Envoi en cours…' : 'Recevoir le lien' }}
+        </button>
       </form>
-    }
 
-    <p class="formulaire-page__bas"><a routerLink="/connexion">Retour à la connexion</a></p>
+      <p class="formulaire-page__bas"><a routerLink="/connexion">Retour à la connexion</a></p>
+    }
   </div>
 </section>

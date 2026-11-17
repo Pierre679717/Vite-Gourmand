@@ -1,0 +1,7 @@
+// Styles communs aux pages « Mot de passe oublié » et « Nouveau mot de passe »
+
+// Zone qui reçoit le focus après un envoi : pas de cadre de focus autour
+// d'un texte (le focus sert seulement à faire lire le message)
+.zone-message:focus {
+  outline: none;
+}
