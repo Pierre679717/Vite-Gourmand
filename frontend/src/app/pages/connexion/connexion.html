@@ -25,9 +25,10 @@
           type="email"
           formControlName="email"
           autocomplete="email"
-          aria-describedby="email-erreur"
+          [attr.aria-invalid]="aUneErreur('email')"
+          [attr.aria-describedby]="aUneErreur('email') ? 'email-erreur' : null"
         />
-        @if (formulaire.controls.email.touched && formulaire.controls.email.invalid) {
+        @if (aUneErreur('email')) {
           <p id="email-erreur" class="champ__erreur">
             @if (formulaire.controls.email.hasError('required')) {
               L'adresse e-mail est obligatoire.
@@ -47,7 +48,8 @@
             [type]="motDePasseVisible() ? 'text' : 'password'"
             formControlName="mot_de_passe"
             autocomplete="current-password"
-            aria-describedby="mot_de_passe-erreur"
+            [attr.aria-invalid]="aUneErreur('mot_de_passe')"
+            [attr.aria-describedby]="aUneErreur('mot_de_passe') ? 'mot_de_passe-erreur' : null"
           />
           <button
             class="btn btn--secondaire champ__bouton"
@@ -58,7 +60,7 @@
             {{ motDePasseVisible() ? 'Masquer' : 'Afficher' }}
           </button>
         </div>
-        @if (formulaire.controls.mot_de_passe.touched && formulaire.controls.mot_de_passe.invalid) {
+        @if (aUneErreur('mot_de_passe')) {
           <p id="mot_de_passe-erreur" class="champ__erreur">Le mot de passe est obligatoire.</p>
         }
       </div>

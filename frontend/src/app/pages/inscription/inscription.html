@@ -10,6 +10,8 @@
       <p class="alerte alerte--erreur" role="alert">{{ message }}</p>
     }
 
+    <!-- Erreurs : reliées à leur champ (aria-describedby), champ marqué aria-invalid,
+         et focus placé sur le premier champ à corriger (RGAA 11.10) -->
     <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="envoyer()" novalidate>
       <fieldset class="formulaire__groupe">
         <legend class="formulaire__legende">Vos informations</legend>
@@ -24,9 +26,11 @@
               class="champ__saisie"
               formControlName="prenom"
               autocomplete="given-name"
+              [attr.aria-invalid]="aUneErreur('prenom')"
+              [attr.aria-describedby]="aUneErreur('prenom') ? 'prenom-erreur' : null"
             />
             @if (aUneErreur('prenom')) {
-              <p class="champ__erreur">Le prénom est obligatoire.</p>
+              <p id="prenom-erreur" class="champ__erreur">Le prénom est obligatoire.</p>
             }
           </div>
           <div class="champ">
@@ -38,9 +42,11 @@
               class="champ__saisie"
               formControlName="nom"
               autocomplete="family-name"
+              [attr.aria-invalid]="aUneErreur('nom')"
+              [attr.aria-describedby]="aUneErreur('nom') ? 'nom-erreur' : null"
             />
             @if (aUneErreur('nom')) {
-              <p class="champ__erreur">Le nom est obligatoire.</p>
+              <p id="nom-erreur" class="champ__erreur">Le nom est obligatoire.</p>
             }
           </div>
         </div>
@@ -56,9 +62,11 @@
               type="email"
               formControlName="email"
               autocomplete="email"
+              [attr.aria-invalid]="aUneErreur('email')"
+              [attr.aria-describedby]="aUneErreur('email') ? 'email-erreur' : null"
             />
             @if (aUneErreur('email')) {
-              <p class="champ__erreur">
+              <p id="email-erreur" class="champ__erreur">
                 Saisissez une adresse e-mail valide (exemple : nom&#64;domaine.fr).
               </p>
             }
@@ -73,11 +81,16 @@
               type="tel"
               formControlName="telephone"
               autocomplete="tel-national"
-              aria-describedby="telephone-aide"
+              [attr.aria-describedby]="
+                aUneErreur('telephone') ? 'telephone-aide telephone-erreur' : 'telephone-aide'
+              "
+              [attr.aria-invalid]="aUneErreur('telephone')"
             />
             <p id="telephone-aide" class="champ__aide">10 chiffres, exemple : 06 12 34 56 78</p>
             @if (aUneErreur('telephone')) {
-              <p class="champ__erreur">Le numéro doit contenir 10 chiffres et commencer par 0.</p>
+              <p id="telephone-erreur" class="champ__erreur">
+                Le numéro doit contenir 10 chiffres et commencer par 0.
+              </p>
             }
           </div>
         </div>
@@ -95,9 +108,13 @@
             class="champ__saisie"
             formControlName="adresse_postale"
             autocomplete="street-address"
+            [attr.aria-invalid]="aUneErreur('adresse_postale')"
+            [attr.aria-describedby]="
+              aUneErreur('adresse_postale') ? 'adresse_postale-erreur' : null
+            "
           />
           @if (aUneErreur('adresse_postale')) {
-            <p class="champ__erreur">L'adresse est obligatoire.</p>
+            <p id="adresse_postale-erreur" class="champ__erreur">L'adresse est obligatoire.</p>
           }
         </div>
 
@@ -113,9 +130,13 @@
               inputmode="numeric"
               maxlength="5"
               autocomplete="postal-code"
+              [attr.aria-invalid]="aUneErreur('code_postal')"
+              [attr.aria-describedby]="aUneErreur('code_postal') ? 'code_postal-erreur' : null"
             />
             @if (aUneErreur('code_postal')) {
-              <p class="champ__erreur">Le code postal contient 5 chiffres.</p>
+              <p id="code_postal-erreur" class="champ__erreur">
+                Le code postal contient 5 chiffres.
+              </p>
             }
           </div>
           <div class="champ">
@@ -127,9 +148,11 @@
               class="champ__saisie"
               formControlName="ville"
               autocomplete="address-level2"
+              [attr.aria-invalid]="aUneErreur('ville')"
+              [attr.aria-describedby]="aUneErreur('ville') ? 'ville-erreur' : null"
             />
             @if (aUneErreur('ville')) {
-              <p class="champ__erreur">La ville est obligatoire.</p>
+              <p id="ville-erreur" class="champ__erreur">La ville est obligatoire.</p>
             }
           </div>
         </div>
@@ -149,7 +172,12 @@
             formControlName="mot_de_passe"
             autocomplete="new-password"
             [attr.maxlength]="longueurMax"
-            aria-describedby="criteres-mot-de-passe"
+            [attr.aria-describedby]="
+              aUneErreur('mot_de_passe')
+                ? 'criteres-mot-de-passe mot_de_passe-erreur'
+                : 'criteres-mot-de-passe'
+            "
+            [attr.aria-invalid]="aUneErreur('mot_de_passe')"
           />
           <!-- Liste mise à jour à chaque frappe ; lue par les lecteurs d'écran -->
           <ul
@@ -169,7 +197,7 @@
             }
           </ul>
           @if (aUneErreur('mot_de_passe')) {
-            <p class="champ__erreur">
+            <p id="mot_de_passe-erreur" class="champ__erreur">
               @if (c.mot_de_passe.hasError('required')) {
                 Le mot de passe est obligatoire.
               } @else {
@@ -189,11 +217,15 @@
             type="password"
             formControlName="confirmation"
             autocomplete="new-password"
+            [attr.aria-invalid]="erreurConfirmation()"
+            [attr.aria-describedby]="erreurConfirmation() ? 'confirmation-erreur' : null"
           />
           @if (confirmationDifferente()) {
-            <p class="champ__erreur">Les deux mots de passe ne sont pas identiques.</p>
+            <p id="confirmation-erreur" class="champ__erreur">
+              Les deux mots de passe ne sont pas identiques.
+            </p>
           } @else if (aUneErreur('confirmation')) {
-            <p class="champ__erreur">Confirmez votre mot de passe.</p>
+            <p id="confirmation-erreur" class="champ__erreur">Confirmez votre mot de passe.</p>
           }
         </div>
       </fieldset>

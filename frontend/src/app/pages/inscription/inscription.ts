@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -25,6 +34,8 @@ import { champsProfil, versDonneesProfil } from '../../core/validators/profil.va
 export class Inscription {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
+  private readonly hote = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly longueurMax = LONGUEUR_MAX_MOT_DE_PASSE;
 
@@ -64,9 +75,16 @@ export class Inscription {
     return this.c.confirmation.touched && this.formulaire.hasError('confirmationDifferente');
   }
 
+  /** Confirmation à signaler : vide, ou différente du mot de passe */
+  protected erreurConfirmation(): boolean {
+    return this.aUneErreur('confirmation') || this.confirmationDifferente();
+  }
+
   protected envoyer(): void {
     if (this.formulaire.invalid) {
       this.formulaire.markAllAsTouched();
+      // Après l'affichage des messages : focus sur le premier champ à corriger
+      afterNextRender(() => this.focusPremiereErreur(), { injector: this.injector });
       return;
     }
     this.envoiEnCours.set(true);
@@ -82,5 +100,18 @@ export class Inscription {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
     });
+  }
+
+  /**
+   * Premier champ en erreur, dans l'ordre du formulaire. Si seuls les deux mots
+   * de passe diffèrent (erreur portée par le formulaire, pas par un champ),
+   * c'est la confirmation qui reçoit le focus.
+   */
+  private focusPremiereErreur(): void {
+    const formulaire = this.hote.nativeElement;
+    const champ =
+      formulaire.querySelector<HTMLElement>('input.ng-invalid[id]') ??
+      formulaire.querySelector<HTMLElement>('#confirmation');
+    champ?.focus();
   }
 }

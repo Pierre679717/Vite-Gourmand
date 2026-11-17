@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -18,6 +27,8 @@ import { messageErreur } from '../../core/http/message-erreur';
 export class Connexion {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
+  private readonly hote = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Paramètres d'URL, reçus grâce à withComponentInputBinding() */
   readonly retour = input<string>();
@@ -34,10 +45,21 @@ export class Connexion {
   protected readonly erreur = signal<string | null>(null);
   protected readonly motDePasseVisible = signal(false);
 
+  /** Erreur à afficher sous un champ : seulement après que l'utilisateur l'a quitté */
+  protected aUneErreur(champ: 'email' | 'mot_de_passe'): boolean {
+    const controle = this.formulaire.controls[champ];
+    return controle.touched && controle.invalid;
+  }
+
   protected envoyer(): void {
     if (this.formulaire.invalid) {
-      // Affiche les erreurs de tous les champs, même ceux pas encore visités
+      // Affiche les erreurs de tous les champs, même ceux pas encore visités,
+      // puis place le focus sur le premier champ à corriger (RGAA 11.10)
       this.formulaire.markAllAsTouched();
+      afterNextRender(
+        () => this.hote.nativeElement.querySelector<HTMLElement>('input.ng-invalid[id]')?.focus(),
+        { injector: this.injector },
+      );
       return;
     }
     this.envoiEnCours.set(true);
