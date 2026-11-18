@@ -2,17 +2,12 @@
    CONTROLLERS/AUTH.CONTROLLER.JS
    Authentification avec JWT (JSON Web Token)
    ================================================================
-   
-   AVANT (sessions Express) :
-   - Le serveur stockait req.session.user en mémoire
-   - Le client recevait un cookie de session
-   
-   APRÈS (JWT) :
-   - Le serveur génère un token signé (JWT)
-   - Le client stocke le token (localStorage ou cookie httpOnly)
-   - Le client envoie le token dans le header : Authorization: Bearer <token>
-   - Le serveur vérifie la signature du token à chaque requête
-   - Le serveur ne stocke RIEN → sans état (stateless)
+   - À la connexion, le serveur signe un token contenant
+     id, nom, prenom, email et role.
+   - Le client l'envoie ensuite dans le header
+     Authorization: Bearer <token>.
+   - Le middleware auth.middleware.js vérifie la signature et
+     remplit req.user. Le serveur ne stocke aucune session.
    ================================================================ */
 
 const bcrypt  = require('bcrypt');
@@ -21,10 +16,46 @@ const UtilisateurModel = require('../models/utilisateur.model');
 const { sauvegarderStat } = require('../config/db.mongo');
 const { genererMailBienvenue } = require('../email/templates');
 const { transporter, EXPEDITEUR } = require('../email/mailer');
+const { JWT_SECRET, JWT_EXPIRES } = require('../config/jwt');
+const { motDePasseValide, MESSAGE_MOT_DE_PASSE } = require('../utils/motDePasse');
+const { validerProfil } = require('../utils/validationProfil');
 
-// Clé secrète pour signer les tokens (définie dans .env)
-const JWT_SECRET  = process.env.JWT_SECRET  || 'vite-gourmand-jwt-secret-2026';
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '24h';
+/**
+ * Signe un token pour un compte. Le payload contient l'identité affichée
+ * par le front (nom, prénom, e-mail) et le rôle, jamais le mot de passe.
+ */
+function creerToken({ id, nom, prenom, email, role }) {
+    const payload = { id, nom, prenom, email, role };
+    return { payload, token: jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES }) };
+}
+
+/** Champs du profil renvoyés au front (liste blanche : jamais le mot de passe) */
+function versProfilPublic(user) {
+    return {
+        id:              user.utilisateur_id,
+        nom:             user.nom,
+        prenom:          user.prenom,
+        email:           user.email,
+        telephone:       user.telephone,
+        adresse_postale: user.adresse_postale,
+        code_postal:     user.code_postal,
+        ville:           user.ville,
+        role:            user.role
+    };
+}
+
+/**
+ * Envoie le mail de bienvenue sans bloquer l'inscription :
+ * si l'envoi échoue, le compte reste créé et on journalise l'erreur.
+ */
+async function envoyerMailBienvenue(prenom, email) {
+    try {
+        const mail = genererMailBienvenue('client', { prenom, identifiant: email });
+        await transporter.sendMail({ from: EXPEDITEUR, to: email, ...mail });
+    } catch (err) {
+        console.error('Mail de bienvenue non envoyé :', err.message);
+    }
+}
 
 class AuthController {
 
@@ -34,15 +65,17 @@ class AuthController {
      */
     static async inscription(req, res) {
         try {
-            const { nom, prenom, email, telephone, mot_de_passe } = req.body;
-
-            // Validation des champs obligatoires
-            if (!nom || !prenom || !email || !mot_de_passe) {
-                return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
+            // Mêmes règles que la modification du profil (utils/validationProfil.js).
+            // Le sujet exige le GSM et l'adresse postale : tous les champs sont requis.
+            const { donnees, erreurs } = validerProfil(req.body);
+            const motDePasse = req.body ? req.body.mot_de_passe : undefined;
+            if (!motDePasseValide(motDePasse)) {
+                erreurs.push(MESSAGE_MOT_DE_PASSE);
             }
-            if (mot_de_passe.length < 8) {
-                return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères.' });
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
             }
+            const { nom, prenom, email, telephone, adresse_postale, code_postal, ville } = donnees;
 
             // Vérifier si l'email existe déjà
             const emailPris = await UtilisateurModel.emailExiste(email);
@@ -51,17 +84,19 @@ class AuthController {
             }
 
             // Hasher le mot de passe avec bcrypt (10 tours de salage)
-            const motDePasseHash = await bcrypt.hash(mot_de_passe, 10);
+            const motDePasseHash = await bcrypt.hash(motDePasse, 10);
 
-            // Créer l'utilisateur en base
-            const id = await UtilisateurModel.creer({ nom, prenom, email, telephone, motDePasseHash });
+            // Créer l'utilisateur en base.
+            // Le rôle est forcé à 'utilisateur' : il n'est jamais lu dans req.body,
+            // donc impossible de s'inscrire comme employé ou administrateur.
+            const id = await UtilisateurModel.creer({
+                nom, prenom, email, telephone,
+                adressePostale: adresse_postale, codePostal: code_postal, ville,
+                motDePasseHash, role: 'utilisateur'
+            });
 
-            // Email de bienvenue + stat MongoDB (non bloquants)
-            await envoyerEmail(email, 'Bienvenue chez Vite & Gourmand !',
-                `<h1>Bienvenue ${prenom} !</h1>
-                 <p>Votre compte a été créé avec succès.</p>
-                 <p>L'équipe Vite & Gourmand</p>`
-            );
+            // Mail de bienvenue + stat MongoDB (non bloquants)
+            await envoyerMailBienvenue(prenom, email);
             await sauvegarderStat('inscription', { email });
 
             res.status(201).json({ message: 'Compte créé avec succès !', id });
@@ -75,10 +110,6 @@ class AuthController {
     /**
      * POST /api/connexion
      * Authentifier un utilisateur et retourner un JWT
-     * 
-     * CHANGEMENT JWT :
-     * - AVANT : req.session.user = { ... }  → stockage serveur
-     * - APRÈS : jwt.sign({ ... })            → token retourné au client
      */
     static async connexion(req, res) {
         try {
@@ -100,18 +131,15 @@ class AuthController {
                 return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
             }
 
+            // Compte désactivé par l'administrateur (ex. ancien employé)
+            if (!user.actif) {
+                return res.status(403).json({ error: 'Ce compte est désactivé. Contactez Vite & Gourmand.' });
+            }
+
             // ── JWT : Générer le token ────────────────────────────────
             // Le payload contient les infos de l'utilisateur (pas le mot de passe !)
-            const payload = {
-                id:     user.id,
-                nom:    user.nom,
-                prenom: user.prenom,
-                email:  user.email,
-                role:   user.role
-            };
-
-            // Signer le token avec la clé secrète + durée d'expiration
-            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+            // Signé avec la clé secrète + durée d'expiration (voir creerToken)
+            const { payload, token } = creerToken({ ...user, id: user.utilisateur_id });
 
             // Retourner le token au client
             // Le client devra l'envoyer dans chaque requête :
@@ -132,10 +160,6 @@ class AuthController {
      * POST /api/deconnexion
      * Avec JWT, la déconnexion se fait côté client
      * (le client supprime simplement le token de son stockage)
-     * 
-     * CHANGEMENT JWT :
-     * - AVANT : req.session.destroy()  → on détruisait la session serveur
-     * - APRÈS : le client supprime son token → le serveur ne fait rien
      */
     static deconnexion(req, res) {
         // Avec JWT, le serveur n'a rien à détruire
@@ -145,13 +169,77 @@ class AuthController {
 
     /**
      * GET /api/profil
-     * Retourner les informations de l'utilisateur connecté
-     * Les infos viennent maintenant du token décodé (req.user)
-     * injecté par le middleware JWT
+     * Retourner le profil de l'utilisateur connecté, lu en base.
+     * Le token ne contient que id, nom, prénom, e-mail et rôle :
+     * le téléphone et l'adresse (pour pré-remplir la commande) sont
+     * dans la table utilisateur. Lire la base garantit aussi des
+     * données à jour (le token peut dater de 24 h).
      */
-    static profil(req, res) {
-        // req.user est injecté par le middleware auth.middleware.js
-        res.json({ user: req.user });
+    static async profil(req, res) {
+        try {
+            const user = await UtilisateurModel.trouverParId(req.user.id);
+
+            // Compte supprimé depuis la connexion : le token n'a plus de titulaire
+            if (!user) {
+                return res.status(404).json({ error: 'Compte introuvable.' });
+            }
+            // Compte désactivé depuis la connexion : même règle qu'à la connexion
+            if (!user.actif) {
+                return res.status(403).json({ error: 'Ce compte est désactivé. Contactez Vite & Gourmand.' });
+            }
+
+            // Champs choisis un par un (liste blanche) : jamais le mot de passe
+            res.json({ user: versProfilPublic(user) });
+        } catch (err) {
+            console.error('Erreur profil :', err.message);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
+    }
+
+    /**
+     * PUT /api/profil
+     * Modifier ses informations personnelles (« Mes informations »).
+     * - mêmes validations qu'à l'inscription (utils/validationProfil.js) ;
+     * - l'e-mail sert d'identifiant de connexion : il doit rester unique ;
+     * - le rôle, le mot de passe et l'état actif ne sont jamais lus ici.
+     * Le token contient nom, prénom et e-mail : on en renvoie un nouveau,
+     * sinon le site afficherait les anciennes valeurs jusqu'à la
+     * prochaine connexion.
+     */
+    static async modifierProfil(req, res) {
+        try {
+            const user = await UtilisateurModel.trouverParId(req.user.id);
+            if (!user) {
+                return res.status(404).json({ error: 'Compte introuvable.' });
+            }
+            if (!user.actif) {
+                return res.status(403).json({ error: 'Ce compte est désactivé. Contactez Vite & Gourmand.' });
+            }
+
+            const { donnees, erreurs } = validerProfil(req.body);
+            if (erreurs.length > 0) {
+                return res.status(400).json({ error: erreurs[0], erreurs });
+            }
+
+            if (await UtilisateurModel.emailUtiliseParAutre(donnees.email, user.utilisateur_id)) {
+                return res.status(409).json({ error: 'Cet e-mail est déjà utilisé par un autre compte.' });
+            }
+
+            await UtilisateurModel.mettreAJourProfil(user.utilisateur_id, donnees);
+
+            const profil = { ...user, ...donnees };
+            const { token } = creerToken({ ...profil, id: user.utilisateur_id });
+            res.json({ message: 'Vos informations ont été mises à jour.', user: versProfilPublic(profil), token });
+
+        } catch (err) {
+            // Deux comptes qui prennent le même e-mail au même instant :
+            // la contrainte UNIQUE de la base refuse le second
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ error: 'Cet e-mail est déjà utilisé par un autre compte.' });
+            }
+            console.error('Erreur modification profil :', err.message);
+            res.status(500).json({ error: 'Erreur serveur.' });
+        }
     }
 }
 

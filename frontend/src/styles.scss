@@ -1,0 +1,8 @@
+// =====================================================================
+// Styles globaux — point d'entrée du thème Vite & Gourmand
+// Chaque partiel (_*.scss) est dans src/styles/
+// =====================================================================
+@use 'styles/base';
+@use 'styles/boutons';
+@use 'styles/cartes';
+@use 'styles/formulaires';

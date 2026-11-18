@@ -25,7 +25,7 @@ services:
       - DB_USER=vite_user
       - DB_PASSWORD=vite_password
       - DB_NAME=vite_gourmand
-      - SESSION_SECRET=vite-gourmand-secret-docker-2026
+      - JWT_SECRET=${JWT_SECRET}      # Récupéré depuis le .env (obligatoire)
       - MONGO_URI=${MONGO_URI}        # Récupéré depuis le .env
     depends_on:
       mysql:
@@ -50,7 +50,7 @@ services:
       - "3307:3306"                   # Port 3307 pour éviter conflit avec MySQL local
     volumes:
       - mysql_data:/var/lib/mysql     # Persistance des données
-      - ./database.sql:/docker-entrypoint-initdb.d/init.sql  # Import auto au démarrage
+      - ../database/vite_gourmand.sql:/docker-entrypoint-initdb.d/init.sql  # Import auto au premier démarrage (script unique du dépôt)
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 10s

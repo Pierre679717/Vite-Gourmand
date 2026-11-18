@@ -1,0 +1,109 @@
+/* ================================================================
+   MODELS/STATCOMMANDE.MODEL.JS
+   Statistiques des commandes dans MongoDB (base NoSQL)
+   ================================================================
+   MySQL reste la référence (commandes, stock, transactions).
+   À chaque commande, une copie « à plat » des informations utiles
+   aux statistiques est ajoutée dans la collection `commandes_stats` :
+   nombre de commandes et chiffre d'affaires par menu, par période...
+   Ces calculs (agrégations) se font ensuite dans MongoDB, sans
+   charger la base MySQL qui sert les clients.
+
+   Si MongoDB est absent ou en panne, la commande n'est PAS bloquée :
+   l'erreur est seulement écrite dans la console du serveur.
+   ================================================================ */
+
+const mongoose = require('mongoose');
+const { construirePipeline } = require('../utils/filtresStats');
+
+const statCommandeSchema = new mongoose.Schema(
+    {
+        commande_id:     { type: Number, required: true, unique: true }, // pas de doublon pour une même commande
+        numero_commande: { type: String, required: true },
+        menu_id:         { type: Number, required: true, index: true },
+        menu_titre:      { type: String, required: true },
+        nombre_personne: { type: Number, required: true, min: 1 },
+        prix_total:      { type: Number, required: true, min: 0 },
+        reduction:       { type: Number, default: 0 },
+        prix_livraison:  { type: Number, default: 0 },
+        ville:           { type: String },
+        date_prestation: { type: String },               // AAAA-MM-JJ, comme dans MySQL
+        date_commande:   { type: Date, default: Date.now, index: true },
+        statut:          { type: String, default: 'en_attente' }
+    },
+    { collection: 'commandes_stats', versionKey: false }
+);
+
+// mongoose.models évite l'erreur « OverwriteModelError » si le fichier est chargé deux fois
+const StatCommande = mongoose.models.StatCommande || mongoose.model('StatCommande', statCommandeSchema);
+
+/**
+ * Enregistre la statistique d'une commande.
+ * Renvoie true si c'est fait, false sinon (MongoDB absent ou erreur).
+ * Ne lance jamais d'exception : la commande MySQL est déjà validée.
+ */
+async function enregistrerStatCommande(donnees) {
+    // 1 = connecté. Sans ce test, Mongoose mettrait l'opération en attente
+    // pendant 10 secondes avant d'échouer.
+    if (mongoose.connection.readyState !== 1) {
+        return false;
+    }
+    try {
+        await StatCommande.create(donnees);
+        return true;
+    } catch (err) {
+        console.error('Statistique MongoDB non enregistrée :', err.message);
+        return false;
+    }
+}
+
+/**
+ * Met à jour la statistique d'une commande après une modification
+ * (personnes, prix, ville, date) ou un changement de statut (annulee).
+ * Seuls les champs de la liste ci-dessous peuvent être changés.
+ * Même principe que l'enregistrement : true si c'est fait, false sinon,
+ * jamais d'exception (MySQL reste la référence).
+ */
+const CHAMPS_MODIFIABLES = [
+    'nombre_personne', 'prix_total', 'reduction', 'prix_livraison', 'ville', 'date_prestation', 'statut'
+];
+
+async function mettreAJourStatCommande(commandeId, modifications) {
+    if (mongoose.connection.readyState !== 1) {
+        return false;
+    }
+    const changements = {};
+    for (const champ of CHAMPS_MODIFIABLES) {
+        if (modifications[champ] !== undefined) changements[champ] = modifications[champ];
+    }
+    try {
+        // runValidators : les règles du schéma (min, type) s'appliquent aussi à la mise à jour
+        const resultat = await StatCommande.updateOne(
+            { commande_id: commandeId },
+            { $set: changements },
+            { runValidators: true }
+        );
+        return resultat.matchedCount === 1;
+    } catch (err) {
+        console.error('Statistique MongoDB non mise à jour :', err.message);
+        return false;
+    }
+}
+
+/**
+ * Nombre de commandes et chiffre d'affaires par menu (espace administrateur).
+ * La requête d'agrégation est fabriquée par utils/filtresStats.js.
+ * Renvoie null si MongoDB n'est pas connecté : le contrôleur répond 503.
+ * Ici, une erreur est remontée (contrairement à l'enregistrement) :
+ * l'administrateur doit savoir que les chiffres n'ont pas pu être lus.
+ */
+async function statistiquesParMenu(filtres) {
+    if (mongoose.connection.readyState !== 1) {
+        return null;
+    }
+    return StatCommande.aggregate(construirePipeline(filtres));
+}
+
+module.exports = {
+    StatCommande, enregistrerStatCommande, mettreAJourStatCommande, statistiquesParMenu, CHAMPS_MODIFIABLES
+};

@@ -1,0 +1,115 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Pastilles de filtre : vrais boutons radio masqués (flèches du clavier)
+.filtres-avis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $espace-2;
+  margin: 0 0 $espace-6;
+  padding: 0;
+  border: 0;
+}
+
+.filtres-avis__pastille {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: $espace-2 $espace-4;
+  border: 1.5px solid $vert;
+  border-radius: $rayon-pilule;
+  background: $blanc;
+  color: $vert;
+  font-weight: 600;
+  cursor: pointer;
+
+  input:checked + & {
+    background: $vert;
+    color: $blanc;
+  }
+
+  input:focus-visible + & {
+    outline: 3px solid $bordeaux;
+    outline-offset: 2px;
+  }
+}
+
+.moderation__message:focus {
+  outline: none;
+}
+
+.liste-avis {
+  display: grid;
+  gap: $espace-4;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.avis-moderation {
+  gap: $espace-3;
+  height: 100%;
+  padding: $espace-6;
+}
+
+.avis-moderation__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $espace-2;
+}
+
+.avis-moderation__auteur {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.avis-moderation__note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $espace-3;
+  margin: 0;
+  font-weight: 600;
+}
+
+.etoiles {
+  display: inline-flex;
+  gap: 0.125rem;
+  color: $bordure-champ;
+  font-size: 1.375rem;
+  line-height: 1;
+
+  .etoile--active {
+    color: $or-texte;
+  }
+}
+
+.avis-moderation__texte {
+  margin: 0;
+  padding: $espace-3 $espace-4;
+  border-left: 3px solid $or;
+  border-radius: 0 $rayon-petit $rayon-petit 0;
+  background: $fond;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.avis-moderation__contexte {
+  margin: 0;
+  color: $texte-doux;
+  font-size: 0.875rem;
+}
+
+.avis-moderation__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $espace-2;
+  margin-top: auto;
+  padding-top: $espace-2;
+}

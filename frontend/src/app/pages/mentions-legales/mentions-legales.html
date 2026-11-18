@@ -1,0 +1,102 @@
+<article class="conteneur page texte-legal">
+  <p class="surtitre">Informations</p>
+  <h1 class="titre-section">Mentions légales</h1>
+  <p class="texte-legal__maj">Mises à jour le 18 novembre 2026.</p>
+
+  <p class="texte-legal__avertissement">
+    Vite &amp; Gourmand est une entreprise fictive : ce site a été réalisé dans le cadre d'une
+    évaluation de formation (ECF Studi, titre Développeur Web et Web Mobile).
+  </p>
+
+  <h2 id="editeur">Éditeur du site</h2>
+  <p>
+    Vite &amp; Gourmand, traiteur<br />
+    128, avenue des Vignes, 33000 Bordeaux<br />
+    Téléphone : 01 23 45 67 89 · E-mail :
+    <a href="mailto:contact@vite-gourmand.fr">contact&#64;vite-gourmand.fr</a><br />
+    Responsables de la publication : Julie et José, gérants.
+  </p>
+
+  <h2 id="realisation">Conception et réalisation</h2>
+  <p>MANOUAN Anoman (Pierre), développeur web.</p>
+
+  <h2 id="hebergement">Hébergement</h2>
+  <p>
+    Railway Corporation, États-Unis —
+    <a href="https://railway.com" rel="noopener">railway.com</a>.
+  </p>
+
+  <h2 id="propriete">Propriété intellectuelle</h2>
+  <p>
+    Les textes, le logo et la présentation du site sont la propriété de Vite &amp; Gourmand. Toute
+    reproduction sans autorisation est interdite. Les photographies sont libres de droits ; leurs
+    auteurs sont cités ci-dessous.
+  </p>
+
+  <h2 id="credits-photos">Crédits photos</h2>
+  <p>
+    Photographies libres de droits, utilisées selon la
+    <a href="https://unsplash.com/license" rel="noopener">licence Unsplash</a> ou la
+    <a href="https://www.pexels.com/license/" rel="noopener">licence Pexels</a>. Elles ont été
+    recadrées et converties au format WebP pour le site.
+  </p>
+  <ul class="credits-photos">
+    @for (credit of credits; track credit.fichier) {
+      <li>
+        <strong>{{ credit.usage }}</strong> :
+        <a [href]="credit.lien" rel="noopener">{{ credit.sujet }}</a
+        >, photo de {{ credit.auteur }} sur {{ credit.site }}.
+      </li>
+    }
+  </ul>
+
+  <h2 id="donnees-personnelles">Données personnelles</h2>
+  <p>
+    Vite &amp; Gourmand est responsable du traitement des données collectées sur ce site, dans le
+    respect du Règlement général sur la protection des données (RGPD).
+  </p>
+  <ul>
+    <li>
+      <strong>Données collectées :</strong> nom, prénom, e-mail, téléphone et adresse postale lors
+      de la création du compte ; coordonnées et adresse de livraison de chaque commande ; avis
+      laissés par les clients.
+    </li>
+    <li>
+      <strong>Finalités :</strong> gérer le compte, préparer et livrer les commandes, en informer le
+      client par e-mail et publier les avis validés (prénom et initiale du nom seulement).
+    </li>
+    <li>
+      <strong>Formulaire de contact :</strong> le message est transmis par e-mail à l'entreprise et
+      n'est pas conservé sur le site.
+    </li>
+    <li>
+      <strong>Destinataires :</strong> seule l'équipe de Vite &amp; Gourmand accède aux données ;
+      elles ne sont ni vendues ni cédées.
+    </li>
+    <li>
+      <strong>Durée de conservation :</strong> les données du compte sont conservées tant que le
+      compte existe ; les données des commandes utiles à la comptabilité sont conservées 10 ans.
+    </li>
+    <li>
+      <strong>Sécurité :</strong> les mots de passe sont enregistrés sous forme chiffrée (hachage
+      bcrypt) et ne sont jamais lisibles, y compris par l'équipe.
+    </li>
+  </ul>
+  <p>
+    Chaque client peut accéder à ses données et les corriger depuis
+    <a routerLink="/espace-utilisateur/informations">Mes informations</a>. Pour demander leur
+    suppression, une copie ou vous opposer à un traitement, écrivez à
+    <a href="mailto:contact@vite-gourmand.fr">contact&#64;vite-gourmand.fr</a>. Vous pouvez aussi
+    adresser une réclamation à la CNIL (<a href="https://www.cnil.fr" rel="noopener">cnil.fr</a>).
+  </p>
+
+  <h2 id="cookies">Cookies et stockage</h2>
+  <p>
+    Le site n'utilise aucun cookie publicitaire ni outil de mesure d'audience. Il enregistre
+    seulement, dans le navigateur, le jeton de connexion nécessaire pour rester connecté ; il est
+    effacé à la déconnexion. Ce stockage indispensable au fonctionnement du site ne demande pas de
+    consentement.
+  </p>
+
+  <p>Voir aussi les <a routerLink="/cgv">conditions générales de vente</a>.</p>
+</article>

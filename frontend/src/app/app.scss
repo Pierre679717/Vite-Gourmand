@@ -1,0 +1,14 @@
+// Le pied de page reste en bas, même sur une page courte
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+
+  &:focus {
+    outline: none; // reçoit le focus du lien d'évitement, sans contour
+  }
+}

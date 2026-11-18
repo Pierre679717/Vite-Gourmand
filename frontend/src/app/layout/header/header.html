@@ -1,0 +1,77 @@
+<header class="entete">
+  <div class="conteneur entete__barre">
+    <!-- Nom accessible = texte visible + précision masquée (WCAG 2.5.3 : commande vocale) -->
+    <a class="entete__logo" routerLink="/">
+      Vite <span class="entete__esperluette">&amp;</span> Gourmand<span class="visuellement-masque"
+        >, retour à l'accueil</span
+      >
+    </a>
+
+    <!-- Bouton burger : visible uniquement sur mobile -->
+    <button
+      class="entete__burger"
+      type="button"
+      aria-controls="navigation-principale"
+      [attr.aria-expanded]="menuOuvert()"
+      (click)="basculerMenu()"
+    >
+      <span class="visuellement-masque">{{
+        menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'
+      }}</span>
+      <span class="entete__burger-barre" aria-hidden="true"></span>
+      <span class="entete__burger-barre" aria-hidden="true"></span>
+      <span class="entete__burger-barre" aria-hidden="true"></span>
+    </button>
+
+    <nav
+      id="navigation-principale"
+      class="entete__nav"
+      [class.entete__nav--ouverte]="menuOuvert()"
+      aria-label="Navigation principale"
+    >
+      <ul class="entete__liens">
+        <li>
+          <a
+            routerLink="/"
+            routerLinkActive="entete__lien--actif"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            class="entete__lien"
+            >Accueil</a
+          >
+        </li>
+        <li>
+          <a
+            routerLink="/menus"
+            routerLinkActive="entete__lien--actif"
+            ariaCurrentWhenActive="page"
+            class="entete__lien"
+            >Nos menus</a
+          >
+        </li>
+        <li>
+          <a
+            routerLink="/contact"
+            routerLinkActive="entete__lien--actif"
+            ariaCurrentWhenActive="page"
+            class="entete__lien"
+            >Contact</a
+          >
+        </li>
+      </ul>
+      <!-- Zone de compte : dépend du signal utilisateur de l'AuthService -->
+      <div class="entete__compte">
+        @if (auth.utilisateur(); as utilisateur) {
+          <span class="entete__bonjour">Bonjour {{ utilisateur.prenom }}</span>
+          <a class="btn btn--secondaire btn--petit" [routerLink]="auth.lienEspace()">Mon espace</a>
+          <button class="btn btn--accent btn--petit" type="button" (click)="seDeconnecter()">
+            Déconnexion
+          </button>
+        } @else {
+          <a class="btn btn--secondaire btn--petit" routerLink="/connexion">Se connecter</a>
+          <a class="btn btn--primaire btn--petit" routerLink="/inscription">Créer un compte</a>
+        }
+      </div>
+    </nav>
+  </div>
+</header>

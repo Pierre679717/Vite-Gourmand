@@ -1,0 +1,349 @@
+@let e = etat();
+
+@switch (e.statut) {
+  @case ('introuvable') {
+    <app-page-introuvable />
+  }
+
+  @case ('erreur') {
+    <section class="conteneur page">
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher cette commande. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+          <a class="btn btn--secondaire" routerLink="/espace-employe/commandes">Commandes</a>
+        </div>
+      </div>
+    </section>
+  }
+
+  @case ('chargement') {
+    <section class="conteneur page" aria-busy="true">
+      <p class="visuellement-masque" role="status">Chargement de la commande…</p>
+      <div class="detail-commande__squelette" aria-hidden="true"></div>
+    </section>
+  }
+
+  @case ('succes') {
+    @let c = e.commande;
+
+    <article class="conteneur page detail-commande">
+      <app-employe-nav />
+
+      <nav class="fil-ariane" aria-label="Fil d'Ariane">
+        <ol>
+          <li><a routerLink="/espace-employe/commandes">Commandes</a></li>
+          <li aria-current="page">{{ c.numero_commande }}</li>
+        </ol>
+      </nav>
+
+      <header class="detail-commande__entete">
+        <div>
+          <p class="surtitre">
+            Commande de {{ c.client.prenom }} {{ c.client.nom }} du
+            {{ dateHeureFr(c.date_commande) }}
+          </p>
+          <h1 class="detail-commande__titre">{{ c.numero_commande }}</h1>
+        </div>
+        <span [class]="classeBadge(c.statut) + ' detail-commande__badge'">{{
+          libelles[c.statut]
+        }}</span>
+      </header>
+
+      <!-- Résultat d'une action : reçoit le focus, annoncé par les lecteurs d'écran -->
+      <div #zoneMessage tabindex="-1" class="detail-commande__message" role="status">
+        @if (message(); as m) {
+          <p class="alerte alerte--succes">{{ m }}</p>
+        }
+        @if (erreurAction(); as m) {
+          <p class="alerte alerte--erreur">{{ m }} La commande a été relue.</p>
+        }
+      </div>
+
+      <div class="detail-commande__grille">
+        <!-- ============ Colonne principale ============ -->
+        <div class="detail-commande__principal">
+          <section class="carte detail-commande__carte" aria-labelledby="titre-suivi">
+            <h2 id="titre-suivi" class="detail-commande__sous-titre">Suivi de la commande</h2>
+            <app-frise-suivi [etapes]="frise()" />
+          </section>
+
+          @if (c.statut === 'annulee' && c.motif) {
+            <section
+              class="carte detail-commande__carte carte-annulation"
+              aria-labelledby="titre-annulation-faite"
+            >
+              <h2 id="titre-annulation-faite" class="detail-commande__sous-titre">
+                Motif de l'annulation
+              </h2>
+              @if (c.mode_contact) {
+                <p class="detail-commande__aide">
+                  Client contacté par : {{ libellesModeContact[c.mode_contact] }}
+                </p>
+              }
+              <blockquote class="avis-donne__texte">{{ c.motif }}</blockquote>
+            </section>
+          }
+
+          <section class="carte detail-commande__carte" aria-labelledby="titre-client">
+            <h2 id="titre-client" class="detail-commande__sous-titre">Client</h2>
+            <dl class="detail-commande__infos">
+              <div>
+                <dt>Compte</dt>
+                <dd>{{ c.client.prenom }} {{ c.client.nom }}</dd>
+              </div>
+              <div>
+                <dt>E-mail</dt>
+                <dd>
+                  <a [href]="'mailto:' + c.client.email">{{ c.client.email }}</a>
+                </dd>
+              </div>
+              <div>
+                <dt>GSM</dt>
+                <dd>
+                  @if (c.client.telephone) {
+                    <a [href]="'tel:' + c.client.telephone">{{
+                      telephoneFr(c.client.telephone)
+                    }}</a>
+                  } @else {
+                    Non renseigné
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Contact livraison</dt>
+                <dd>
+                  {{ c.contact_prenom }} {{ c.contact_nom }}<br />
+                  <a [href]="'mailto:' + c.contact_email">{{ c.contact_email }}</a> ·
+                  <a [href]="'tel:' + c.contact_telephone">{{
+                    telephoneFr(c.contact_telephone)
+                  }}</a>
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="carte detail-commande__carte" aria-labelledby="titre-livraison">
+            <h2 id="titre-livraison" class="detail-commande__sous-titre">Livraison</h2>
+            <dl class="detail-commande__infos">
+              <div>
+                <dt>Menu</dt>
+                <dd>{{ c.menu.titre }} pour {{ c.nombre_personne }} personnes</dd>
+              </div>
+              <div>
+                <dt>Date</dt>
+                <dd>{{ dateLongue(c.date_prestation) }} à {{ heureFr(c.heure_livraison) }}</dd>
+              </div>
+              <div>
+                <dt>Adresse</dt>
+                <dd>{{ c.adresse_prestation }}, {{ c.ville_prestation }}</dd>
+              </div>
+              <div>
+                <dt>Prêt de matériel</dt>
+                <dd>
+                  @if (c.pret_materiel) {
+                    Oui{{ c.materiel_restitue ? ', restitué' : ', à récupérer' }}
+                  } @else {
+                    Non
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          @if (c.avis; as a) {
+            <section class="carte detail-commande__carte" aria-labelledby="titre-avis">
+              <h2 id="titre-avis" class="detail-commande__sous-titre">Avis du client</h2>
+              <p class="avis-donne__note">
+                <span class="etoiles" aria-hidden="true">
+                  @for (n of notes; track n) {
+                    <span [class.etoile--active]="n <= a.note">★</span>
+                  }
+                </span>
+                <span>{{ a.note }}/5 · {{ libellesNote[a.note] }}</span>
+                <span [class]="classeBadgeAvis(a.statut)">{{ libellesAvis[a.statut] }}</span>
+              </p>
+              <blockquote class="avis-donne__texte">{{ a.commentaire }}</blockquote>
+              @if (a.statut === 'en_attente') {
+                <a class="lien-action" routerLink="/espace-employe/avis">Modérer les avis</a>
+              }
+            </section>
+          }
+        </div>
+
+        <!-- ============ Colonne de côté : actions et montant ============ -->
+        <aside class="detail-commande__cote">
+          <section class="carte detail-commande__carte actions" aria-labelledby="titre-actions">
+            <h2 id="titre-actions" class="detail-commande__sous-titre">Faire avancer</h2>
+
+            @if (etapes().length === 0 && !annulable()) {
+              <p class="detail-commande__aide">
+                Cette commande est {{ libelles[c.statut].toLowerCase() }} : son statut ne peut plus
+                changer.
+              </p>
+            }
+
+            @for (suivant of etapes(); track suivant) {
+              <div class="actions__etape">
+                <button
+                  type="button"
+                  class="btn btn--primaire btn--bloc"
+                  [disabled]="actionEnCours() !== null"
+                  [attr.aria-describedby]="effetAction(suivant) ? 'effet-' + suivant : null"
+                  (click)="avancer(c, suivant)"
+                >
+                  {{
+                    actionEnCours() === suivant
+                      ? 'Enregistrement…'
+                      : libelleAction(c.statut, suivant)
+                  }}
+                </button>
+                @if (effetAction(suivant); as effet) {
+                  <p [id]="'effet-' + suivant" class="actions__effet">{{ effet }}</p>
+                }
+              </div>
+            }
+
+            @if (annulable()) {
+              @if (!annulationOuverte()) {
+                <button
+                  #boutonAnnuler
+                  type="button"
+                  class="btn btn--secondaire btn--bloc"
+                  [disabled]="actionEnCours() !== null"
+                  (click)="ouvrirAnnulation()"
+                >
+                  Annuler la commande…
+                </button>
+              } @else {
+                <form
+                  class="annulation"
+                  [formGroup]="formAnnulation"
+                  (ngSubmit)="confirmerAnnulation(c)"
+                  (keydown.escape)="fermerAnnulation()"
+                  novalidate
+                  aria-labelledby="titre-annulation"
+                >
+                  <h3 #titreAnnulation id="titre-annulation" tabindex="-1">
+                    Annuler {{ c.numero_commande }} ?
+                  </h3>
+                  <p>
+                    Contactez d'abord le client, puis indiquez comment et pourquoi. Il ne peut pas
+                    être prévenu autrement.
+                  </p>
+
+                  <fieldset class="annulation__modes">
+                    <legend class="champ__label">
+                      Client contacté par
+                      <span class="champ__obligatoire" aria-hidden="true">*</span>
+                    </legend>
+                    @for (mode of modesContact; track mode) {
+                      <label class="champ-case">
+                        <input
+                          type="radio"
+                          formControlName="modeContact"
+                          [value]="mode"
+                          [attr.aria-invalid]="!!erreurModeContact()"
+                          [attr.aria-describedby]="erreurModeContact() ? 'mode-erreur' : null"
+                        />
+                        <span>{{ libellesModeContact[mode] }}</span>
+                      </label>
+                    }
+                    @if (erreurModeContact(); as m) {
+                      <p id="mode-erreur" class="champ__erreur">{{ m }}</p>
+                    }
+                  </fieldset>
+
+                  <div class="champ">
+                    <label class="champ__label" for="motif">
+                      Motif <span class="champ__obligatoire" aria-hidden="true">*</span>
+                    </label>
+                    <textarea
+                      id="motif"
+                      class="champ__saisie"
+                      formControlName="motif"
+                      rows="4"
+                      [attr.maxlength]="motifMax"
+                      [attr.aria-invalid]="!!erreurMotifChamp()"
+                      [attr.aria-describedby]="
+                        erreurMotifChamp() ? 'motif-erreur motif-compte' : 'motif-compte'
+                      "
+                    ></textarea>
+                    <p id="motif-compte" class="champ__aide">
+                      {{ longueurMotif() }} / {{ motifMax }} caractères
+                    </p>
+                    @if (erreurMotifChamp(); as m) {
+                      <p id="motif-erreur" class="champ__erreur">{{ m }}</p>
+                    }
+                  </div>
+
+                  @if (erreursAnnulation().length > 0) {
+                    <div class="alerte alerte--erreur" role="alert">
+                      <ul>
+                        @for (m of erreursAnnulation(); track m) {
+                          <li>{{ m }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+
+                  <div class="annulation__boutons">
+                    <button
+                      type="submit"
+                      class="btn btn--accent btn--bloc"
+                      [disabled]="actionEnCours() !== null"
+                    >
+                      {{ actionEnCours() === 'annulee' ? 'Annulation…' : 'Confirmer l’annulation' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn--secondaire btn--bloc"
+                      (click)="fermerAnnulation()"
+                    >
+                      Revenir
+                    </button>
+                  </div>
+                </form>
+              }
+            }
+          </section>
+
+          <section class="carte detail-commande__carte" aria-labelledby="titre-montant">
+            <h2 id="titre-montant" class="detail-commande__sous-titre">Montant</h2>
+            <dl class="detail-commande__prix">
+              <div>
+                <dt>{{ c.nombre_personne }} × {{ c.prix_par_personne | prix }}</dt>
+                <dd>{{ montantAvantReduction(c) | prix }}</dd>
+              </div>
+              @if (c.reduction > 0) {
+                <div>
+                  <dt>Réduction −10 %</dt>
+                  <dd>− {{ c.reduction | prix }}</dd>
+                </div>
+              }
+              <div>
+                <dt>
+                  Livraison
+                  @if (c.distance_km > 0) {
+                    <span class="detail-commande__km">({{ c.distance_km }} km)</span>
+                  }
+                </dt>
+                <dd>
+                  @if (c.prix_livraison === 0) {
+                    Offerte
+                  } @else {
+                    {{ c.prix_livraison | prix }}
+                  }
+                </dd>
+              </div>
+              <div class="detail-commande__total">
+                <dt>Total TTC</dt>
+                <dd>{{ c.prix_total | prix }}</dd>
+              </div>
+            </dl>
+          </section>
+        </aside>
+      </div>
+    </article>
+  }
+}

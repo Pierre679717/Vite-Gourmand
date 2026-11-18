@@ -1,0 +1,123 @@
+<section class="conteneur page">
+  <div class="formulaire-page">
+    <h1 class="titre-section">Nouveau mot de passe</h1>
+
+    <div #zoneMessage tabindex="-1" class="zone-message">
+      @if (refus(); as refus) {
+        <p class="alerte alerte--erreur" role="alert">{{ refus.message }}</p>
+      }
+      @if (erreursServeur().length) {
+        <div class="alerte alerte--erreur" role="alert">
+          <ul class="liste-erreurs">
+            @for (message of erreursServeur(); track message) {
+              <li>{{ message }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+
+    @switch (etat().statut) {
+      @case ('verification') {
+        <p role="status">Vérification du lien…</p>
+      }
+      @case ('refuse') {
+        <div class="alerte__boutons">
+          @if (refus()?.nouvelleDemande) {
+            <a class="btn btn--primaire" routerLink="/mot-de-passe-oublie"
+              >Faire une nouvelle demande</a
+            >
+          }
+          @if (refus()?.type === 'erreur') {
+            <button class="btn btn--primaire" type="button" (click)="verifierLien()">
+              Réessayer
+            </button>
+          }
+          @if (!refus()?.nouvelleDemande && refus()?.type !== 'erreur') {
+            <a class="btn btn--primaire" routerLink="/contact">Nous contacter</a>
+          }
+          <a class="btn btn--secondaire" routerLink="/connexion">Retour à la connexion</a>
+        </div>
+      }
+      @default {
+        <p>Choisissez votre nouveau mot de passe. Le lien ne pourra servir qu'une seule fois.</p>
+
+        <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="envoyer()" novalidate>
+          <div class="champ">
+            <label class="champ__label" for="mot_de_passe">Nouveau mot de passe</label>
+            <input
+              #champMotDePasse
+              id="mot_de_passe"
+              class="champ__saisie"
+              type="password"
+              formControlName="mot_de_passe"
+              autocomplete="new-password"
+              [attr.maxlength]="longueurMax"
+              aria-describedby="criteres-mot-de-passe"
+              [attr.aria-invalid]="aUneErreur('mot_de_passe')"
+            />
+            <!-- Liste mise à jour à chaque frappe ; lue par les lecteurs d'écran -->
+            <ul
+              id="criteres-mot-de-passe"
+              class="criteres"
+              [class.criteres--neutre]="!motDePasseSaisi()"
+              aria-live="polite"
+            >
+              @for (critere of criteres(); track critere.libelle) {
+                <li class="criteres__item" [class.criteres__item--ok]="critere.respecte">
+                  <span aria-hidden="true">{{ critere.respecte ? '✓' : '✗' }}</span>
+                  {{ critere.libelle }}
+                  <span class="visuellement-masque">
+                    {{ critere.respecte ? '(respecté)' : '(manquant)' }}
+                  </span>
+                </li>
+              }
+            </ul>
+            @if (aUneErreur('mot_de_passe')) {
+              <p class="champ__erreur">
+                @if (c.mot_de_passe.hasError('required')) {
+                  Le nouveau mot de passe est obligatoire.
+                } @else {
+                  Le mot de passe ne respecte pas toutes les règles ci-dessus.
+                }
+              </p>
+            }
+          </div>
+
+          <div class="champ">
+            <label class="champ__label" for="confirmation">Confirmer le nouveau mot de passe</label>
+            <input
+              #champConfirmation
+              id="confirmation"
+              class="champ__saisie"
+              type="password"
+              formControlName="confirmation"
+              autocomplete="new-password"
+              aria-describedby="confirmation-erreur"
+              [attr.aria-invalid]="confirmationDifferente() || aUneErreur('confirmation')"
+            />
+            @if (confirmationDifferente()) {
+              <p id="confirmation-erreur" class="champ__erreur">
+                Les deux mots de passe ne sont pas identiques.
+              </p>
+            } @else if (aUneErreur('confirmation')) {
+              <p id="confirmation-erreur" class="champ__erreur">Confirmez votre mot de passe.</p>
+            }
+          </div>
+
+          <button
+            class="btn btn--primaire btn--bloc"
+            type="submit"
+            [disabled]="etat().statut === 'envoi'"
+          >
+            {{
+              etat().statut === 'envoi' ? 'Enregistrement…' : 'Enregistrer le nouveau mot de passe'
+            }}
+          </button>
+        </form>
+
+        <p class="formulaire-page__bas"><a routerLink="/connexion">Retour à la connexion</a></p>
+      }
+    }
+  </div>
+</section>

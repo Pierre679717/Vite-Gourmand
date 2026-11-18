@@ -1,0 +1,269 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.detail-commande__squelette {
+  height: 24rem;
+  border-radius: $rayon;
+  background: $sable;
+}
+
+.detail-commande__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $espace-3;
+  margin: $espace-4 0 $espace-6;
+
+  .surtitre {
+    margin: 0;
+  }
+}
+
+.detail-commande__titre {
+  margin: $espace-1 0 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.detail-commande__badge {
+  font-size: 0.9375rem;
+  padding: $espace-1 $espace-4;
+}
+
+// Zone qui reçoit le focus après une action : pas de contour, le message suffit
+.detail-commande__message:focus {
+  outline: none;
+}
+
+.detail-commande__materiel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $espace-3;
+
+  p {
+    margin: 0;
+    flex: 1 1 20rem;
+  }
+
+  a:not(.btn) {
+    color: inherit;
+  }
+}
+
+// Une colonne sur mobile ; sur ordinateur, le montant et les actions à droite
+.detail-commande__grille {
+  display: grid;
+  gap: $espace-6;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+  }
+}
+
+.detail-commande__principal,
+.detail-commande__cote {
+  display: grid;
+  gap: $espace-6;
+}
+
+@include a-partir-de($point-bureau) {
+  .detail-commande__cote {
+    position: sticky;
+    top: $espace-6;
+  }
+}
+
+.detail-commande__carte {
+  gap: $espace-4;
+  padding: $espace-6;
+}
+
+.detail-commande__sous-titre {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.detail-commande__aide {
+  margin: 0;
+  color: $texte-doux;
+
+  &--cote {
+    padding: 0 $espace-2;
+  }
+}
+
+.detail-commande__infos {
+  display: grid;
+  gap: $espace-3;
+  margin: 0;
+
+  div {
+    display: grid;
+    gap: $espace-1;
+
+    @include a-partir-de($point-tablette) {
+      grid-template-columns: 9rem 1fr;
+      gap: $espace-4;
+    }
+  }
+
+  dt {
+    color: $texte-doux;
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere; // adresse e-mail longue sur mobile
+  }
+}
+
+.detail-commande__prix {
+  display: grid;
+  gap: $espace-3;
+  margin: 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: $espace-4;
+  }
+
+  dd {
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+
+.detail-commande__km {
+  color: $texte-doux;
+  font-size: 0.875rem;
+}
+
+.detail-commande__total {
+  padding-top: $espace-3;
+  border-top: 1px solid $bordure;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+// ---- Annulation --------------------------------------------------------
+.confirmation-annulation {
+  display: grid;
+  gap: $espace-3;
+  padding: $espace-4;
+  border: 1px solid $bordeaux;
+  border-radius: $rayon-moyen;
+  background: $bordeaux-clair;
+
+  h3 {
+    margin: 0;
+    font-size: 1.0625rem;
+    color: $bordeaux;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.confirmation-annulation__boutons {
+  display: grid;
+  gap: $espace-2;
+}
+
+// ---- Avis ----------------------------------------------------------------
+.etoiles {
+  display: inline-flex;
+  gap: 0.125rem;
+  color: $bordure-champ;
+  font-size: 1.5rem;
+  line-height: 1;
+
+  .etoile--active {
+    color: $or-texte;
+  }
+}
+
+.avis-donne__note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $espace-3;
+  margin: 0;
+  font-weight: 600;
+}
+
+.avis-donne__texte {
+  margin: 0;
+  padding: $espace-3 $espace-4;
+  border-left: 3px solid $or;
+  background: $fond;
+  border-radius: 0 $rayon-petit $rayon-petit 0;
+  white-space: pre-line;
+}
+
+.avis-donne__statut {
+  margin: 0;
+  color: $texte-doux;
+  font-size: 0.875rem;
+}
+
+.avis-form {
+  display: grid;
+  gap: $espace-6;
+  justify-items: start;
+
+  .champ {
+    width: 100%;
+  }
+}
+
+.avis-form__notes {
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: $espace-2;
+  }
+}
+
+// Étoiles cliquables : de vrais boutons radio (masqués), donc les flèches
+// du clavier changent la note ; le contour apparaît sur l'étoile ciblée
+.etoiles--saisie {
+  align-items: center;
+  font-size: 2rem;
+
+  label {
+    display: inline-flex;
+    padding: 0.125rem;
+    border-radius: $rayon-petit;
+    cursor: pointer;
+  }
+
+  input:focus-visible + label {
+    outline: 3px solid $bordeaux;
+    outline-offset: 2px;
+  }
+}
+
+.avis-form__libelle-note {
+  margin-left: $espace-3;
+  color: $texte;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+// Un numéro de commande ne se coupe jamais en fin de ligne
+.sans-coupure {
+  white-space: nowrap;
+}

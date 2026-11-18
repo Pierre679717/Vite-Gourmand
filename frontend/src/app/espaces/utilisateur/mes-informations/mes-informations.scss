@@ -1,0 +1,42 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.informations__entete .titre-section {
+  margin-bottom: $espace-4;
+}
+
+.informations__squelette {
+  max-width: 48rem;
+  height: 28rem;
+  border-radius: $rayon;
+  background: $sable;
+}
+
+.informations__carte {
+  max-width: 48rem;
+  gap: $espace-4;
+  padding: $espace-6 $espace-4;
+
+  @include a-partir-de($point-tablette) {
+    padding: $espace-8;
+  }
+}
+
+.informations__intro {
+  margin: 0;
+  color: $texte-doux;
+}
+
+.informations__message:focus {
+  outline: none;
+}
+
+.informations__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.alerte__liste {
+  margin: $espace-2 0 0;
+  padding-left: $espace-6;
+}

@@ -1,0 +1,165 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace administrateur</p>
+    <h1 class="titre-section">Statistiques</h1>
+    <p class="espace__bonjour">
+      Commandes et chiffre d'affaires par menu. Les commandes annulées ne sont comptées ni dans le
+      graphique ni dans le chiffre d'affaires.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <!-- ======================= Filtres ======================= -->
+  <form
+    class="carte stats-filtres"
+    [formGroup]="formulaire"
+    (ngSubmit)="appliquer()"
+    aria-label="Filtrer les statistiques"
+    novalidate
+  >
+    <div class="champ">
+      <label class="champ__label" for="menu_id">Menu</label>
+      <select id="menu_id" class="champ__saisie" formControlName="menu_id">
+        <option value="">Tous les menus</option>
+        @for (m of menus(); track m.id) {
+          <option [value]="m.id">{{ m.titre }}</option>
+        }
+      </select>
+    </div>
+    <div class="champ">
+      <label class="champ__label" for="debut">Commandes passées du</label>
+      <input
+        id="debut"
+        class="champ__saisie"
+        type="date"
+        formControlName="debut"
+        [attr.aria-invalid]="!!erreurPeriode()"
+        [attr.aria-describedby]="erreurPeriode() ? 'periode-erreur' : null"
+      />
+    </div>
+    <div class="champ">
+      <label class="champ__label" for="fin">au (inclus)</label>
+      <input
+        id="fin"
+        class="champ__saisie"
+        type="date"
+        formControlName="fin"
+        [attr.aria-invalid]="!!erreurPeriode()"
+        [attr.aria-describedby]="erreurPeriode() ? 'periode-erreur' : null"
+      />
+    </div>
+    <div class="stats-filtres__boutons">
+      <button type="submit" class="btn btn--primaire">Afficher</button>
+      <button type="button" class="btn btn--secondaire" (click)="reinitialiser()">
+        Tout afficher
+      </button>
+    </div>
+    @if (erreurPeriode(); as m) {
+      <p id="periode-erreur" class="champ__erreur stats-filtres__erreur" role="alert">{{ m }}</p>
+    }
+  </form>
+
+  <!-- ======================= Résultats ======================= -->
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Calcul des statistiques…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher les statistiques. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        </div>
+      </div>
+    }
+    @case ('succes') {
+      <p class="stats-resume" role="status">
+        <span class="visuellement-masque">Résultats pour : </span>{{ resume() }}
+      </p>
+
+      <dl class="stats-tuiles">
+        <div class="carte stats-tuile">
+          <dt>Commandes</dt>
+          <dd>{{ e.stats.totaux.nombre_commandes }}</dd>
+        </div>
+        <div class="carte stats-tuile">
+          <dt>Chiffre d'affaires</dt>
+          <dd>{{ e.stats.totaux.chiffre_affaires | prix }}</dd>
+        </div>
+        <div class="carte stats-tuile">
+          <dt>Annulées (non comptées)</dt>
+          <dd>{{ e.stats.totaux.nombre_annulees }}</dd>
+        </div>
+      </dl>
+
+      @if (e.stats.menus.length === 0) {
+        <div class="espace__vide carte">
+          <p>
+            Aucune commande pour ces filtres. Élargissez la période ou choisissez « Tous les menus
+            ».
+          </p>
+        </div>
+      } @else {
+        <div class="stats-resultats">
+          <section class="carte stats-bloc" aria-labelledby="titre-graphique">
+            <h2 id="titre-graphique" class="espace__sous-titre">Nombre de commandes par menu</h2>
+            <app-graphique-commandes [menus]="e.stats.menus" />
+          </section>
+
+          <section class="carte stats-bloc" aria-labelledby="titre-tableau">
+            <h2 id="titre-tableau" class="espace__sous-titre">Chiffre d'affaires par menu</h2>
+            <p class="champ__aide stats-tableau__aide">
+              Sur un petit écran, faites défiler le tableau vers la droite.
+            </p>
+            <!-- Défile horizontalement sur mobile ; focusable pour défiler au clavier -->
+            <div class="stats-tableau" tabindex="0" role="region" aria-labelledby="titre-tableau">
+              <table>
+                <caption class="visuellement-masque">
+                  Commandes et chiffre d'affaires par menu, du plus rentable au moins rentable.
+                  {{
+                    resume()
+                  }}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Menu</th>
+                    <th scope="col" class="nombre">Commandes</th>
+                    <th scope="col" class="nombre">Annulées</th>
+                    <th scope="col" class="nombre">Chiffre d'affaires</th>
+                    <th scope="col" class="nombre">Part</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (l of e.stats.menus; track l.menu_id) {
+                    <tr>
+                      <th scope="row">{{ l.menu_titre }}</th>
+                      <td class="nombre">{{ l.nombre_commandes }}</td>
+                      <td class="nombre">{{ l.nombre_annulees }}</td>
+                      <td class="nombre">{{ l.chiffre_affaires | prix }}</td>
+                      <td class="nombre">
+                        {{ partDuTotal(l.chiffre_affaires, e.stats.totaux.chiffre_affaires) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th scope="row">Total</th>
+                    <td class="nombre">{{ e.stats.totaux.nombre_commandes }}</td>
+                    <td class="nombre">{{ e.stats.totaux.nombre_annulees }}</td>
+                    <td class="nombre">{{ e.stats.totaux.chiffre_affaires | prix }}</td>
+                    <td class="nombre">100 %</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </section>
+        </div>
+      }
+    }
+  }
+</section>

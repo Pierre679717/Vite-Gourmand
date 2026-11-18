@@ -1,0 +1,124 @@
+@let e = etat();
+@switch (e.statut) {
+  @case ('introuvable') {
+    <app-page-introuvable />
+  }
+  @case ('erreur') {
+    <section class="conteneur page">
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'ouvrir le formulaire. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <a class="btn btn--secondaire" routerLink="/espace-employe/plats">Retour aux plats</a>
+        </div>
+      </div>
+    </section>
+  }
+  @case ('chargement') {
+    <section class="conteneur page" aria-busy="true">
+      <p class="visuellement-masque" role="status">Chargement du formulaire…</p>
+      <div class="espace__squelette" aria-hidden="true"></div>
+    </section>
+  }
+  @case ('pret') {
+    <section class="conteneur page espace">
+      <app-employe-nav />
+      <nav class="fil-ariane" aria-label="Fil d'Ariane">
+        <ol>
+          <li><a routerLink="/espace-employe/plats">Plats</a></li>
+          <li aria-current="page">{{ creation() ? 'Nouveau plat' : e.plat?.titre }}</li>
+        </ol>
+      </nav>
+      <header class="espace__entete">
+        <p class="surtitre">Espace employé</p>
+        <h1 class="titre-section">
+          {{ creation() ? 'Nouveau plat' : 'Modifier « ' + e.plat?.titre + ' »' }}
+        </h1>
+      </header>
+
+      <form
+        class="carte formulaire-catalogue"
+        [formGroup]="formulaire"
+        (ngSubmit)="enregistrer()"
+        novalidate
+      >
+        <div class="champ">
+          <label class="champ__label" for="titre"
+            >Nom du plat <span class="champ__obligatoire" aria-hidden="true">*</span></label
+          >
+          <input
+            id="titre"
+            class="champ__saisie"
+            formControlName="titre"
+            maxlength="150"
+            [attr.aria-invalid]="!!erreurTitre()"
+            [attr.aria-describedby]="erreurTitre() ? 'titre-erreur' : null"
+          />
+          @if (erreurTitre(); as m) {
+            <p id="titre-erreur" class="champ__erreur">{{ m }}</p>
+          }
+        </div>
+
+        <fieldset class="cases__groupe">
+          <legend>Catégorie <span class="champ__obligatoire" aria-hidden="true">*</span></legend>
+          <ul class="cases">
+            @for (c of categories; track c) {
+              <li>
+                <label class="champ-case">
+                  <input
+                    type="radio"
+                    formControlName="categorie"
+                    [value]="c"
+                    [attr.aria-invalid]="!!erreurCategorie()"
+                    [attr.aria-describedby]="erreurCategorie() ? 'categorie-erreur' : null"
+                  />
+                  <span>{{ libelles[c] }}</span>
+                </label>
+              </li>
+            }
+          </ul>
+          @if (erreurCategorie(); as m) {
+            <p id="categorie-erreur" class="champ__erreur">{{ m }}</p>
+          }
+        </fieldset>
+
+        <fieldset class="cases__groupe" aria-describedby="allergenes-aide">
+          <legend>Allergènes</legend>
+          <p id="allergenes-aide" class="champ__aide">
+            Les 14 allergènes à déclaration obligatoire. Aucun coché = aucun allergène.
+          </p>
+          <ul class="cases">
+            @for (a of e.allergenes; track a.allergene_id) {
+              <li>
+                <label class="champ-case">
+                  <input
+                    type="checkbox"
+                    [checked]="allergenesChoisis().includes(a.allergene_id)"
+                    (change)="basculerAllergene(a.allergene_id)"
+                  />
+                  <span>{{ a.libelle }}</span>
+                </label>
+              </li>
+            }
+          </ul>
+        </fieldset>
+
+        @if (erreursServeur().length > 0) {
+          <div id="erreurs-serveur" class="alerte alerte--erreur" role="alert" tabindex="-1">
+            <ul>
+              @for (m of erreursServeur(); track m) {
+                <li>{{ m }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="formulaire-catalogue__bas">
+          <button type="submit" class="btn btn--primaire" [disabled]="envoi()">
+            {{ envoi() ? 'Enregistrement…' : creation() ? 'Créer le plat' : 'Enregistrer' }}
+          </button>
+          <a class="btn btn--secondaire" routerLink="/espace-employe/plats">Annuler</a>
+        </div>
+      </form>
+    </section>
+  }
+}

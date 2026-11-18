@@ -1,0 +1,244 @@
+<!-- En-tête de page (maquette « Nos menus ») -->
+<header class="entete-page">
+  <div class="conteneur">
+    <nav class="fil-ariane" aria-label="Fil d'Ariane">
+      <ol>
+        <li><a routerLink="/">Accueil</a></li>
+        <li aria-current="page">Nos menus</li>
+      </ol>
+    </nav>
+    <h1 class="entete-page__titre">Nos menus</h1>
+    <p class="entete-page__intro">
+      Des menus complets, de l'entrée au dessert, pour vos fêtes et vos évènements.<br />
+      Les prix indiqués correspondent au nombre minimum de convives.
+    </p>
+  </div>
+</header>
+
+<div class="conteneur catalogue">
+  <!-- ================= Filtres ================= -->
+  <form class="filtres-zone" [formGroup]="formulaire" aria-label="Filtrer les menus">
+    <!-- Mobile : pastilles de thème en haut, faciles d'accès au pouce -->
+    <fieldset class="pastilles pastilles--defilantes pastilles--mobile">
+      <legend class="visuellement-masque">Thème</legend>
+      <ng-container *ngTemplateOutlet="choixThemes; context: { nom: 'theme-mobile' }" />
+    </fieldset>
+
+    <button
+      type="button"
+      class="btn btn--secondaire btn--bloc filtres-zone__bascule"
+      aria-controls="panneau-filtres"
+      [attr.aria-expanded]="filtresOuverts()"
+      (click)="basculerFiltres()"
+    >
+      <svg
+        aria-hidden="true"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <path d="M4 6h16M7 12h10M10 18h4" />
+      </svg>
+      {{ filtresOuverts() ? 'Masquer les filtres' : 'Afficher les filtres' }}
+    </button>
+
+    <div id="panneau-filtres" class="filtres" [class.filtres--ferme]="!filtresOuverts()">
+      <div class="filtres__entete">
+        <h2 class="filtres__titre">Filtres</h2>
+        <button
+          type="button"
+          class="lien-action filtres__reinitialiser-haut"
+          (click)="reinitialiser()"
+        >
+          Réinitialiser
+        </button>
+      </div>
+
+      <!-- Prix maximum : curseur -->
+      <div class="filtres__groupe">
+        <label class="filtres__label" for="filtre-prix-max">Prix maximum</label>
+        @if (curseur(); as bornes) {
+          <input
+            id="filtre-prix-max"
+            class="curseur"
+            type="range"
+            [min]="bornes.min"
+            [max]="bornes.max"
+            step="10"
+            formControlName="prixMax"
+            [attr.aria-valuetext]="
+              (valeur().prixMax ?? bornes.max) >= bornes.max
+                ? 'Sans limite'
+                : 'Jusqu’à ' + valeur().prixMax + ' euros'
+            "
+          />
+          <p class="filtres__valeur" aria-hidden="true">
+            @if ((valeur().prixMax ?? bornes.max) >= bornes.max) {
+              Sans limite
+            } @else {
+              Jusqu'à <strong>{{ valeur().prixMax }} €</strong>
+            }
+          </p>
+        } @else {
+          <input id="filtre-prix-max" class="curseur" type="range" disabled />
+        }
+      </div>
+
+      <!-- Fourchette De / À -->
+      <fieldset class="filtres__groupe">
+        <legend class="filtres__label">Fourchette de prix</legend>
+        <div class="fourchette">
+          <label class="visuellement-masque" for="filtre-de"
+            >Prix minimum de la fourchette, en euros</label
+          >
+          <input
+            id="filtre-de"
+            class="champ__saisie"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="10"
+            placeholder="De"
+            formControlName="fourchetteMin"
+          />
+          <span aria-hidden="true">–</span>
+          <label class="visuellement-masque" for="filtre-a"
+            >Prix maximum de la fourchette, en euros</label
+          >
+          <input
+            id="filtre-a"
+            class="champ__saisie"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="10"
+            placeholder="À"
+            formControlName="fourchetteMax"
+          />
+        </div>
+      </fieldset>
+
+      <!-- Thème (ordinateur : dans la colonne) -->
+      <fieldset class="filtres__groupe pastilles pastilles--bureau">
+        <legend class="filtres__label">Thème</legend>
+        <ng-container *ngTemplateOutlet="choixThemes; context: { nom: 'theme' }" />
+      </fieldset>
+
+      <fieldset class="filtres__groupe pastilles">
+        <legend class="filtres__label">Régime</legend>
+        <label class="pastille">
+          <input type="radio" name="regime" value="" formControlName="regime" />
+          <span>Tous</span>
+        </label>
+        @for (regime of regimes(); track regime.id) {
+          <label class="pastille">
+            <input type="radio" name="regime" value="{{ regime.id }}" formControlName="regime" />
+            <span>{{ regime.libelle }}</span>
+          </label>
+        }
+      </fieldset>
+
+      <div class="filtres__groupe">
+        <label class="filtres__label" for="filtre-personnes">Nombre de convives</label>
+        <input
+          id="filtre-personnes"
+          class="champ__saisie"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          placeholder="Ex. 8"
+          formControlName="personnes"
+          aria-describedby="aide-personnes"
+        />
+        @if (formulaire.controls.personnes.invalid) {
+          <p class="champ__erreur" role="alert">Indiquez un nombre entier de personnes.</p>
+        }
+        <p id="aide-personnes" class="filtres__aide">
+          Affiche les menus dont le minimum de personnes vous convient.
+        </p>
+      </div>
+
+      <!-- Mobile : boutons en bas du panneau -->
+      <div class="filtres__actions">
+        <button type="button" class="btn btn--secondaire" (click)="reinitialiser()">
+          Réinitialiser
+        </button>
+        <button type="button" class="btn btn--primaire" (click)="voirResultats()">
+          Voir {{ nombreMenus() }} {{ nombreMenus() > 1 ? 'menus' : 'menu' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Pastilles des thèmes, utilisées deux fois (mobile et ordinateur) -->
+    <ng-template #choixThemes let-nom="nom">
+      <label class="pastille">
+        <input type="radio" [name]="nom" value="" formControlName="theme" />
+        <span>Tous</span>
+      </label>
+      @for (theme of themes(); track theme.id) {
+        <label class="pastille">
+          <input type="radio" [name]="nom" value="{{ theme.id }}" formControlName="theme" />
+          <span>{{ theme.libelle }}</span>
+        </label>
+      }
+    </ng-template>
+  </form>
+
+  <!-- ================= Résultats ================= -->
+  <section class="resultats" aria-labelledby="resultats">
+    <div class="resultats__entete">
+      <!-- Zone « live » : le nombre de résultats est lu par les lecteurs d'écran -->
+      <h2 id="resultats" class="resultats__nombre" tabindex="-1" aria-live="polite">
+        {{ resume() }}
+      </h2>
+      <p class="resultats__info">Mise à jour instantanée, sans rechargement</p>
+    </div>
+
+    @let e = etat();
+
+    @if (e.erreur) {
+      <div class="alerte alerte--erreur">
+        <p>Impossible de charger les menus. {{ e.erreur }}</p>
+        <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+      </div>
+    } @else if (e.menus === null) {
+      <!-- Premier chargement : emplacements gris de la taille des cartes -->
+      <ul class="resultats__liste" aria-hidden="true">
+        @for (i of [1, 2, 3]; track i) {
+          <li class="carte resultats__squelette"></li>
+        }
+      </ul>
+    } @else if (e.incoherent) {
+      <div class="resultats__vide">
+        <p>
+          Le prix maximum est inférieur au prix minimum choisi : aucun menu ne peut correspondre.
+        </p>
+        <button type="button" class="btn btn--secondaire" (click)="reinitialiser()">
+          Réinitialiser les filtres
+        </button>
+      </div>
+    } @else if (e.menus.length === 0) {
+      <div class="resultats__vide">
+        <p>Aucun menu ne correspond à vos critères.</p>
+        <button type="button" class="btn btn--secondaire" (click)="reinitialiser()">
+          Réinitialiser les filtres
+        </button>
+      </div>
+    } @else {
+      <ul
+        class="resultats__liste"
+        [class.resultats__liste--chargement]="e.chargement"
+        [attr.aria-busy]="e.chargement"
+      >
+        @for (menu of e.menus; track menu.menu_id) {
+          <li><app-menu-card [menu]="menu" /></li>
+        }
+      </ul>
+    }
+  </section>
+</div>

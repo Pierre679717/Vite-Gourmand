@@ -1,0 +1,31 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Formulaire et liste côte à côte sur grand écran, l'un sous l'autre sur mobile
+.admin-employes {
+  display: grid;
+  gap: $espace-12;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: $espace-8;
+    align-items: start;
+  }
+}
+
+// La liste occupe une demi-largeur : une carte par ligne
+.admin-employes__liste {
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-employes__compte {
+  margin: 0 0 $espace-4;
+  color: $texte-doux;
+}
+
+// Une adresse longue passe à la ligne au lieu de déborder de la carte (390 px)
+.admin-employes__email {
+  overflow-wrap: anywhere;
+}

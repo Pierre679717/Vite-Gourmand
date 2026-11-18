@@ -1,0 +1,124 @@
+<section class="conteneur page espace">
+  <header class="espace__entete">
+    <p class="surtitre">Espace employé</p>
+    <h1 class="titre-section">Plats</h1>
+    <p class="espace__bonjour">
+      Chaque plat existe une seule fois et peut entrer dans plusieurs menus. Ses allergènes
+      s'affichent sur la fiche de chaque menu qui le contient.
+    </p>
+  </header>
+  <app-employe-nav />
+
+  <div class="catalogue__barre">
+    <p>Pour supprimer un plat, retirez-le d'abord des menus qui l'utilisent.</p>
+    <a class="btn btn--primaire" routerLink="/espace-employe/plats/nouveau">Nouveau plat</a>
+  </div>
+
+  <div #zoneMessage tabindex="-1" class="catalogue__message" role="status">
+    @if (message(); as m) {
+      <p class="alerte alerte--succes">{{ m }}</p>
+    }
+    @if (erreur(); as m) {
+      <p class="alerte alerte--erreur">{{ m }}</p>
+    }
+  </div>
+
+  @let e = etat();
+  @switch (e.statut) {
+    @case ('chargement') {
+      <div aria-busy="true">
+        <p class="visuellement-masque" role="status">Chargement des plats…</p>
+        <div class="espace__squelette" aria-hidden="true"></div>
+      </div>
+    }
+    @case ('erreur') {
+      <div class="alerte alerte--erreur" role="alert">
+        <p>Impossible d'afficher les plats. {{ e.message }}</p>
+        <div class="alerte__boutons">
+          <button type="button" class="btn btn--primaire" (click)="reessayer()">Réessayer</button>
+        </div>
+      </div>
+    }
+    @case ('succes') {
+      @for (g of groupes(); track g.categorie) {
+        <section class="catalogue__groupe" [attr.aria-labelledby]="'categorie-' + g.categorie">
+          <h2 class="catalogue__sous-titre" [id]="'categorie-' + g.categorie">
+            {{ g.libelle }} <span class="espace__compte">({{ g.elements.length }})</span>
+          </h2>
+          @if (g.elements.length === 0) {
+            <p class="element__texte">Aucun plat dans cette catégorie.</p>
+          }
+          <ul class="catalogue__liste">
+            @for (p of g.elements; track p.plat_id) {
+              <li>
+                <article class="carte element" [attr.aria-labelledby]="'plat-' + p.plat_id">
+                  <h3 class="element__titre" [id]="'plat-' + p.plat_id">{{ p.titre }}</h3>
+
+                  @if (p.allergenes.length > 0) {
+                    <ul class="badges" aria-label="Allergènes">
+                      @for (a of p.allergenes; track a.allergene_id) {
+                        <li class="badge badge--neutre">{{ a.libelle }}</li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="element__texte">Aucun allergène déclaré</p>
+                  }
+                  <p class="element__texte">{{ texteMenus(p) }}</p>
+
+                  @if (aConfirmer() === p.plat_id) {
+                    <div class="confirmation" (keydown.escape)="annulerSuppression(p)">
+                      <h4 #titreConfirmation class="confirmation__titre" tabindex="-1">
+                        Supprimer « {{ p.titre }} » ?
+                      </h4>
+                      <p>La suppression est définitive. Ce plat n'est dans aucun menu.</p>
+                      <div class="confirmation__boutons">
+                        <button
+                          type="button"
+                          class="btn btn--accent"
+                          [disabled]="enCours() !== null"
+                          (click)="supprimer(p)"
+                        >
+                          {{
+                            enCours() === p.plat_id ? 'Suppression…' : 'Confirmer la suppression'
+                          }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn--secondaire"
+                          (click)="annulerSuppression(p)"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="element__actions">
+                      <a
+                        class="btn btn--secondaire"
+                        [routerLink]="['/espace-employe/plats', p.plat_id]"
+                        [attr.aria-label]="'Modifier ' + p.titre"
+                        >Modifier</a
+                      >
+                      @if (peutSupprimer(p)) {
+                        <button
+                          type="button"
+                          class="lien-action"
+                          [id]="'supprimer-plat-' + p.plat_id"
+                          [disabled]="enCours() !== null"
+                          [attr.aria-label]="'Supprimer ' + p.titre"
+                          (click)="demanderSuppression(p)"
+                        >
+                          Supprimer…
+                        </button>
+                      }
+                    </div>
+                  }
+                </article>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  }
+</section>

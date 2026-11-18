@@ -1,0 +1,127 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ---- Filtres : une ligne sur grand écran, empilés sur mobile -----------
+.stats-filtres {
+  display: grid;
+  gap: $espace-4;
+  margin-bottom: $espace-8;
+  padding: $espace-6;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+}
+
+.stats-filtres__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $espace-2;
+}
+
+.stats-filtres__erreur {
+  grid-column: 1 / -1;
+}
+
+.stats-resume {
+  margin: 0 0 $espace-4;
+  color: $texte-doux;
+  font-weight: 600;
+}
+
+// ---- Tuiles des totaux ----------------------------------------------------
+.stats-tuiles {
+  display: grid;
+  gap: $espace-4;
+  margin: 0 0 $espace-8;
+
+  @include a-partir-de($point-tablette) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.stats-tuile {
+  padding: $espace-4 $espace-6;
+
+  dt {
+    color: $texte-doux;
+    font-size: 0.9375rem;
+  }
+
+  dd {
+    margin: $espace-1 0 0;
+    font-family: $police-titres;
+    font-size: 1.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ---- Graphique et tableau : côte à côte sur grand écran ------------------
+.stats-resultats {
+  display: grid;
+  gap: $espace-6;
+
+  @include a-partir-de($point-bureau) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.stats-bloc {
+  padding: $espace-6;
+}
+
+.stats-tableau {
+  overflow-x: auto;
+
+  @include focus-clavier;
+
+  table {
+    width: 100%;
+    min-width: 30rem; // en dessous, le tableau défile au lieu d'écraser les colonnes
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    padding: $espace-3 $espace-2;
+    border-bottom: 1px solid $bordure;
+    text-align: left;
+  }
+
+  thead th {
+    color: $texte-doux;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
+
+  tfoot th,
+  tfoot td {
+    border-bottom: 0;
+    font-weight: 700;
+  }
+
+  .nombre {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+// L'aide ne s'affiche que là où le tableau défile
+.stats-tableau__aide {
+  margin: 0 0 $espace-2;
+
+  @include a-partir-de($point-tablette) {
+    display: none;
+  }
+}
