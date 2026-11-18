@@ -455,20 +455,21 @@ VALUES
     5, 1, 4, 1);
 
 -- ----------------------------------------------------------------
--- Galerie d'images (chemins prévus pour le projet Angular :
--- les fichiers seront copiés dans frontend/src/assets/images/menus/)
+-- Galerie d'images : photos libres de droits (Unsplash et Pexels),
+-- recadrées en WebP 1280 × 880. Auteurs et liens : page « Mentions légales »,
+-- section « Crédits photos ». Fichiers : frontend/public/assets/images/menus/
 -- ----------------------------------------------------------------
 INSERT INTO menu_image (menu_id, chemin, texte_alternatif, ordre) VALUES
-(1,  'assets/images/menus/gastronomique.jpg', 'Tranches de magret de canard rosé nappées de sauce, sur une purée onctueuse', 1),
-(2,  'assets/images/menus/traditionnel.jpg',  'Cassoulet toulousain aux haricots blancs et viandes confites dans une cassole en terre cuite', 1),
-(3,  'assets/images/menus/mediterraneen.jpg', 'Part de moussaka gratinée aux aubergines, servie avec des tomates cerises', 1),
-(4,  'assets/images/menus/vegetarien.jpg',    'Assiette végétarienne : quinoa, lentilles, aubergines et patates douces rôties, épinards et sauce', 1),
-(5,  'assets/images/menus/vegan.jpg',         'Bowl vegan de riz complet, haricots noirs, avocat, maïs et tomates', 1),
-(6,  'assets/images/menus/sans-porc.jpg',     'Cocotte de cabillaud et de crevettes dans une sauce crémeuse aux légumes', 1),
-(7,  'assets/images/menus/exotique.jpg',      'Curry de poulet à la sauce tomate épicée et à la coriandre, sur du riz blanc', 1),
-(8,  'assets/images/menus/noel.jpg',          'Dinde rôtie entière garnie de légumes, sur une table de fête décorée pour Noël', 1),
-(9,  'assets/images/menus/paques.jpg',        'Grand plateau de fruits de mer : crevettes, langoustines, Saint-Jacques et saumon', 1),
-(10, 'assets/images/menus/prestige.jpg',      'Filet de bœuf tranché et légumes dans une assiette dressée façon restaurant', 1);
+(1,  'assets/images/menus/gastronomique.webp', 'Tranches de magret de canard rosé, chou kale, pomme fondante et jus de cuisson', 1),
+(2,  'assets/images/menus/traditionnel.webp',  'Haricots blancs mijotés avec de la viande confite, façon cassoulet, dans une assiette creuse', 1),
+(3,  'assets/images/menus/mediterraneen.webp', 'Part de moussaka gratinée aux aubergines dans une assiette', 1),
+(4,  'assets/images/menus/vegetarien.webp',    'Bowl végétarien : pois chiches rôtis et feta, tomates cerises, edamame, épinards et kaki', 1),
+(5,  'assets/images/menus/vegan.webp',         'Bowl vegan : avocat, pois chiches, patate douce, tomates cerises, chou rouge et salade', 1),
+(6,  'assets/images/menus/sans-porc.webp',     'Soupe de poissons et grosse crevette, avec un croûton à la rouille', 1),
+(7,  'assets/images/menus/exotique.webp',      'Curry de poulet à la menthe, servi avec un riz aux carottes', 1),
+(8,  'assets/images/menus/noel.webp',          'Table de fête aux chandelles avec une dinde rôtie, des pommes de terre et du chou rouge', 1),
+(9,  'assets/images/menus/paques.webp',        'Côtelettes d''agneau rôties aux herbes sur un plateau en bois', 1),
+(10, 'assets/images/menus/prestige.webp',      'Tranches de bœuf rosé sur un lit de roquette, sauce au vin', 1);
 
 -- ----------------------------------------------------------------
 -- Plats (un plat peut figurer dans plusieurs menus)

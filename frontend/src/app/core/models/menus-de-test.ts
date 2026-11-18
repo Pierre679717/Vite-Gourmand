@@ -18,7 +18,7 @@ export const MENU_GASTRO: MenuResume = {
   regime: 'Classique',
   theme_id: 4,
   regime_id: 1,
-  image: 'assets/images/menus/gastronomique.jpg',
+  image: 'assets/images/menus/gastronomique.webp',
   image_alt: 'Magret de canard',
 };
 
@@ -31,6 +31,6 @@ export const MENU_PAQUES_EPUISE: MenuResume = {
   quantite_restante: 0,
   theme: 'Pâques',
   theme_id: 2,
-  image: 'assets/images/menus/paques.jpg',
-  image_alt: 'Plateau de fruits de mer',
+  image: 'assets/images/menus/paques.webp',
+  image_alt: "Côtelettes d'agneau rôties",
 };
