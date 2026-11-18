@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { CREDITS_PHOTOS } from '../mentions-legales/credits-photos';
 import { MentionsLegales } from '../mentions-legales/mentions-legales';
 import { Cgv } from './cgv';
 
@@ -29,5 +30,32 @@ describe('Pages légales', () => {
     fixture.detectChanges();
     const section = (fixture.nativeElement as HTMLElement).querySelector('#donnees-personnelles');
     expect(section?.textContent).toContain('Données personnelles');
+  });
+
+  it('les mentions légales donnent le nom du concepteur', () => {
+    const fixture = TestBed.createComponent(MentionsLegales);
+    fixture.detectChanges();
+    const section = (fixture.nativeElement as HTMLElement).querySelector('#realisation + p');
+    expect(section?.textContent).toContain('MANOUAN Anoman (Pierre)');
+  });
+
+  it('les crédits photos citent les 12 photos, chacune avec son auteur et un lien vers sa page', () => {
+    const fixture = TestBed.createComponent(MentionsLegales);
+    fixture.detectChanges();
+    const page = fixture.nativeElement as HTMLElement;
+    const lignes = [...page.querySelectorAll('.credits-photos li')];
+    expect(lignes).toHaveLength(12);
+    expect(new Set(CREDITS_PHOTOS.map((c) => c.fichier)).size).toBe(12);
+    lignes.forEach((ligne, i) => {
+      const credit = CREDITS_PHOTOS[i];
+      const lien = ligne.querySelector('a')!;
+      expect(lien.getAttribute('href')).toBe(credit.lien);
+      expect(lien.getAttribute('href')).toMatch(
+        /^https:\/\/(unsplash\.com|www\.pexels\.com)\/photo/,
+      );
+      // Texte du lien explicite (RGAA 6.1) : le sujet de la photo, pas « ici » ni l'URL
+      expect(lien.textContent!.trim()).toBe(credit.sujet);
+      expect(ligne.textContent).toContain(credit.auteur);
+    });
   });
 });
