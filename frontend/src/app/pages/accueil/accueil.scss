@@ -315,6 +315,9 @@
     scroll-snap-align: start;
   }
 
+  // Liste des avis, focusable pour défiler au clavier : contour bordeaux
+  @include focus-clavier;
+
   @include a-partir-de($point-tablette) {
     grid-auto-flow: row;
     grid-template-columns: repeat(3, 1fr);

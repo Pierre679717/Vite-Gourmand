@@ -233,19 +233,22 @@
                   @if (estim.reduction > 0) {
                     − {{ estim.reduction | prix }}
                   } @else {
-                    <span aria-label="aucune">—</span>
+                    <span aria-hidden="true">—</span><span class="visuellement-masque">aucune</span>
                   }
                 </dd>
               </div>
-              <p class="estimation__aide" aria-live="polite">
-                @if (estim.convivesManquants > 0) {
-                  Encore {{ estim.convivesManquants }}
-                  {{ estim.convivesManquants > 1 ? 'convives' : 'convive' }}
-                  pour bénéficier de −10 %.
-                } @else {
-                  Réduction de 10 % appliquée.
-                }
-              </p>
+            </dl>
+            <!-- Hors du <dl> : une liste de définitions ne contient que des dt / dd (RGAA 8.2) -->
+            <p class="estimation__aide" aria-live="polite">
+              @if (estim.convivesManquants > 0) {
+                Encore {{ estim.convivesManquants }}
+                {{ estim.convivesManquants > 1 ? 'convives' : 'convive' }}
+                pour bénéficier de −10 %.
+              } @else {
+                Réduction de 10 % appliquée.
+              }
+            </p>
+            <dl class="estimation__lignes estimation__lignes--suite">
               <div class="estimation__ligne">
                 <dt>Livraison</dt>
                 <dd class="estimation__livraison">calculée à l'étape suivante</dd>

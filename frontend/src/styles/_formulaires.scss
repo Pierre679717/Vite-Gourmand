@@ -2,6 +2,7 @@
 // Formulaires — un .champ = libellé + saisie + aide ou erreur
 // =====================================================================
 @use 'variables' as *;
+@use 'mixins' as *;
 
 .formulaire {
   display: flex;
@@ -41,14 +42,15 @@
     color: $texte;
     border: 1px solid $bordure-champ; // 3,4:1 : bordure visible (critère 3:1)
     border-radius: $rayon-moyen;
-    transition:
-      border-color $transition,
-      box-shadow $transition;
+    transition: border-color $transition;
 
-    &:focus {
-      outline: none;
+    // Même contour bordeaux que les liens et les boutons (RGAA 10.7).
+    // L'ancien halo vert à 20 % ne contrastait qu'à 1,3:1 avec le fond.
+    // Un champ de texte affiche toujours :focus-visible, au clavier comme à la souris.
+    @include focus-clavier;
+
+    &:focus-visible {
       border-color: $vert;
-      box-shadow: 0 0 0 3px rgba($vert, 0.2);
     }
 
     // Erreur affichée seulement après que l'utilisateur a quitté le champ

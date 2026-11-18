@@ -1,7 +1,7 @@
 <article class="conteneur page texte-legal">
   <p class="surtitre">Informations</p>
   <h1 class="titre-section">Mentions légales</h1>
-  <p class="texte-legal__maj">Mises à jour le 13 novembre 2026.</p>
+  <p class="texte-legal__maj">Mises à jour le 18 novembre 2026.</p>
 
   <p class="texte-legal__avertissement">
     Vite &amp; Gourmand est une entreprise fictive : ce site a été réalisé dans le cadre d'une
@@ -18,7 +18,7 @@
   </p>
 
   <h2 id="realisation">Conception et réalisation</h2>
-  <p>Anoman MANOUAN, développeur web.</p>
+  <p>MANOUAN Anoman (Pierre), développeur web.</p>
 
   <h2 id="hebergement">Hébergement</h2>
   <p>
@@ -29,8 +29,26 @@
   <h2 id="propriete">Propriété intellectuelle</h2>
   <p>
     Les textes, le logo et la présentation du site sont la propriété de Vite &amp; Gourmand. Toute
-    reproduction sans autorisation est interdite.
+    reproduction sans autorisation est interdite. Les photographies sont libres de droits ; leurs
+    auteurs sont cités ci-dessous.
   </p>
+
+  <h2 id="credits-photos">Crédits photos</h2>
+  <p>
+    Photographies libres de droits, utilisées selon la
+    <a href="https://unsplash.com/license" rel="noopener">licence Unsplash</a> ou la
+    <a href="https://www.pexels.com/license/" rel="noopener">licence Pexels</a>. Elles ont été
+    recadrées et converties au format WebP pour le site.
+  </p>
+  <ul class="credits-photos">
+    @for (credit of credits; track credit.fichier) {
+      <li>
+        <strong>{{ credit.usage }}</strong> :
+        <a [href]="credit.lien" rel="noopener">{{ credit.sujet }}</a
+        >, photo de {{ credit.auteur }} sur {{ credit.site }}.
+      </li>
+    }
+  </ul>
 
   <h2 id="donnees-personnelles">Données personnelles</h2>
   <p>

@@ -71,4 +71,30 @@ describe('Connexion', () => {
     expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(false);
     expect(page.querySelector('a[href="/mot-de-passe-oublie"]')).not.toBeNull();
   });
+
+  describe('erreurs accessibles (RGAA 11.10)', () => {
+    it('envoi vide : champs marqués invalides, reliés à leur message, focus sur le premier', async () => {
+      await ouvrir();
+      page.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+      await rendre();
+
+      const email = page.querySelector<HTMLInputElement>('#email')!;
+      expect(email.getAttribute('aria-invalid')).toBe('true');
+      const idMessage = email.getAttribute('aria-describedby')!;
+      expect(page.querySelector(`#${idMessage}`)?.textContent).toContain('obligatoire');
+      expect(document.activeElement).toBe(email);
+      expect(page.querySelector('#mot_de_passe')!.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('e-mail correct, mot de passe vide : le focus va au mot de passe', async () => {
+      await ouvrir();
+      saisir('email', 'utilisateur@vite-gourmand.fr');
+      page.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+      await rendre();
+
+      expect(page.querySelector('#email')!.getAttribute('aria-invalid')).toBe('false');
+      expect(page.querySelector('#email')!.hasAttribute('aria-describedby')).toBe(false);
+      expect(document.activeElement).toBe(page.querySelector('#mot_de_passe'));
+    });
+  });
 });
